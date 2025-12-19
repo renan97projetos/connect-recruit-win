@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CandidateLayout } from '@/components/CandidateLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Clock, CheckCircle2, ArrowRight, User, Trash2 } from 'lucide-react';
+import { Briefcase, Clock, CheckCircle2, ArrowRight, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CandidateDashboard() {
@@ -100,30 +100,22 @@ export default function CandidateDashboard() {
 
   if (loading) {
     return (
-      <DashboardLayout
+      <CandidateLayout
         title="Minhas Candidaturas"
         description="Acompanhe o status das suas aplicações"
       >
         <div className="text-center py-8">
           <p className="text-muted-foreground">Carregando candidaturas...</p>
         </div>
-      </DashboardLayout>
+      </CandidateLayout>
     );
   }
 
   return (
-    <DashboardLayout
+    <CandidateLayout
       title="Minhas Candidaturas"
       description="Acompanhe o status das suas aplicações"
     >
-      <div className="mb-6">
-        <Button asChild>
-          <Link to="/candidate/profile">
-            <User className="mr-2 h-4 w-4" />
-            Editar Perfil e Currículo
-          </Link>
-        </Button>
-      </div>
 
       <div className="grid gap-6 md:grid-cols-3 mb-8">
         <Card>
@@ -442,6 +434,6 @@ export default function CandidateDashboard() {
           )}
         </TabsContent>
       </Tabs>
-    </DashboardLayout>
+    </CandidateLayout>
   );
 }

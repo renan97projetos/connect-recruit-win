@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CandidateLayout } from '@/components/CandidateLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -384,24 +384,24 @@ export default function CandidateProfile() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Meu Perfil" description="Carregando...">
+      <CandidateLayout title="Meu Perfil" description="Carregando...">
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </DashboardLayout>
+      </CandidateLayout>
     );
   }
 
   if (!profile) {
     return (
-      <DashboardLayout title="Meu Perfil" description="Perfil não encontrado">
+      <CandidateLayout title="Meu Perfil" description="Perfil não encontrado">
         <p>Não foi possível carregar seu perfil.</p>
-      </DashboardLayout>
+      </CandidateLayout>
     );
   }
 
   return (
-    <DashboardLayout
+    <CandidateLayout
       title="Meu Perfil"
       description="Gerencie suas informações e currículo"
     >
@@ -1018,6 +1018,6 @@ export default function CandidateProfile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </CandidateLayout>
   );
 }
