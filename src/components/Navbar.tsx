@@ -123,7 +123,7 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link to={getDashboardRoute()} className="cursor-pointer flex items-center font-semibold">
                       <Zap className="mr-2 h-4 w-4" />
-                      Dashboard
+                      Minha Área
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-foreground" />
