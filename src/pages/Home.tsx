@@ -243,7 +243,7 @@ export default function Home() {
                         <Link to="/register">Cadastrar currículo</Link>
                       </Button>
                       <Button variant="outline" asChild>
-                        <Link to="/contact">Falar conosco</Link>
+                        <Link to="/prospect-funnel">Falar conosco</Link>
                       </Button>
                     </div>
                   </div> : filteredJobs.map(job => <Card key={job.id} className="group">
@@ -451,7 +451,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
-                <Link to="/register">
+                <Link to="/prospect-funnel">
                   Sou empresa
                   <Sparkles className="ml-2 h-5 w-5" />
                 </Link>
