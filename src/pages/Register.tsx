@@ -6,10 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import srhLogo from '@/assets/srh-logo-main.png';
 
 // Schema de validação
 const registerSchema = z.object({
@@ -111,8 +110,11 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-soft p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center justify-center">
-            <img src={srhLogo} alt="SRH Logo" className="h-20 w-auto" />
+          <Link to="/" className="inline-flex items-center justify-center gap-3 group">
+            <div className="w-12 h-12 bg-primary rounded-lg border-3 border-foreground flex items-center justify-center shadow-brutal group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-brutal-hover transition-all">
+              <Zap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-2xl tracking-tight">SinapseRH</span>
           </Link>
         </div>
 
