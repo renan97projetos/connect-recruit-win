@@ -131,14 +131,13 @@ export function Navbar() {
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-lg overflow-hidden">
+                  <Button variant="outline" size="icon" className="overflow-hidden p-0">
                     {avatarUrl ? (
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={avatarUrl} alt="Foto do perfil" />
-                        <AvatarFallback>
-                          <User className="h-5 w-5" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <img 
+                        src={avatarUrl} 
+                        alt="Foto do perfil" 
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <User className="h-5 w-5" />
                     )}
