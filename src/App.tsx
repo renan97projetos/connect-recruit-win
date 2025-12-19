@@ -45,6 +45,7 @@ import EmployeeForm from "./pages/admin/EmployeeForm";
 import EmployeeDetails from "./pages/admin/EmployeeDetails";
 import SystemSettings from "./pages/admin/SystemSettings";
 import ContentManagement from "./pages/admin/ContentManagement";
+import TeamManagement from "./pages/admin/TeamManagement";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
@@ -108,6 +109,7 @@ const App = () => {
               <Route path="/admin/employees/:id/edit" element={<ProtectedRoute requiredRole="admin"><EmployeeForm /></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><SystemSettings /></ProtectedRoute>} />
               <Route path="/admin/content" element={<ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>} />
+              <Route path="/admin/team" element={<ProtectedRoute requiredRole="admin"><TeamManagement /></ProtectedRoute>} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-use" element={<TermsOfUse />} />
