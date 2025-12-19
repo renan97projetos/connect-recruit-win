@@ -164,7 +164,7 @@ export default function Home() {
       
       {/* Hero Section - NEUBRUTALIST */}
       <section className="border-b-3 border-foreground">
-        <div className="container px-4 py-16 md:py-24 mx-auto">
+        <div className="container px-4 py-8 md:py-12 mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left content */}
             <div className="space-y-8">
