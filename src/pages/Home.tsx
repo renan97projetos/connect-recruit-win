@@ -7,17 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote } from 'lucide-react';
+import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { JobFiltersComponent, JobFilters } from '@/components/JobFilters';
+
 export default function Home() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('date');
-  const {
-    user
-  } = useSupabaseAuth();
+  const { user } = useSupabaseAuth();
   const [filters, setFilters] = useState<JobFilters>({
     keyword: '',
     city: '',
@@ -28,14 +27,15 @@ export default function Home() {
     experienceLevel: 'all',
     datePosted: 'all'
   });
+
   useEffect(() => {
     const loadJobs = async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('jobs').select('*').eq('is_active', true).eq('is_archived', false).order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
       if (!error && data) {
         setJobs(data);
       }
@@ -43,16 +43,19 @@ export default function Home() {
     };
     loadJobs();
   }, []);
+
   const filteredJobs = useMemo(() => {
     let filtered = jobs;
 
-    // Keyword filter
     if (filters.keyword) {
       const keyword = filters.keyword.toLowerCase();
-      filtered = filtered.filter(job => job.title.toLowerCase().includes(keyword) || job.description.toLowerCase().includes(keyword) || job.company_name.toLowerCase().includes(keyword));
+      filtered = filtered.filter(job => 
+        job.title.toLowerCase().includes(keyword) || 
+        job.description.toLowerCase().includes(keyword) || 
+        job.company_name.toLowerCase().includes(keyword)
+      );
     }
 
-    // Location filters
     if (filters.city) {
       filtered = filtered.filter(job => job.city?.toLowerCase().includes(filters.city.toLowerCase()));
     }
@@ -60,17 +63,14 @@ export default function Home() {
       filtered = filtered.filter(job => job.state?.toLowerCase().includes(filters.state.toLowerCase()));
     }
 
-    // Job type filter
     if (filters.jobType && filters.jobType !== 'all') {
       filtered = filtered.filter(job => job.job_type === filters.jobType);
     }
 
-    // Location mode filter
     if (filters.location && filters.location !== 'all') {
       filtered = filtered.filter(job => job.location === filters.location);
     }
 
-    // Salary range filter
     const [minSalary, maxSalary] = filters.salaryRange;
     if (minSalary > 0 || maxSalary < 50000) {
       filtered = filtered.filter(job => {
@@ -79,7 +79,6 @@ export default function Home() {
       });
     }
 
-    // Date posted filter
     if (filters.datePosted && filters.datePosted !== 'all') {
       const now = new Date();
       const filterDate = new Date();
@@ -96,7 +95,6 @@ export default function Home() {
       });
     }
 
-    // Sort
     if (sortBy === 'date') {
       filtered = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } else if (sortBy === 'salary') {
@@ -104,6 +102,7 @@ export default function Home() {
     }
     return filtered;
   }, [jobs, filters, sortBy]);
+
   const resetFilters = () => {
     setFilters({
       keyword: '',
@@ -116,6 +115,7 @@ export default function Home() {
       datePosted: 'all'
     });
   };
+
   const getJobTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       'full-time': 'Tempo Integral',
@@ -126,6 +126,7 @@ export default function Home() {
     };
     return labels[type] || type;
   };
+
   const getLocationLabel = (location: string) => {
     const labels: Record<string, string> = {
       'remote': 'Remoto',
@@ -134,80 +135,107 @@ export default function Home() {
     };
     return labels[location] || location;
   };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
   };
-  return <div className="min-h-screen bg-gradient-soft">
+
+  return (
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Marquee Banner */}
-      <div className="w-full overflow-hidden bg-gradient-to-r from-[#1a1a3e] via-[#0a0a1f] to-[#2d1b4e] py-2 border-b border-border/50">
+      {/* Marquee Banner - Editorial Style */}
+      <div className="w-full overflow-hidden bg-accent py-3 border-y-2 border-foreground/10">
         <div className="relative flex items-center">
           <div className="flex animate-marquee whitespace-nowrap items-center">
-            <span className="mx-8 flex items-center gap-4 text-xl font-mono font-bold italic text-[hsl(var(--marquee-cyan))] drop-shadow-[0_0_15px_rgba(0,191,255,0.8)]">
-              <Zap className="h-5 w-5 text-[hsl(var(--gold-star))] fill-[hsl(var(--gold-star))] drop-shadow-[0_0_10px_rgba(255,215,0,0.6)]" />
-              Multiplique seu RH por 10. É hora de colocar um sistema para trabalhar por você.
-            </span>
-            <span className="mx-8 flex items-center gap-4 text-xl font-mono font-bold italic text-[hsl(var(--marquee-cyan))] drop-shadow-[0_0_15px_rgba(0,191,255,0.8)]">
-              <Zap className="h-5 w-5 text-[hsl(var(--gold-star))] fill-[hsl(var(--gold-star))] drop-shadow-[0_0_10px_rgba(255,215,0,0.6)]" />
-              Multiplique seu RH por 10. É hora de colocar um sistema para trabalhar por você.
-            </span>
-            <span className="mx-8 flex items-center gap-4 text-xl font-mono font-bold italic text-[hsl(var(--marquee-cyan))] drop-shadow-[0_0_15px_rgba(0,191,255,0.8)]">
-              <Zap className="h-5 w-5 text-[hsl(var(--gold-star))] fill-[hsl(var(--gold-star))] drop-shadow-[0_0_10px_rgba(255,215,0,0.6)]" />
-              Multiplique seu RH por 10. É hora de colocar um sistema para trabalhar por você.
-            </span>
-            <span className="mx-8 flex items-center gap-4 text-xl font-mono font-bold italic text-[hsl(var(--marquee-cyan))] drop-shadow-[0_0_15px_rgba(0,191,255,0.8)]">
-              <Zap className="h-5 w-5 text-[hsl(var(--gold-star))] fill-[hsl(var(--gold-star))] drop-shadow-[0_0_10px_rgba(255,215,0,0.6)]" />
-              Multiplique seu RH por 10. É hora de colocar um sistema para trabalhar por você.
-            </span>
+            {[1, 2, 3, 4].map((i) => (
+              <span key={i} className="mx-12 flex items-center gap-4 text-lg font-body font-medium text-accent-foreground">
+                <Star className="h-4 w-4 text-primary fill-primary" />
+                <span className="italic">Multiplique seu RH por 10</span>
+                <span className="text-primary">•</span>
+                <span>É hora de colocar um sistema para trabalhar por você</span>
+              </span>
+            ))}
           </div>
         </div>
       </div>
       
-      {/* Hero Section */}
-      <section className="container px-4 py-16 md:py-24 mx-0 bg-muted border-[#584998]">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
-            Encontre o talento certo, na hora certa
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Automatize seu RH e economize 90% do tempo gasto em recrutamento
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button size="lg" asChild className="text-lg px-8">
-              <a href="#vagas" className="bg-blue-900">Ver vagas disponíveis</a>
-            </Button>
-            <Button size="lg" asChild className="text-lg px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg">
-              <Link to="/prospect-funnel">Para Empresas — Começar</Link>
-            </Button>
+      {/* Hero Section - Editorial Design */}
+      <section className="relative overflow-hidden">
+        {/* Organic background shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary/5 rounded-blob animate-float" />
+          <div className="absolute top-1/2 -left-32 w-64 h-64 bg-secondary/30 rounded-organic" style={{ animationDelay: '2s' }} />
+        </div>
+
+        <div className="container px-4 py-20 md:py-32 mx-auto relative">
+          <div className="max-w-5xl mx-auto">
+            {/* Stamp badge */}
+            <div className="flex justify-center mb-8">
+              <span className="stamp text-primary border-primary">
+                Recrutamento humanizado
+              </span>
+            </div>
+
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] text-center mb-8">
+              Encontre o{' '}
+              <span className="relative inline-block">
+                <span className="relative z-10">talento certo</span>
+                <svg className="absolute -bottom-2 left-0 w-full h-4 text-primary/30" viewBox="0 0 200 12" preserveAspectRatio="none">
+                  <path d="M0 8 Q50 0, 100 8 T200 8" stroke="currentColor" strokeWidth="4" fill="none" />
+                </svg>
+              </span>
+              , na hora certa
+            </h1>
+
+            <p className="font-body text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+              Automatize seu RH e economize{' '}
+              <span className="text-primary font-semibold">90% do tempo</span>{' '}
+              gasto em recrutamento
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button size="lg" asChild className="text-lg px-8 py-6 shadow-editorial hover:translate-x-[-2px] hover:translate-y-[-2px] transition-transform">
+                <a href="#vagas">
+                  Ver vagas disponíveis
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </a>
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                asChild 
+                className="text-lg px-8 py-6 border-2 border-foreground/20 hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <Link to="/prospect-funnel">
+                  Para Empresas — Começar
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Banner */}
-      <section className="container mx-auto px-4 py-8">
+      {/* Stats Banner - Editorial Cards */}
+      <section className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="py-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div>
-                  <p className="text-3xl font-bold text-primary">+120</p>
-                  <p className="text-sm text-muted-foreground mt-1">empresas ativas</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-primary">+10.000</p>
-                  <p className="text-sm text-muted-foreground mt-1">candidatos cadastrados</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-primary">Rápido</p>
-                  <p className="text-sm text-muted-foreground mt-1">recrutamento inteligente</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="card-editorial p-8 text-center rotate-slight-left">
+              <p className="font-display text-5xl font-bold text-primary mb-2">+120</p>
+              <p className="font-body text-sm text-muted-foreground uppercase tracking-wide">empresas ativas</p>
+            </div>
+            <div className="card-editorial p-8 text-center">
+              <p className="font-display text-5xl font-bold text-primary mb-2">+10k</p>
+              <p className="font-body text-sm text-muted-foreground uppercase tracking-wide">candidatos cadastrados</p>
+            </div>
+            <div className="card-editorial p-8 text-center rotate-slight-right">
+              <p className="font-display text-5xl font-bold text-primary mb-2">Rápido</p>
+              <p className="font-body text-sm text-muted-foreground uppercase tracking-wide">recrutamento inteligente</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -220,15 +248,15 @@ export default function Home() {
 
             {/* Jobs List */}
             <div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h2 className="text-2xl font-bold">Vagas Abertas</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h2 className="font-display text-3xl font-bold">Vagas Abertas</h2>
+                  <p className="font-body text-sm text-muted-foreground mt-2">
                     {filteredJobs.length} {filteredJobs.length === 1 ? 'vaga encontrada' : 'vagas encontradas'}
                   </p>
                 </div>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[180px] border-2">
                     <SelectValue placeholder="Ordenar por" />
                   </SelectTrigger>
                   <SelectContent>
@@ -239,16 +267,23 @@ export default function Home() {
               </div>
 
               <div className="grid gap-6">
-                {loading ? <Card>
+                {loading ? (
+                  <Card className="border-2 border-dashed">
                     <CardContent className="py-12 text-center">
-                      <p className="text-muted-foreground">Carregando vagas...</p>
+                      <div className="animate-pulse">
+                        <p className="text-muted-foreground font-body">Carregando vagas...</p>
+                      </div>
                     </CardContent>
-                  </Card> : filteredJobs.length === 0 ? <Card>
+                  </Card>
+                ) : filteredJobs.length === 0 ? (
+                  <Card className="border-2 border-dashed bg-muted/30">
                     <CardContent className="py-16 text-center space-y-6">
-                      <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                      <div className="w-20 h-20 mx-auto bg-primary/10 rounded-blob flex items-center justify-center">
+                        <Search className="h-10 w-10 text-primary" />
+                      </div>
                       <div className="space-y-2">
-                        <h3 className="text-xl font-semibold">Nenhuma vaga disponível no momento</h3>
-                        <p className="text-muted-foreground">
+                        <h3 className="font-display text-2xl font-semibold">Nenhuma vaga disponível no momento</h3>
+                        <p className="font-body text-muted-foreground">
                           Em breve novas oportunidades serão publicadas
                         </p>
                       </div>
@@ -256,297 +291,230 @@ export default function Home() {
                         <Button asChild size="lg">
                           <Link to="/register">Cadastrar currículo</Link>
                         </Button>
-                        <Button asChild variant="outline" size="lg">
+                        <Button asChild variant="outline" size="lg" className="border-2">
                           <Link to="/contact">Entre em contato</Link>
                         </Button>
                       </div>
                     </CardContent>
-                  </Card> : filteredJobs.map(job => <Card key={job.id} className="hover:shadow-md transition-shadow">
+                  </Card>
+                ) : (
+                  filteredJobs.map((job, index) => (
+                    <Card 
+                      key={job.id} 
+                      className="border-2 border-border hover:border-primary/30 transition-all duration-300 hover:shadow-md group"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
                       <CardHeader>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
-                            <CardDescription className="flex items-center gap-2">
+                            <CardTitle className="font-display text-xl mb-2 group-hover:text-primary transition-colors">
+                              {job.title}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-2 font-body">
                               <Building2 className="h-4 w-4" />
                               {job.company_name}
                             </CardDescription>
                           </div>
-                          <Badge variant="secondary">{getJobTypeLabel(job.job_type)}</Badge>
+                          <Badge 
+                            variant="secondary" 
+                            className="font-body text-xs uppercase tracking-wide border border-current"
+                          >
+                            {getJobTypeLabel(job.job_type)}
+                          </Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                        <p className="font-body text-sm text-muted-foreground line-clamp-2 mb-4">
                           {job.description}
                         </p>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground font-body">
                           <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
+                            <MapPin className="h-4 w-4 text-primary" />
                             {getLocationLabel(job.location)}
                             {job.city && ` • ${job.city}, ${job.state}`}
                           </div>
-                          {job.salary_min && job.salary_max && <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
+                          {job.salary_min && job.salary_max && (
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-4 w-4 text-primary" />
                               {formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}
-                            </div>}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                       <CardFooter>
-                        <Button asChild variant="outline" className="w-full group">
+                        <Button asChild variant="outline" className="w-full group/btn border-2 hover:bg-primary hover:text-primary-foreground hover:border-primary">
                           <Link to={`/jobs/${job.id}`}>
                             Ver detalhes
-                            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                           </Link>
                         </Button>
                       </CardFooter>
-                    </Card>)}
+                    </Card>
+                  ))
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Como Funciona */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Como Funciona</h2>
-            <p className="text-lg text-muted-foreground">Simples e eficiente em 3 passos</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-8 w-8 text-primary" />
+      {/* Como Funciona - Editorial Steps */}
+      <section className="bg-muted/50 py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-16">
+              <span className="stamp text-muted-foreground border-muted-foreground mb-4 inline-block">
+                Simples assim
+              </span>
+              <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">Como Funciona</h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 relative">
+              {/* Connection line */}
+              <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+              {[
+                { icon: CheckCircle2, title: "Cadastre-se", desc: "Crie sua conta como empresa ou candidato em poucos minutos", num: "01" },
+                { icon: Users, title: "Conecte-se", desc: "Publique vagas ou encontre oportunidades ideais para você", num: "02" },
+                { icon: BarChart3, title: "Acompanhe", desc: "Receba notificações e gerencie tudo em um único painel", num: "03" },
+              ].map((step, i) => (
+                <div key={i} className="relative">
+                  <Card className="text-center border-2 hover:border-primary/30 transition-all h-full bg-background">
+                    <CardHeader>
+                      <div className="relative mx-auto mb-4">
+                        <div className="h-20 w-20 rounded-blob bg-primary/10 flex items-center justify-center">
+                          <step.icon className="h-10 w-10 text-primary" />
+                        </div>
+                        <span className="absolute -top-2 -right-2 font-display text-4xl font-bold text-primary/20">
+                          {step.num}
+                        </span>
+                      </div>
+                      <CardTitle className="font-display text-xl">{step.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="font-body text-muted-foreground">{step.desc}</p>
+                    </CardContent>
+                  </Card>
                 </div>
-                <CardTitle>1. Cadastre-se</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Crie sua conta como empresa ou candidato em poucos minutos
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="h-8 w-8 text-primary" />
-                </div>
-                <CardTitle>2. Conecte-se</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Publique vagas ou encontre oportunidades ideais para você
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <BarChart3 className="h-8 w-8 text-primary" />
-                </div>
-                <CardTitle>3. Acompanhe</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Receba notificações e gerencie tudo em um único painel
-                </p>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Porque escolher nossa plataforma - Destaques/Diferenciais */}
-      <section className="bg-muted/50 py-16">
+      {/* Features - Asymmetric Grid */}
+      <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Por que escolher nossa plataforma?</h2>
-              <p className="text-lg text-muted-foreground">Recursos que fazem a diferença</p>
+            <div className="text-center mb-16">
+              <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
+                Por que escolher nossa plataforma?
+              </h2>
+              <p className="font-body text-lg text-muted-foreground">Recursos que fazem a diferença</p>
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Zap className="h-5 w-5 text-primary" />
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { icon: Zap, title: "Automação completa", desc: "Automatize todo o processo seletivo e economize tempo valioso", featured: true },
+                { icon: Search, title: "Filtros inteligentes", desc: "Encontre o match perfeito entre talentos e oportunidades" },
+                { icon: BarChart3, title: "Dashboard completo", desc: "Indicadores e métricas de recrutamento em tempo real" },
+                { icon: Brain, title: "IA que recomenda", desc: "Inteligência artificial sugere os candidatos ideais" },
+                { icon: Clock, title: "Rápido e intuitivo", desc: "Plataforma leve com interface fácil de usar" },
+                { icon: Users, title: "Gestão eficiente", desc: "Controle total de candidatos e processos seletivos" },
+              ].map((feature, i) => (
+                <Card 
+                  key={i} 
+                  className={`border-2 transition-all hover:shadow-md ${
+                    feature.featured ? 'md:col-span-2 lg:col-span-1 bg-primary/5 border-primary/20' : 'hover:border-primary/30'
+                  }`}
+                >
+                  <CardHeader>
+                    <div className="flex items-start gap-4">
+                      <div className={`h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        feature.featured ? 'bg-primary text-primary-foreground' : 'bg-primary/10'
+                      }`}>
+                        <feature.icon className={`h-6 w-6 ${feature.featured ? '' : 'text-primary'}`} />
+                      </div>
+                      <div>
+                        <CardTitle className="font-display text-xl">{feature.title}</CardTitle>
+                        <CardDescription className="font-body mt-2">{feature.desc}</CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-xl">Automação completa</CardTitle>
-                      <CardDescription className="mt-2">
-                        Automatize todo o processo seletivo e economize tempo valioso
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Search className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">Filtros inteligentes</CardTitle>
-                      <CardDescription className="mt-2">
-                        Encontre o match perfeito entre talentos e oportunidades
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <BarChart3 className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">Dashboard completo</CardTitle>
-                      <CardDescription className="mt-2">
-                        Indicadores e métricas de recrutamento em tempo real
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Brain className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">IA que recomenda</CardTitle>
-                      <CardDescription className="mt-2">
-                        Inteligência artificial sugere os candidatos ideais
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Clock className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">Rápido e intuitivo</CardTitle>
-                      <CardDescription className="mt-2">
-                        Plataforma leve com interface fácil de usar
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">Gestão eficiente</CardTitle>
-                      <CardDescription className="mt-2">
-                        Controle total de candidatos e processos seletivos
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
+                  </CardHeader>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Depoimentos */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">O que dizem sobre nós</h2>
-            <p className="text-lg text-muted-foreground">Histórias reais de sucesso</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="relative">
-              <CardHeader>
-                <Quote className="h-8 w-8 text-primary/20 absolute top-6 right-6" />
-                <CardDescription className="text-base leading-relaxed">
-                  "Preenchemos 3 vagas técnicas em menos de 10 dias com esta plataforma. 
-                  A automação do processo seletivo economizou horas de trabalho manual."
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <div>
-                  <p className="font-semibold">João P.</p>
-                  <p className="text-sm text-muted-foreground">Coordenador de RH</p>
-                </div>
-              </CardFooter>
-            </Card>
-            <Card className="relative">
-              <CardHeader>
-                <Quote className="h-8 w-8 text-primary/20 absolute top-6 right-6" />
-                <CardDescription className="text-base leading-relaxed">
-                  "Interface intuitiva, fácil de usar e economiza tempo. 
-                  O dashboard com métricas ajuda muito na tomada de decisões."
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <div>
-                  <p className="font-semibold">Ana M.</p>
-                  <p className="text-sm text-muted-foreground">Analista de Recrutamento</p>
-                </div>
-              </CardFooter>
-            </Card>
-            <Card className="relative">
-              <CardHeader>
-                <Quote className="h-8 w-8 text-primary/20 absolute top-6 right-6" />
-                <CardDescription className="text-base leading-relaxed">
-                  "A recomendação de candidatos por IA é impressionante. 
-                  Conseguimos encontrar talentos que realmente se encaixam na cultura da empresa."
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <div>
-                  <p className="font-semibold">Carlos R.</p>
-                  <p className="text-sm text-muted-foreground">Gerente de Talentos</p>
-                </div>
-              </CardFooter>
-            </Card>
-            <Card className="relative">
-              <CardHeader>
-                <Quote className="h-8 w-8 text-primary/20 absolute top-6 right-6" />
-                <CardDescription className="text-base leading-relaxed">
-                  "Como candidato, adorei a facilidade de encontrar vagas e me candidatar. 
-                  O processo é transparente e recebi feedback rapidamente."
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <div>
-                  <p className="font-semibold">Marina S.</p>
-                  <p className="text-sm text-muted-foreground">Desenvolvedora Full Stack</p>
-                </div>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background py-20">
+      {/* Testimonials - Editorial Quote Style */}
+      <section className="bg-accent text-accent-foreground py-20">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">O que dizem sobre nós</h2>
+              <p className="font-body text-lg text-accent-foreground/70">Histórias reais de sucesso</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {[
+                { quote: "Preenchemos 3 vagas técnicas em menos de 10 dias com esta plataforma. A automação do processo seletivo economizou horas de trabalho manual.", name: "João P.", role: "Coordenador de RH" },
+                { quote: "Interface intuitiva, fácil de usar e economiza tempo. O dashboard com métricas ajuda muito na tomada de decisões.", name: "Ana M.", role: "Analista de Recrutamento" },
+                { quote: "A recomendação de candidatos por IA é impressionante. Conseguimos encontrar talentos que realmente se encaixam na cultura da empresa.", name: "Carlos R.", role: "Gerente de Talentos" },
+                { quote: "Como candidato, adorei a facilidade de encontrar vagas e me candidatar. O processo é transparente e recebi feedback rapidamente.", name: "Marina S.", role: "Desenvolvedora Full Stack" },
+              ].map((testimonial, i) => (
+                <div 
+                  key={i} 
+                  className="relative p-8 bg-accent-foreground/5 rounded-lg border border-accent-foreground/10"
+                >
+                  <Quote className="h-10 w-10 text-primary/30 absolute top-6 right-6" />
+                  <p className="font-body text-lg leading-relaxed mb-6 text-accent-foreground/90">
+                    "{testimonial.quote}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="font-display font-bold text-primary">{testimonial.name[0]}</span>
+                    </div>
+                    <div>
+                      <p className="font-body font-semibold">{testimonial.name}</p>
+                      <p className="font-body text-sm text-accent-foreground/60">{testimonial.role}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Final - Bold Editorial */}
+      <section className="relative py-24 overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent" />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-secondary/30 rounded-blob" />
+        </div>
+
+        <div className="container mx-auto px-4 relative">
           <div className="max-w-3xl mx-auto text-center space-y-8">
-            <h2 className="text-4xl md:text-5xl font-bold">
+            <span className="stamp text-primary border-primary">
+              Comece agora
+            </span>
+            <h2 className="font-display text-5xl md:text-6xl font-bold leading-tight">
               Transforme seu recrutamento hoje
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="font-body text-xl text-muted-foreground">
               Crie sua conta gratuita e experimente a plataforma agora mesmo
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Button size="lg" asChild className="text-lg px-8">
-                <Link to="/register" className="border-blue-900 bg-blue-900">Sou empresa</Link>
+              <Button size="lg" asChild className="text-lg px-8 py-6 shadow-editorial">
+                <Link to="/register">
+                  Sou empresa
+                  <Sparkles className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="text-lg px-8">
+              <Button size="lg" variant="outline" asChild className="text-lg px-8 py-6 border-2">
                 <Link to="/register">Sou candidato</Link>
               </Button>
             </div>
@@ -554,7 +522,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
       <Footer />
-    </div>;
+    </div>
+  );
 }
