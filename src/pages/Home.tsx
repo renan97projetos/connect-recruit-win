@@ -10,12 +10,13 @@ import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users,
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { JobFiltersComponent, JobFilters } from '@/components/JobFilters';
-
 export default function Home() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('date');
-  const { user } = useSupabaseAuth();
+  const {
+    user
+  } = useSupabaseAuth();
   const [filters, setFilters] = useState<JobFilters>({
     keyword: '',
     city: '',
@@ -26,15 +27,14 @@ export default function Home() {
     experienceLevel: 'all',
     datePosted: 'all'
   });
-
   useEffect(() => {
     const loadJobs = async () => {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
+      const {
+        data,
+        error
+      } = await supabase.from('jobs').select('*').eq('is_active', true).eq('is_archived', false).order('created_at', {
+        ascending: false
+      });
       if (!error && data) {
         setJobs(data);
       }
@@ -42,34 +42,24 @@ export default function Home() {
     };
     loadJobs();
   }, []);
-
   const filteredJobs = useMemo(() => {
     let filtered = jobs;
-
     if (filters.keyword) {
       const keyword = filters.keyword.toLowerCase();
-      filtered = filtered.filter(job => 
-        job.title.toLowerCase().includes(keyword) || 
-        job.description.toLowerCase().includes(keyword) || 
-        job.company_name.toLowerCase().includes(keyword)
-      );
+      filtered = filtered.filter(job => job.title.toLowerCase().includes(keyword) || job.description.toLowerCase().includes(keyword) || job.company_name.toLowerCase().includes(keyword));
     }
-
     if (filters.city) {
       filtered = filtered.filter(job => job.city?.toLowerCase().includes(filters.city.toLowerCase()));
     }
     if (filters.state) {
       filtered = filtered.filter(job => job.state?.toLowerCase().includes(filters.state.toLowerCase()));
     }
-
     if (filters.jobType && filters.jobType !== 'all') {
       filtered = filtered.filter(job => job.job_type === filters.jobType);
     }
-
     if (filters.location && filters.location !== 'all') {
       filtered = filtered.filter(job => job.location === filters.location);
     }
-
     const [minSalary, maxSalary] = filters.salaryRange;
     if (minSalary > 0 || maxSalary < 50000) {
       filtered = filtered.filter(job => {
@@ -77,7 +67,6 @@ export default function Home() {
         return job.salary_min >= minSalary && job.salary_max <= maxSalary;
       });
     }
-
     if (filters.datePosted && filters.datePosted !== 'all') {
       const now = new Date();
       const filterDate = new Date();
@@ -93,7 +82,6 @@ export default function Home() {
         return jobDate >= filterDate;
       });
     }
-
     if (sortBy === 'date') {
       filtered = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } else if (sortBy === 'salary') {
@@ -101,7 +89,6 @@ export default function Home() {
     }
     return filtered;
   }, [jobs, filters, sortBy]);
-
   const resetFilters = () => {
     setFilters({
       keyword: '',
@@ -114,7 +101,6 @@ export default function Home() {
       datePosted: 'all'
     });
   };
-
   const getJobTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       'full-time': 'Full-time',
@@ -125,7 +111,6 @@ export default function Home() {
     };
     return labels[type] || type;
   };
-
   const getLocationLabel = (location: string) => {
     const labels: Record<string, string> = {
       'remote': 'Remoto',
@@ -134,30 +119,25 @@ export default function Home() {
     };
     return labels[location] || location;
   };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navbar />
       
       {/* Marquee Banner - Neubrutalist */}
       <div className="w-full overflow-hidden bg-yellow border-y-3 border-foreground">
         <div className="relative flex items-center py-3">
           <div className="flex animate-marquee whitespace-nowrap items-center">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <span key={i} className="mx-8 flex items-center gap-3 text-base font-bold uppercase tracking-wide text-foreground">
+            {[1, 2, 3, 4, 5, 6].map(i => <span key={i} className="mx-8 flex items-center gap-3 text-base font-bold uppercase tracking-wide text-foreground">
                 <Star className="h-5 w-5 fill-current" />
                 Multiplique seu RH por 10
                 <span className="text-2xl">→</span>
                 Sistema trabalhando por você
-              </span>
-            ))}
+              </span>)}
           </div>
         </div>
       </div>
@@ -169,9 +149,7 @@ export default function Home() {
             {/* Left content */}
             <div className="space-y-8">
               <div className="inline-block">
-                <span className="sticker">
-                  🚀 Novo
-                </span>
+                
               </div>
 
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[0.9] tracking-tight">
@@ -251,15 +229,12 @@ export default function Home() {
               </div>
 
               <div className="grid gap-4">
-                {loading ? (
-                  <div className="card-brutal p-12 text-center bg-muted">
+                {loading ? <div className="card-brutal p-12 text-center bg-muted">
                     <div className="animate-bounce-subtle inline-block">
                       <Zap className="h-12 w-12 text-primary" />
                     </div>
                     <p className="text-muted-foreground font-bold mt-4">Carregando vagas...</p>
-                  </div>
-                ) : filteredJobs.length === 0 ? (
-                  <div className="card-brutal p-12 text-center bg-yellow">
+                  </div> : filteredJobs.length === 0 ? <div className="card-brutal p-12 text-center bg-yellow">
                     <Search className="h-16 w-16 mx-auto mb-4" />
                     <h3 className="text-2xl font-black mb-2">Nenhuma vaga no momento</h3>
                     <p className="text-muted-foreground mb-6">Em breve novas oportunidades!</p>
@@ -271,10 +246,7 @@ export default function Home() {
                         <Link to="/contact">Falar conosco</Link>
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  filteredJobs.map((job) => (
-                    <Card key={job.id} className="group">
+                  </div> : filteredJobs.map(job => <Card key={job.id} className="group">
                       <CardHeader>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
@@ -301,12 +273,10 @@ export default function Home() {
                             {getLocationLabel(job.location)}
                             {job.city && ` • ${job.city}`}
                           </span>
-                          {job.salary_min && job.salary_max && (
-                            <span className="inline-flex items-center gap-1 bg-lime px-2 py-1 rounded-lg font-semibold">
+                          {job.salary_min && job.salary_max && <span className="inline-flex items-center gap-1 bg-lime px-2 py-1 rounded-lg font-semibold">
                               <DollarSign className="h-3 w-3" />
                               {formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}
-                            </span>
-                          )}
+                            </span>}
                         </div>
                       </CardContent>
                       <CardFooter>
@@ -317,9 +287,7 @@ export default function Home() {
                           </Link>
                         </Button>
                       </CardFooter>
-                    </Card>
-                  ))
-                )}
+                    </Card>)}
               </div>
             </div>
           </div>
@@ -338,20 +306,32 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { icon: CheckCircle2, title: "Cadastre-se", desc: "Crie sua conta em minutos", num: "01", color: "bg-yellow text-foreground" },
-                { icon: Users, title: "Conecte-se", desc: "Publique ou encontre vagas", num: "02", color: "bg-cyan text-foreground" },
-                { icon: BarChart3, title: "Acompanhe", desc: "Gerencie tudo em um painel", num: "03", color: "bg-pink text-foreground" },
-              ].map((step, i) => (
-                <div key={i} className={`${step.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}>
+              {[{
+              icon: CheckCircle2,
+              title: "Cadastre-se",
+              desc: "Crie sua conta em minutos",
+              num: "01",
+              color: "bg-yellow text-foreground"
+            }, {
+              icon: Users,
+              title: "Conecte-se",
+              desc: "Publique ou encontre vagas",
+              num: "02",
+              color: "bg-cyan text-foreground"
+            }, {
+              icon: BarChart3,
+              title: "Acompanhe",
+              desc: "Gerencie tudo em um painel",
+              num: "03",
+              color: "bg-pink text-foreground"
+            }].map((step, i) => <div key={i} className={`${step.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}>
                   <div className="flex items-start justify-between mb-4">
                     <step.icon className="h-10 w-10" />
                     <span className="font-mono text-4xl font-black opacity-30">{step.num}</span>
                   </div>
                   <h3 className="text-xl font-black mb-2">{step.title}</h3>
                   <p className="text-sm opacity-80">{step.desc}</p>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </div>
@@ -367,23 +347,41 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                { icon: Zap, title: "Automação total", desc: "Todo processo seletivo automatizado", bg: "bg-yellow" },
-                { icon: Search, title: "Filtros smart", desc: "Match perfeito entre talento e vaga", bg: "bg-cyan" },
-                { icon: BarChart3, title: "Dashboard show", desc: "Métricas em tempo real", bg: "bg-pink" },
-                { icon: Brain, title: "IA que ajuda", desc: "Recomendações inteligentes", bg: "bg-lime" },
-                { icon: Clock, title: "Rápido demais", desc: "Interface leve e intuitiva", bg: "bg-secondary" },
-                { icon: Heart, title: "Suporte humano", desc: "Time de verdade te ajudando", bg: "bg-primary text-primary-foreground" },
-              ].map((feature, i) => (
-                <div 
-                  key={i} 
-                  className={`${feature.bg} p-6 rounded-xl border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all`}
-                >
+              {[{
+              icon: Zap,
+              title: "Automação total",
+              desc: "Todo processo seletivo automatizado",
+              bg: "bg-yellow"
+            }, {
+              icon: Search,
+              title: "Filtros smart",
+              desc: "Match perfeito entre talento e vaga",
+              bg: "bg-cyan"
+            }, {
+              icon: BarChart3,
+              title: "Dashboard show",
+              desc: "Métricas em tempo real",
+              bg: "bg-pink"
+            }, {
+              icon: Brain,
+              title: "IA que ajuda",
+              desc: "Recomendações inteligentes",
+              bg: "bg-lime"
+            }, {
+              icon: Clock,
+              title: "Rápido demais",
+              desc: "Interface leve e intuitiva",
+              bg: "bg-secondary"
+            }, {
+              icon: Heart,
+              title: "Suporte humano",
+              desc: "Time de verdade te ajudando",
+              bg: "bg-primary text-primary-foreground"
+            }].map((feature, i) => <div key={i} className={`${feature.bg} p-6 rounded-xl border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all`}>
                   <feature.icon className="h-8 w-8 mb-4" />
                   <h3 className="text-lg font-black mb-1">{feature.title}</h3>
                   <p className="text-sm opacity-80">{feature.desc}</p>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </div>
@@ -399,16 +397,27 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {[
-                { quote: "Preenchemos 3 vagas técnicas em menos de 10 dias. A automação economizou horas!", name: "João P.", role: "RH Lead", color: "bg-yellow text-foreground" },
-                { quote: "Interface intuitiva e dashboard incrível. Tomada de decisões muito mais fácil.", name: "Ana M.", role: "Recrutadora", color: "bg-cyan text-foreground" },
-                { quote: "A IA de recomendação é surreal. Encontra talentos que encaixam na cultura.", name: "Carlos R.", role: "Gerente", color: "bg-pink text-foreground" },
-                { quote: "Como candidato, o processo é transparente. Recebi feedback super rápido!", name: "Marina S.", role: "Dev", color: "bg-lime text-foreground" },
-              ].map((testimonial, i) => (
-                <div 
-                  key={i} 
-                  className={`${testimonial.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}
-                >
+              {[{
+              quote: "Preenchemos 3 vagas técnicas em menos de 10 dias. A automação economizou horas!",
+              name: "João P.",
+              role: "RH Lead",
+              color: "bg-yellow text-foreground"
+            }, {
+              quote: "Interface intuitiva e dashboard incrível. Tomada de decisões muito mais fácil.",
+              name: "Ana M.",
+              role: "Recrutadora",
+              color: "bg-cyan text-foreground"
+            }, {
+              quote: "A IA de recomendação é surreal. Encontra talentos que encaixam na cultura.",
+              name: "Carlos R.",
+              role: "Gerente",
+              color: "bg-pink text-foreground"
+            }, {
+              quote: "Como candidato, o processo é transparente. Recebi feedback super rápido!",
+              name: "Marina S.",
+              role: "Dev",
+              color: "bg-lime text-foreground"
+            }].map((testimonial, i) => <div key={i} className={`${testimonial.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}>
                   <Quote className="h-8 w-8 opacity-30 mb-4" />
                   <p className="text-lg font-semibold mb-6 leading-relaxed">"{testimonial.quote}"</p>
                   <div className="flex items-center gap-3">
@@ -420,8 +429,7 @@ export default function Home() {
                       <p className="text-sm opacity-70 font-mono">{testimonial.role}</p>
                     </div>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </div>
@@ -460,6 +468,5 @@ export default function Home() {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 }
