@@ -190,18 +190,6 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Quick Stats under video */}
-            <div className="flex flex-wrap justify-center gap-4 mt-6">
-              <div className="bg-yellow text-foreground px-4 py-2 rounded-xl border-3 border-foreground font-bold text-sm">
-                ⏱️ Vídeo de 2 minutos
-              </div>
-              <div className="bg-cyan text-foreground px-4 py-2 rounded-xl border-3 border-foreground font-bold text-sm">
-                🚀 Tour completo do sistema
-              </div>
-              <div className="bg-pink text-foreground px-4 py-2 rounded-xl border-3 border-foreground font-bold text-sm">
-                💡 Dicas exclusivas
-              </div>
-            </div>
           </div>
         </div>
       </section>
