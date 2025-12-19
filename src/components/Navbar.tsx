@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, User, Menu, X, Zap } from 'lucide-react';
 import { SRHIcon } from '@/components/icons/SRHIcon';
 import { 
@@ -19,6 +21,29 @@ export function Navbar() {
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (data?.avatar_url) {
+          setAvatarUrl(data.avatar_url);
+        }
+      }
+    };
+
+    if (isAuthenticated && user) {
+      fetchProfile();
+    } else {
+      setAvatarUrl(null);
+    }
+  }, [isAuthenticated, user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -106,8 +131,17 @@ export function Navbar() {
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <User className="h-5 w-5" />
+                  <Button variant="outline" size="icon" className="rounded-lg overflow-hidden">
+                    {avatarUrl ? (
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={avatarUrl} alt="Foto do perfil" />
+                        <AvatarFallback>
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-5 w-5" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 border-3 border-foreground shadow-brutal">
