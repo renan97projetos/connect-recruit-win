@@ -4,7 +4,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Menu, X, Zap } from 'lucide-react';
+import { LogOut, User, Menu, X, Zap, LayoutDashboard } from 'lucide-react';
 import { SRHIcon } from '@/components/icons/SRHIcon';
 import { 
   DropdownMenu, 
@@ -155,7 +155,7 @@ export function Navbar() {
                   <DropdownMenuSeparator className="bg-foreground" />
                   <DropdownMenuItem asChild>
                     <Link to={getDashboardRoute()} className="cursor-pointer flex items-center font-semibold">
-                      <Zap className="mr-2 h-4 w-4" />
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
                       Minha Área
                     </Link>
                   </DropdownMenuItem>
