@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Linkedin, Instagram, ArrowUpRight } from 'lucide-react';
+import { Linkedin, Instagram, Zap, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { SRHIcon } from '@/components/icons/SRHIcon';
 
 export function Footer() {
   const [socialLinks, setSocialLinks] = useState({
@@ -37,31 +36,36 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-accent text-accent-foreground border-t-2 border-border">
+    <footer className="bg-foreground text-background border-t-3 border-foreground">
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="space-y-4">
-            <SRHIcon size={48} className="text-primary" />
-            <p className="font-body text-sm text-accent-foreground/70 leading-relaxed">
-              Plataforma SaaS para gestão e automação de recrutamento humanizado
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-lg border-3 border-background flex items-center justify-center">
+                <Zap className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-black text-xl">SinapseRH</span>
+            </div>
+            <p className="text-sm opacity-70 leading-relaxed">
+              Plataforma de recrutamento que funciona. Sem complicação, sem enrolação.
             </p>
           </div>
 
-          {/* Company Links */}
+          {/* Links */}
           <div className="space-y-4">
-            <h4 className="font-display text-lg font-semibold">Empresa</h4>
-            <nav className="flex flex-col space-y-3">
+            <h4 className="font-black uppercase tracking-wide">Empresa</h4>
+            <nav className="flex flex-col space-y-2">
               <Link 
                 to="/about" 
-                className="font-body text-sm text-accent-foreground/70 hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
               >
                 Sobre
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
               <Link 
                 to="/contact" 
-                className="font-body text-sm text-accent-foreground/70 hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
               >
                 Contato
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -69,22 +73,22 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Legal Links */}
+          {/* Legal */}
           <div className="space-y-4">
-            <h4 className="font-display text-lg font-semibold">Legal</h4>
-            <nav className="flex flex-col space-y-3">
+            <h4 className="font-black uppercase tracking-wide">Legal</h4>
+            <nav className="flex flex-col space-y-2">
               <Link 
                 to="/privacy-policy" 
-                className="font-body text-sm text-accent-foreground/70 hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
               >
-                Política de Privacidade
+                Privacidade
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
               <Link 
                 to="/terms-of-use" 
-                className="font-body text-sm text-accent-foreground/70 hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
               >
-                Termos de Uso
+                Termos
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </nav>
@@ -92,14 +96,14 @@ export function Footer() {
 
           {/* Social */}
           <div className="space-y-4">
-            <h4 className="font-display text-lg font-semibold">Conecte-se</h4>
-            <div className="flex gap-4">
+            <h4 className="font-black uppercase tracking-wide">Social</h4>
+            <div className="flex gap-3">
               {socialLinks.linkedin && (
                 <a 
                   href={socialLinks.linkedin} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-accent-foreground/10 flex items-center justify-center text-accent-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
+                  className="w-10 h-10 rounded-lg bg-background text-foreground flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all border-3 border-background"
                 >
                   <Linkedin className="h-5 w-5" />
                 </a>
@@ -109,7 +113,7 @@ export function Footer() {
                   href={socialLinks.instagram} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-accent-foreground/10 flex items-center justify-center text-accent-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
+                  className="w-10 h-10 rounded-lg bg-background text-foreground flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all border-3 border-background"
                 >
                   <Instagram className="h-5 w-5" />
                 </a>
@@ -118,14 +122,14 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-accent-foreground/10 mt-12 pt-8">
+        {/* Bottom */}
+        <div className="border-t border-background/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="font-body text-sm text-accent-foreground/60">
+            <p className="text-sm opacity-60">
               © {new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.
             </p>
-            <p className="font-body text-xs text-accent-foreground/40">
-              Feito com cuidado para humanos
+            <p className="text-xs opacity-40 font-mono">
+              FEITO COM ❤️ PARA HUMANOS
             </p>
           </div>
         </div>

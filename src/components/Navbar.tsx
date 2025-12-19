@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Menu, X } from 'lucide-react';
+import { LogOut, User, Menu, X, Zap } from 'lucide-react';
 import { SRHIcon } from '@/components/icons/SRHIcon';
 import { 
   DropdownMenu, 
@@ -58,31 +58,34 @@ export function Navbar() {
 
   const navLinks = [
     { to: "/", label: "Vagas" },
-    { to: "/about", label: "Para Empresas" },
+    { to: "/about", label: "Empresas" },
     { to: "/about", label: "Sobre" },
     { to: "/contact", label: "Ajuda" },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <nav className="sticky top-0 z-50 w-full border-b-3 border-foreground bg-background">
       <div className="container mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center gap-2 group" 
+            className="flex items-center gap-3 group" 
             onClick={handleLogoClick}
           >
-            <SRHIcon size={40} className="text-primary transition-transform group-hover:scale-105" />
+            <div className="w-10 h-10 bg-primary rounded-lg border-3 border-foreground flex items-center justify-center shadow-brutal group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-brutal-hover transition-all">
+              <Zap className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-xl tracking-tight hidden sm:block">SinapseRH</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex flex-1 items-center justify-center gap-8">
+          <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link 
                 key={link.label}
                 to={link.to} 
-                className="font-body font-medium text-foreground/80 hover:text-primary transition-colors link-editorial"
+                className="px-4 py-2 font-semibold text-sm uppercase tracking-wide hover:bg-secondary rounded-lg transition-colors"
               >
                 {link.label}
               </Link>
@@ -93,38 +96,38 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {!isAuthenticated ? (
               <>
-                <Button variant="ghost" asChild className="font-body">
+                <Button variant="ghost" asChild>
                   <Link to="/login">Entrar</Link>
                 </Button>
-                <Button asChild className="font-body shadow-sm">
+                <Button variant="yellow" asChild>
                   <Link to="/register">Cadastrar</Link>
                 </Button>
               </>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full border-2">
+                  <Button variant="outline" size="icon">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 border-2">
+                <DropdownMenuContent align="end" className="w-56 border-3 border-foreground shadow-brutal">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
-                      <span className="font-body font-medium">{user?.email}</span>
-                      <span className="font-body text-xs text-muted-foreground">
-                        {userRole === 'admin' ? 'Administrador' : userRole === 'company' ? 'Empresa' : 'Candidato'}
+                      <span className="font-bold">{user?.email}</span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {userRole === 'admin' ? 'ADMIN' : userRole === 'company' ? 'EMPRESA' : 'CANDIDATO'}
                       </span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-foreground" />
                   <DropdownMenuItem asChild>
-                    <Link to={getDashboardRoute()} className="cursor-pointer flex items-center font-body">
-                      <SRHIcon size={16} className="mr-2" />
+                    <Link to={getDashboardRoute()} className="cursor-pointer flex items-center font-semibold">
+                      <Zap className="mr-2 h-4 w-4" />
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive font-body">
+                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive font-semibold">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
                   </DropdownMenuItem>
@@ -146,25 +149,25 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
+          <div className="md:hidden py-4 border-t-3 border-foreground">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link 
                   key={link.label}
                   to={link.to} 
-                  className="font-body font-medium py-2 px-4 rounded-lg hover:bg-muted transition-colors"
+                  className="font-semibold py-3 px-4 rounded-lg hover:bg-secondary transition-colors uppercase tracking-wide"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="border-t border-border mt-2 pt-4 flex flex-col gap-2">
+              <div className="border-t-3 border-foreground mt-2 pt-4 flex flex-col gap-2">
                 {!isAuthenticated ? (
                   <>
-                    <Button variant="ghost" asChild className="justify-start font-body">
+                    <Button variant="ghost" asChild className="justify-start">
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Entrar</Link>
                     </Button>
-                    <Button asChild className="font-body">
+                    <Button variant="yellow" asChild>
                       <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Cadastrar</Link>
                     </Button>
                   </>
@@ -172,12 +175,12 @@ export function Navbar() {
                   <>
                     <Link 
                       to={getDashboardRoute()} 
-                      className="font-body font-medium py-2 px-4 rounded-lg hover:bg-muted transition-colors"
+                      className="font-semibold py-3 px-4 rounded-lg hover:bg-secondary transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Dashboard
                     </Link>
-                    <Button variant="ghost" onClick={handleLogout} className="justify-start text-destructive font-body">
+                    <Button variant="ghost" onClick={handleLogout} className="justify-start text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sair
                     </Button>

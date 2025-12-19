@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star } from 'lucide-react';
+import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star, Rocket, Target, Heart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { JobFiltersComponent, JobFilters } from '@/components/JobFilters';
@@ -118,8 +117,8 @@ export default function Home() {
 
   const getJobTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      'full-time': 'Tempo Integral',
-      'part-time': 'Meio Período',
+      'full-time': 'Full-time',
+      'part-time': 'Part-time',
       'contract': 'Contrato',
       'freelance': 'Freelance',
       'internship': 'Estágio'
@@ -147,93 +146,80 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Marquee Banner - Editorial Style */}
-      <div className="w-full overflow-hidden bg-accent py-3 border-y-2 border-foreground/10">
-        <div className="relative flex items-center">
+      {/* Marquee Banner - Neubrutalist */}
+      <div className="w-full overflow-hidden bg-yellow border-y-3 border-foreground">
+        <div className="relative flex items-center py-3">
           <div className="flex animate-marquee whitespace-nowrap items-center">
-            {[1, 2, 3, 4].map((i) => (
-              <span key={i} className="mx-12 flex items-center gap-4 text-lg font-body font-medium text-accent-foreground">
-                <Star className="h-4 w-4 text-primary fill-primary" />
-                <span className="italic">Multiplique seu RH por 10</span>
-                <span className="text-primary">•</span>
-                <span>É hora de colocar um sistema para trabalhar por você</span>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <span key={i} className="mx-8 flex items-center gap-3 text-base font-bold uppercase tracking-wide text-foreground">
+                <Star className="h-5 w-5 fill-current" />
+                Multiplique seu RH por 10
+                <span className="text-2xl">→</span>
+                Sistema trabalhando por você
               </span>
             ))}
           </div>
         </div>
       </div>
       
-      {/* Hero Section - Editorial Design */}
-      <section className="relative overflow-hidden">
-        {/* Organic background shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary/5 rounded-blob animate-float" />
-          <div className="absolute top-1/2 -left-32 w-64 h-64 bg-secondary/30 rounded-organic" style={{ animationDelay: '2s' }} />
-        </div>
+      {/* Hero Section - NEUBRUTALIST */}
+      <section className="border-b-3 border-foreground">
+        <div className="container px-4 py-16 md:py-24 mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left content */}
+            <div className="space-y-8">
+              <div className="inline-block">
+                <span className="sticker">
+                  🚀 Novo
+                </span>
+              </div>
 
-        <div className="container px-4 py-20 md:py-32 mx-auto relative">
-          <div className="max-w-5xl mx-auto">
-            {/* Stamp badge */}
-            <div className="flex justify-center mb-8">
-              <span className="stamp text-primary border-primary">
-                Recrutamento humanizado
-              </span>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[0.9] tracking-tight">
+                Encontre o{' '}
+                <span className="bg-primary text-primary-foreground px-2 -rotate-1 inline-block">talento</span>{' '}
+                certo, na hora certa
+              </h1>
+
+              <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
+                Automatize seu RH e economize{' '}
+                <span className="bg-yellow px-1 font-bold">90% do tempo</span>{' '}
+                gasto em recrutamento. Sem complicação.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" asChild>
+                  <a href="#vagas">
+                    Ver vagas
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </a>
+                </Button>
+                <Button size="lg" variant="yellow" asChild>
+                  <Link to="/prospect-funnel">
+                    Sou empresa
+                    <Rocket className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
             </div>
 
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] text-center mb-8">
-              Encontre o{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10">talento certo</span>
-                <svg className="absolute -bottom-2 left-0 w-full h-4 text-primary/30" viewBox="0 0 200 12" preserveAspectRatio="none">
-                  <path d="M0 8 Q50 0, 100 8 T200 8" stroke="currentColor" strokeWidth="4" fill="none" />
-                </svg>
-              </span>
-              , na hora certa
-            </h1>
-
-            <p className="font-body text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto text-center mb-12 leading-relaxed">
-              Automatize seu RH e economize{' '}
-              <span className="text-primary font-semibold">90% do tempo</span>{' '}
-              gasto em recrutamento
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" asChild className="text-lg px-8 py-6 shadow-editorial hover:translate-x-[-2px] hover:translate-y-[-2px] transition-transform">
-                <a href="#vagas">
-                  Ver vagas disponíveis
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </a>
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                asChild 
-                className="text-lg px-8 py-6 border-2 border-foreground/20 hover:border-primary hover:bg-primary/5 transition-all"
-              >
-                <Link to="/prospect-funnel">
-                  Para Empresas — Começar
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Banner - Editorial Cards */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="card-editorial p-8 text-center rotate-slight-left">
-              <p className="font-display text-5xl font-bold text-primary mb-2">+120</p>
-              <p className="font-body text-sm text-muted-foreground uppercase tracking-wide">empresas ativas</p>
-            </div>
-            <div className="card-editorial p-8 text-center">
-              <p className="font-display text-5xl font-bold text-primary mb-2">+10k</p>
-              <p className="font-body text-sm text-muted-foreground uppercase tracking-wide">candidatos cadastrados</p>
-            </div>
-            <div className="card-editorial p-8 text-center rotate-slight-right">
-              <p className="font-display text-5xl font-bold text-primary mb-2">Rápido</p>
-              <p className="font-body text-sm text-muted-foreground uppercase tracking-wide">recrutamento inteligente</p>
+            {/* Right - Stats Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="card-yellow p-6 tilt-left">
+                <p className="text-5xl font-black">+120</p>
+                <p className="text-sm font-bold uppercase tracking-wide mt-2">Empresas</p>
+              </div>
+              <div className="card-cyan p-6 tilt-right">
+                <p className="text-5xl font-black">+10k</p>
+                <p className="text-sm font-bold uppercase tracking-wide mt-2">Candidatos</p>
+              </div>
+              <div className="card-pink p-6 tilt-right">
+                <p className="text-5xl font-black">90%</p>
+                <p className="text-sm font-bold uppercase tracking-wide mt-2">Tempo salvo</p>
+              </div>
+              <div className="card-lime p-6 tilt-left">
+                <p className="text-5xl font-black">24h</p>
+                <p className="text-sm font-bold uppercase tracking-wide mt-2">Suporte</p>
+              </div>
             </div>
           </div>
         </div>
@@ -243,109 +229,91 @@ export default function Home() {
       <section id="vagas" className="container mx-auto px-4 py-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-[300px,1fr] gap-8">
-            {/* Filters Sidebar */}
             <JobFiltersComponent filters={filters} onFilterChange={setFilters} onReset={resetFilters} />
 
-            {/* Jobs List */}
             <div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h2 className="font-display text-3xl font-bold">Vagas Abertas</h2>
-                  <p className="font-body text-sm text-muted-foreground mt-2">
-                    {filteredJobs.length} {filteredJobs.length === 1 ? 'vaga encontrada' : 'vagas encontradas'}
+                  <h2 className="text-4xl font-black">Vagas Abertas</h2>
+                  <p className="text-sm text-muted-foreground mt-2 font-mono">
+                    {filteredJobs.length} {filteredJobs.length === 1 ? 'vaga' : 'vagas'} disponíveis
                   </p>
                 </div>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px] border-2">
-                    <SelectValue placeholder="Ordenar por" />
+                  <SelectTrigger className="w-[180px] border-3 border-foreground shadow-brutal">
+                    <SelectValue placeholder="Ordenar" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="border-3 border-foreground shadow-brutal">
                     <SelectItem value="date">Mais recentes</SelectItem>
                     <SelectItem value="salary">Maior salário</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="grid gap-6">
+              <div className="grid gap-4">
                 {loading ? (
-                  <Card className="border-2 border-dashed">
-                    <CardContent className="py-12 text-center">
-                      <div className="animate-pulse">
-                        <p className="text-muted-foreground font-body">Carregando vagas...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="card-brutal p-12 text-center bg-muted">
+                    <div className="animate-bounce-subtle inline-block">
+                      <Zap className="h-12 w-12 text-primary" />
+                    </div>
+                    <p className="text-muted-foreground font-bold mt-4">Carregando vagas...</p>
+                  </div>
                 ) : filteredJobs.length === 0 ? (
-                  <Card className="border-2 border-dashed bg-muted/30">
-                    <CardContent className="py-16 text-center space-y-6">
-                      <div className="w-20 h-20 mx-auto bg-primary/10 rounded-blob flex items-center justify-center">
-                        <Search className="h-10 w-10 text-primary" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="font-display text-2xl font-semibold">Nenhuma vaga disponível no momento</h3>
-                        <p className="font-body text-muted-foreground">
-                          Em breve novas oportunidades serão publicadas
-                        </p>
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-                        <Button asChild size="lg">
-                          <Link to="/register">Cadastrar currículo</Link>
-                        </Button>
-                        <Button asChild variant="outline" size="lg" className="border-2">
-                          <Link to="/contact">Entre em contato</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="card-brutal p-12 text-center bg-yellow">
+                    <Search className="h-16 w-16 mx-auto mb-4" />
+                    <h3 className="text-2xl font-black mb-2">Nenhuma vaga no momento</h3>
+                    <p className="text-muted-foreground mb-6">Em breve novas oportunidades!</p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button asChild>
+                        <Link to="/register">Cadastrar currículo</Link>
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link to="/contact">Falar conosco</Link>
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
-                  filteredJobs.map((job, index) => (
-                    <Card 
-                      key={job.id} 
-                      className="border-2 border-border hover:border-primary/30 transition-all duration-300 hover:shadow-md group"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
+                  filteredJobs.map((job) => (
+                    <Card key={job.id} className="group">
                       <CardHeader>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <CardTitle className="font-display text-xl mb-2 group-hover:text-primary transition-colors">
+                            <CardTitle className="text-xl group-hover:text-primary transition-colors">
                               {job.title}
                             </CardTitle>
-                            <CardDescription className="flex items-center gap-2 font-body">
+                            <CardDescription className="flex items-center gap-2 mt-1">
                               <Building2 className="h-4 w-4" />
                               {job.company_name}
                             </CardDescription>
                           </div>
-                          <Badge 
-                            variant="secondary" 
-                            className="font-body text-xs uppercase tracking-wide border border-current"
-                          >
+                          <span className="badge-brutal text-xs">
                             {getJobTypeLabel(job.job_type)}
-                          </Badge>
+                          </span>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="font-body text-sm text-muted-foreground line-clamp-2 mb-4">
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
                           {job.description}
                         </p>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground font-body">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4 text-primary" />
+                        <div className="flex flex-wrap gap-3 text-sm">
+                          <span className="inline-flex items-center gap-1 bg-secondary px-2 py-1 rounded-lg font-semibold">
+                            <MapPin className="h-3 w-3" />
                             {getLocationLabel(job.location)}
-                            {job.city && ` • ${job.city}, ${job.state}`}
-                          </div>
+                            {job.city && ` • ${job.city}`}
+                          </span>
                           {job.salary_min && job.salary_max && (
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4 text-primary" />
+                            <span className="inline-flex items-center gap-1 bg-lime px-2 py-1 rounded-lg font-semibold">
+                              <DollarSign className="h-3 w-3" />
                               {formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}
-                            </div>
+                            </span>
                           )}
                         </div>
                       </CardContent>
                       <CardFooter>
-                        <Button asChild variant="outline" className="w-full group/btn border-2 hover:bg-primary hover:text-primary-foreground hover:border-primary">
+                        <Button asChild variant="outline" className="w-full">
                           <Link to={`/jobs/${job.id}`}>
                             Ver detalhes
-                            <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                            <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
                         </Button>
                       </CardFooter>
@@ -358,43 +326,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Como Funciona - Editorial Steps */}
-      <section className="bg-muted/50 py-20">
+      {/* Como Funciona - Chunky Steps */}
+      <section className="bg-primary text-primary-foreground py-20 border-y-3 border-foreground">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
-              <span className="stamp text-muted-foreground border-muted-foreground mb-4 inline-block">
-                Simples assim
+              <span className="inline-block bg-yellow text-foreground px-4 py-2 rounded-xl border-3 border-foreground font-bold uppercase tracking-wide text-sm mb-4">
+                Super simples
               </span>
-              <h2 className="font-display text-4xl md:text-5xl font-bold mt-4">Como Funciona</h2>
+              <h2 className="text-4xl md:text-5xl font-black">Como Funciona</h2>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 relative">
-              {/* Connection line */}
-              <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-
+            <div className="grid md:grid-cols-3 gap-6">
               {[
-                { icon: CheckCircle2, title: "Cadastre-se", desc: "Crie sua conta como empresa ou candidato em poucos minutos", num: "01" },
-                { icon: Users, title: "Conecte-se", desc: "Publique vagas ou encontre oportunidades ideais para você", num: "02" },
-                { icon: BarChart3, title: "Acompanhe", desc: "Receba notificações e gerencie tudo em um único painel", num: "03" },
+                { icon: CheckCircle2, title: "Cadastre-se", desc: "Crie sua conta em minutos", num: "01", color: "bg-yellow text-foreground" },
+                { icon: Users, title: "Conecte-se", desc: "Publique ou encontre vagas", num: "02", color: "bg-cyan text-foreground" },
+                { icon: BarChart3, title: "Acompanhe", desc: "Gerencie tudo em um painel", num: "03", color: "bg-pink text-foreground" },
               ].map((step, i) => (
-                <div key={i} className="relative">
-                  <Card className="text-center border-2 hover:border-primary/30 transition-all h-full bg-background">
-                    <CardHeader>
-                      <div className="relative mx-auto mb-4">
-                        <div className="h-20 w-20 rounded-blob bg-primary/10 flex items-center justify-center">
-                          <step.icon className="h-10 w-10 text-primary" />
-                        </div>
-                        <span className="absolute -top-2 -right-2 font-display text-4xl font-bold text-primary/20">
-                          {step.num}
-                        </span>
-                      </div>
-                      <CardTitle className="font-display text-xl">{step.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="font-body text-muted-foreground">{step.desc}</p>
-                    </CardContent>
-                  </Card>
+                <div key={i} className={`${step.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <step.icon className="h-10 w-10" />
+                    <span className="font-mono text-4xl font-black opacity-30">{step.num}</span>
+                  </div>
+                  <h3 className="text-xl font-black mb-2">{step.title}</h3>
+                  <p className="text-sm opacity-80">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -402,83 +357,67 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features - Asymmetric Grid */}
+      {/* Features */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-                Por que escolher nossa plataforma?
-              </h2>
-              <p className="font-body text-lg text-muted-foreground">Recursos que fazem a diferença</p>
+              <h2 className="text-4xl md:text-5xl font-black mb-4">Por que escolher a gente?</h2>
+              <p className="text-lg text-muted-foreground">Recursos que fazem diferença de verdade</p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icon: Zap, title: "Automação completa", desc: "Automatize todo o processo seletivo e economize tempo valioso", featured: true },
-                { icon: Search, title: "Filtros inteligentes", desc: "Encontre o match perfeito entre talentos e oportunidades" },
-                { icon: BarChart3, title: "Dashboard completo", desc: "Indicadores e métricas de recrutamento em tempo real" },
-                { icon: Brain, title: "IA que recomenda", desc: "Inteligência artificial sugere os candidatos ideais" },
-                { icon: Clock, title: "Rápido e intuitivo", desc: "Plataforma leve com interface fácil de usar" },
-                { icon: Users, title: "Gestão eficiente", desc: "Controle total de candidatos e processos seletivos" },
+                { icon: Zap, title: "Automação total", desc: "Todo processo seletivo automatizado", bg: "bg-yellow" },
+                { icon: Search, title: "Filtros smart", desc: "Match perfeito entre talento e vaga", bg: "bg-cyan" },
+                { icon: BarChart3, title: "Dashboard show", desc: "Métricas em tempo real", bg: "bg-pink" },
+                { icon: Brain, title: "IA que ajuda", desc: "Recomendações inteligentes", bg: "bg-lime" },
+                { icon: Clock, title: "Rápido demais", desc: "Interface leve e intuitiva", bg: "bg-secondary" },
+                { icon: Heart, title: "Suporte humano", desc: "Time de verdade te ajudando", bg: "bg-primary text-primary-foreground" },
               ].map((feature, i) => (
-                <Card 
+                <div 
                   key={i} 
-                  className={`border-2 transition-all hover:shadow-md ${
-                    feature.featured ? 'md:col-span-2 lg:col-span-1 bg-primary/5 border-primary/20' : 'hover:border-primary/30'
-                  }`}
+                  className={`${feature.bg} p-6 rounded-xl border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all`}
                 >
-                  <CardHeader>
-                    <div className="flex items-start gap-4">
-                      <div className={`h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        feature.featured ? 'bg-primary text-primary-foreground' : 'bg-primary/10'
-                      }`}>
-                        <feature.icon className={`h-6 w-6 ${feature.featured ? '' : 'text-primary'}`} />
-                      </div>
-                      <div>
-                        <CardTitle className="font-display text-xl">{feature.title}</CardTitle>
-                        <CardDescription className="font-body mt-2">{feature.desc}</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
+                  <feature.icon className="h-8 w-8 mb-4" />
+                  <h3 className="text-lg font-black mb-1">{feature.title}</h3>
+                  <p className="text-sm opacity-80">{feature.desc}</p>
+                </div>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials - Editorial Quote Style */}
-      <section className="bg-accent text-accent-foreground py-20">
+      {/* Testimonials */}
+      <section className="bg-foreground text-background py-20 border-y-3 border-foreground">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">O que dizem sobre nós</h2>
-              <p className="font-body text-lg text-accent-foreground/70">Histórias reais de sucesso</p>
+              <h2 className="text-4xl md:text-5xl font-black mb-4">O que dizem sobre nós</h2>
+              <p className="text-lg opacity-70">Histórias reais de sucesso</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-6">
               {[
-                { quote: "Preenchemos 3 vagas técnicas em menos de 10 dias com esta plataforma. A automação do processo seletivo economizou horas de trabalho manual.", name: "João P.", role: "Coordenador de RH" },
-                { quote: "Interface intuitiva, fácil de usar e economiza tempo. O dashboard com métricas ajuda muito na tomada de decisões.", name: "Ana M.", role: "Analista de Recrutamento" },
-                { quote: "A recomendação de candidatos por IA é impressionante. Conseguimos encontrar talentos que realmente se encaixam na cultura da empresa.", name: "Carlos R.", role: "Gerente de Talentos" },
-                { quote: "Como candidato, adorei a facilidade de encontrar vagas e me candidatar. O processo é transparente e recebi feedback rapidamente.", name: "Marina S.", role: "Desenvolvedora Full Stack" },
+                { quote: "Preenchemos 3 vagas técnicas em menos de 10 dias. A automação economizou horas!", name: "João P.", role: "RH Lead", color: "bg-yellow text-foreground" },
+                { quote: "Interface intuitiva e dashboard incrível. Tomada de decisões muito mais fácil.", name: "Ana M.", role: "Recrutadora", color: "bg-cyan text-foreground" },
+                { quote: "A IA de recomendação é surreal. Encontra talentos que encaixam na cultura.", name: "Carlos R.", role: "Gerente", color: "bg-pink text-foreground" },
+                { quote: "Como candidato, o processo é transparente. Recebi feedback super rápido!", name: "Marina S.", role: "Dev", color: "bg-lime text-foreground" },
               ].map((testimonial, i) => (
                 <div 
                   key={i} 
-                  className="relative p-8 bg-accent-foreground/5 rounded-lg border border-accent-foreground/10"
+                  className={`${testimonial.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}
                 >
-                  <Quote className="h-10 w-10 text-primary/30 absolute top-6 right-6" />
-                  <p className="font-body text-lg leading-relaxed mb-6 text-accent-foreground/90">
-                    "{testimonial.quote}"
-                  </p>
+                  <Quote className="h-8 w-8 opacity-30 mb-4" />
+                  <p className="text-lg font-semibold mb-6 leading-relaxed">"{testimonial.quote}"</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="font-display font-bold text-primary">{testimonial.name[0]}</span>
+                    <div className="w-10 h-10 rounded-full bg-foreground/20 flex items-center justify-center font-black">
+                      {testimonial.name[0]}
                     </div>
                     <div>
-                      <p className="font-body font-semibold">{testimonial.name}</p>
-                      <p className="font-body text-sm text-accent-foreground/60">{testimonial.role}</p>
+                      <p className="font-bold">{testimonial.name}</p>
+                      <p className="text-sm opacity-70 font-mono">{testimonial.role}</p>
                     </div>
                   </div>
                 </div>
@@ -488,34 +427,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Final - Bold Editorial */}
-      <section className="relative py-24 overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent" />
-          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-secondary/30 rounded-blob" />
-        </div>
-
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-3xl mx-auto text-center space-y-8">
-            <span className="stamp text-primary border-primary">
-              Comece agora
+      {/* CTA Final */}
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="sticker mb-6 inline-block">
+              ⚡ Bora?
             </span>
-            <h2 className="font-display text-5xl md:text-6xl font-bold leading-tight">
-              Transforme seu recrutamento hoje
+            <h2 className="text-5xl md:text-6xl font-black mb-6 leading-tight">
+              Transforme seu recrutamento{' '}
+              <span className="bg-yellow px-2 inline-block -rotate-1">hoje</span>
             </h2>
-            <p className="font-body text-xl text-muted-foreground">
-              Crie sua conta gratuita e experimente a plataforma agora mesmo
+            <p className="text-xl text-muted-foreground mb-8">
+              Conta gratuita. Começa em 2 minutos. Sem cartão.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Button size="lg" asChild className="text-lg px-8 py-6 shadow-editorial">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" asChild>
                 <Link to="/register">
                   Sou empresa
                   <Sparkles className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="text-lg px-8 py-6 border-2">
-                <Link to="/register">Sou candidato</Link>
+              <Button size="lg" variant="cyan" asChild>
+                <Link to="/register">
+                  Sou candidato
+                  <Target className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
             </div>
           </div>

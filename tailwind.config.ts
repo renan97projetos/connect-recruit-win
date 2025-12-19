@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Playfair Display', 'Georgia', 'serif'],
-        body: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        display: ['DM Sans', 'system-ui', 'sans-serif'],
+        body: ['DM Sans', 'system-ui', 'sans-serif'],
+        mono: ['Space Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -74,32 +75,28 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Editorial design tokens
-        stamp: "hsl(var(--stamp))",
-        ink: "hsl(var(--ink))",
-        cream: "hsl(var(--cream))",
-        sage: "hsl(var(--sage))",
-        terracotta: "hsl(var(--terracotta))",
-        clay: "hsl(var(--clay))",
-      },
-      backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-soft': 'var(--gradient-soft)',
-        'gradient-warm': 'var(--gradient-warm)',
-        'gradient-editorial': 'var(--gradient-editorial)',
+        // Neubrutalist feature colors
+        yellow: "hsl(var(--yellow))",
+        pink: "hsl(var(--pink))",
+        cyan: "hsl(var(--cyan))",
+        lime: "hsl(var(--lime))",
+        violet: "hsl(var(--violet))",
+        coral: "hsl(var(--coral))",
       },
       boxShadow: {
-        'sm': 'var(--shadow-sm)',
-        'md': 'var(--shadow-md)',
-        'lg': 'var(--shadow-lg)',
-        'editorial': 'var(--shadow-editorial)',
+        'brutal': 'var(--shadow-brutal)',
+        'brutal-lg': 'var(--shadow-brutal-lg)',
+        'brutal-xl': 'var(--shadow-brutal-xl)',
+        'brutal-hover': 'var(--shadow-brutal-hover)',
+      },
+      borderWidth: {
+        '3': '3px',
+        '4': '4px',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        organic: "60% 40% 55% 45% / 45% 55% 45% 55%",
-        blob: "30% 70% 70% 30% / 30% 30% 70% 70%",
       },
       keyframes: {
         "accordion-down": {
@@ -114,21 +111,21 @@ export default {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
         },
-        "float": {
-          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
-          "50%": { transform: "translateY(-10px) rotate(2deg)" },
+        "bounce-subtle": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
         },
-        "fade-in-up": {
-          "0%": { opacity: "0", transform: "translateY(20px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+        "wiggle": {
+          "0%, 100%": { transform: "rotate(-2deg)" },
+          "50%": { transform: "rotate(2deg)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "marquee": "marquee 40s linear infinite",
-        "float": "float 6s ease-in-out infinite",
-        "fade-in-up": "fade-in-up 0.6s ease-out forwards",
+        "marquee": "marquee 25s linear infinite",
+        "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
+        "wiggle": "wiggle 0.5s ease-in-out infinite",
       },
     },
   },
