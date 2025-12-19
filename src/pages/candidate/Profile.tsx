@@ -109,7 +109,7 @@ export default function CandidateProfile() {
   const [newSkill, setNewSkill] = useState('');
 
   // Fetch profile data
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error: profileError } = useQuery({
     queryKey: ['candidate-profile', user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -120,7 +120,10 @@ export default function CandidateProfile() {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
       
       return {
         ...data,
@@ -130,6 +133,8 @@ export default function CandidateProfile() {
       } as ProfileData;
     },
     enabled: !!user,
+    retry: 1,
+    staleTime: 30000,
   });
 
   // Update profile mutation
@@ -392,10 +397,15 @@ export default function CandidateProfile() {
     );
   }
 
-  if (!profile) {
+  if (profileError || !profile) {
     return (
       <CandidateLayout title="Meu Perfil" description="Perfil não encontrado">
-        <p>Não foi possível carregar seu perfil.</p>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">Não foi possível carregar seu perfil.</p>
+          <p className="text-sm text-muted-foreground">
+            {profileError ? `Erro: ${(profileError as any).message}` : 'Perfil não encontrado para este usuário.'}
+          </p>
+        </div>
       </CandidateLayout>
     );
   }
