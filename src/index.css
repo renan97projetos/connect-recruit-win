@@ -280,6 +280,14 @@
   }
 }
 
+/* Hide native password reveal icon in browsers */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input::-webkit-textfield-decoration-container {
+  display: none !important;
+}
+
 /* Keyframes */
 @keyframes marquee {
   0% { transform: translateX(0%); }
