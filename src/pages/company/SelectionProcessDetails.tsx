@@ -4,18 +4,16 @@ import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, User, Mail, TrendingUp, MessageSquare, CheckCircle, XCircle, HelpCircle, Star, Filter, Phone, Archive, Eye, FileText, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, User, Mail, TrendingUp, MessageSquare, CheckCircle, XCircle, Star, Filter, Phone, Archive, Eye, FileText, Link as LinkIcon, Settings, ChevronRight, GripVertical, Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ApplicationStatus } from '@/types';
+import { ApplicationStatus, WorkflowStageData } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,11 +28,12 @@ import { CandidateProfileView } from '@/components/CandidateProfileView';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 
-const WORKFLOW_STAGES = [
-  { id: 'triagem', name: 'Triagem', description: 'Candidatos em triagem inicial. Análise de currículos e primeira avaliação.' },
-  { id: 'entrevista', name: 'Entrevista', description: 'Candidatos aprovados para entrevista. Agendamento e realização de entrevistas.' },
-  { id: 'avaliacao', name: 'Avaliações', description: 'Análise de testes e avaliações técnicas/comportamentais.' },
-  { id: 'admissao', name: 'Contratação', description: 'Fase final: elaboração de proposta e formalização da contratação.' },
+// Fallback stages quando não há workflow configurado
+const DEFAULT_STAGES = [
+  { id: 'triagem', name: 'Triagem', stage_type: 'screening', order_position: 1, description: 'Análise de currículos e primeira avaliação.' },
+  { id: 'entrevista', name: 'Entrevista', stage_type: 'hr_interview', order_position: 2, description: 'Agendamento e realização de entrevistas.' },
+  { id: 'avaliacao', name: 'Avaliações', stage_type: 'practical_test', order_position: 3, description: 'Análise de testes e avaliações.' },
+  { id: 'admissao', name: 'Contratação', stage_type: 'final_approval', order_position: 4, description: 'Proposta e formalização da contratação.' },
 ];
 
 export default function SelectionProcessDetails() {
@@ -43,6 +42,8 @@ export default function SelectionProcessDetails() {
   const { toast } = useToast();
   const [job, setJob] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
+  const [workflowStages, setWorkflowStages] = useState<any[]>([]);
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [noteContent, setNoteContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -68,6 +69,7 @@ export default function SelectionProcessDetails() {
     
     setLoading(true);
     
+    // Carregar vaga
     const { data: jobData, error: jobError } = await supabase
       .from('jobs')
       .select('*')
@@ -83,7 +85,44 @@ export default function SelectionProcessDetails() {
     if (jobData) {
       setJob(jobData);
     }
+
+    // Carregar workflow e etapas dinâmicas
+    const { data: workflowData, error: workflowError } = await supabase
+      .from('workflows')
+      .select('*')
+      .eq('job_id', id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (workflowError) {
+      console.error('Error loading workflow:', workflowError);
+    }
+
+    if (workflowData) {
+      setWorkflowId(workflowData.id);
+      
+      // Carregar etapas do workflow
+      const { data: stagesData, error: stagesError } = await supabase
+        .from('workflow_stages')
+        .select('*')
+        .eq('workflow_id', workflowData.id)
+        .eq('is_active', true)
+        .order('order_position');
+
+      if (stagesError) {
+        console.error('Error loading stages:', stagesError);
+        setWorkflowStages(DEFAULT_STAGES);
+      } else if (stagesData && stagesData.length > 0) {
+        setWorkflowStages(stagesData);
+      } else {
+        setWorkflowStages(DEFAULT_STAGES);
+      }
+    } else {
+      // Sem workflow configurado, usa etapas padrão
+      setWorkflowStages(DEFAULT_STAGES);
+    }
     
+    // Carregar candidaturas
     const { data: appsData, error: appsError } = await supabase
       .from('applications')
       .select('*')
@@ -104,7 +143,6 @@ export default function SelectionProcessDetails() {
         .select('id, phone')
         .in('id', candidateIds);
       
-      // Adicionar telefone aos dados das applications
       const enrichedApps = appsData.map(app => ({
         ...app,
         candidate_phone: profilesData?.find(p => p.id === app.candidate_id)?.phone || null
@@ -119,7 +157,10 @@ export default function SelectionProcessDetails() {
   };
 
   const getApplicationsByStage = (stageId: string) => {
-    const stageApps = applications.filter(app => (app.current_stage || 'triagem') === stageId);
+    const stageApps = applications.filter(app => {
+      const currentStage = app.current_stage || workflowStages[0]?.id || 'triagem';
+      return currentStage === stageId;
+    });
     if (showFavoritesOnly) {
       return stageApps.filter(app => app.is_favorite);
     }
@@ -198,10 +239,26 @@ export default function SelectionProcessDetails() {
   };
 
   const handleMoveToStage = async (application: any, newStageId: string) => {
+    const currentStage = application.current_stage || workflowStages[0]?.id;
+    const stage = workflowStages.find(s => s.id === newStageId);
+    
+    // Atualizar histórico de etapas
+    const currentHistory = application.stage_history || [];
+    const updatedHistory = [
+      ...currentHistory,
+      {
+        stage_id: newStageId,
+        stage_name: stage?.name,
+        entered_at: new Date().toISOString(),
+        from_stage: currentStage,
+      }
+    ];
+
     const { error } = await supabase
       .from('applications')
       .update({
         current_stage: newStageId,
+        stage_history: updatedHistory as any,
         updated_at: new Date().toISOString(),
       })
       .eq('id', application.id);
@@ -216,34 +273,50 @@ export default function SelectionProcessDetails() {
       return;
     }
 
+    // Se tiver workflow configurado, criar registro em candidate_stages
+    if (workflowId) {
+      await supabase
+        .from('candidate_stages')
+        .insert({
+          workflow_id: workflowId,
+          job_id: id,
+          candidate_id: application.candidate_id,
+          stage_id: newStageId,
+          status: 'pending',
+          entered_at: new Date().toISOString(),
+        });
+    }
+
     loadJobAndApplications();
     
-    const stage = WORKFLOW_STAGES.find(s => s.id === newStageId);
     toast({
       title: 'Candidato movido',
       description: `Candidato movido para ${stage?.name}.`,
     });
   };
 
+  const isLastStage = (stageId: string) => {
+    const lastStage = workflowStages[workflowStages.length - 1];
+    return lastStage?.id === stageId;
+  };
+
   const handleUpdateStatus = async (application: any, newStatus: ApplicationStatus) => {
-    const currentStage = application.current_stage || 'triagem';
+    const currentStage = application.current_stage || workflowStages[0]?.id;
     
-    // Apenas permite aprovação na etapa de Contratação
-    if (newStatus === 'approved' && currentStage !== 'admissao') {
+    // Apenas permite aprovação na última etapa
+    if (newStatus === 'approved' && !isLastStage(currentStage)) {
+      const lastStage = workflowStages[workflowStages.length - 1];
       toast({
         title: 'Ação não permitida',
-        description: 'Candidatos só podem ser aprovados na etapa de Contratação.',
+        description: `Candidatos só podem ser aprovados na etapa de ${lastStage?.name || 'Contratação'}.`,
         variant: 'destructive',
       });
       return;
     }
 
-    // Se está aprovando na etapa de Contratação, criar registro de colaborador
-    if (newStatus === 'approved' && currentStage === 'admissao') {
+    // Se está aprovando na última etapa, criar registro de colaborador
+    if (newStatus === 'approved' && isLastStage(currentStage)) {
       try {
-        console.log('Iniciando processo de contratação para:', application.candidate_id);
-        
-        // Buscar dados do perfil do candidato
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -260,11 +333,9 @@ export default function SelectionProcessDetails() {
           return;
         }
 
-        // Buscar dados da empresa
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          console.error('User not authenticated');
           toast({
             title: 'Erro',
             description: 'Usuário não autenticado.',
@@ -273,15 +344,7 @@ export default function SelectionProcessDetails() {
           return;
         }
 
-        console.log('User ID:', user.id);
-        console.log('Creating employee with data:', {
-          company_id: user.id,
-          nome: profileData?.name || application.candidate_name,
-          email_corporativo: application.candidate_email,
-        });
-
-        // Criar registro do colaborador
-        const { data: employeeData, error: employeeError } = await supabase
+        const { error: employeeError } = await supabase
           .from('employees')
           .insert({
             company_id: user.id,
@@ -297,8 +360,7 @@ export default function SelectionProcessDetails() {
             horario_entrada: '08:00',
             horario_saida: '17:00',
             status: 'aguardando_cadastro',
-          })
-          .select();
+          });
 
         if (employeeError) {
           console.error('Error creating employee:', employeeError);
@@ -309,8 +371,6 @@ export default function SelectionProcessDetails() {
           });
           return;
         }
-
-        console.log('Employee created successfully:', employeeData);
 
         toast({
           title: 'Colaborador contratado',
@@ -374,7 +434,6 @@ export default function SelectionProcessDetails() {
       return;
     }
 
-    // Se estava removendo dos favoritos e o filtro estava ativo, desativa o filtro
     if (application.is_favorite && showFavoritesOnly) {
       setShowFavoritesOnly(false);
     }
@@ -507,203 +566,174 @@ export default function SelectionProcessDetails() {
     });
   };
 
-  const CandidateRow = ({ application, currentStage }: { application: any; currentStage: string }) => {
-    const candidatePhone = application.candidate_phone;
-    
-    // Verifica se os documentos já foram solicitados
-    const documentsRequested = application.notes?.some((note: any) => 
-      note.content?.includes('📄 Documentos Solicitados')
-    );
-    
+  const getNextStage = (currentStageId: string) => {
+    const currentIndex = workflowStages.findIndex(s => s.id === currentStageId);
+    if (currentIndex < workflowStages.length - 1) {
+      return workflowStages[currentIndex + 1];
+    }
+    return null;
+  };
+
+  const getPreviousStage = (currentStageId: string) => {
+    const currentIndex = workflowStages.findIndex(s => s.id === currentStageId);
+    if (currentIndex > 0) {
+      return workflowStages[currentIndex - 1];
+    }
+    return null;
+  };
+
+  const CandidateCard = ({ application, stageId }: { application: any; stageId: string }) => {
+    const whatsappNumber = formatWhatsAppNumber(application.candidate_phone);
+    const nextStage = getNextStage(stageId);
+    const previousStage = getPreviousStage(stageId);
+    const isLast = isLastStage(stageId);
+
     return (
-      <TableRow>
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToggleFavorite(application)}
-              className="h-8 w-8 p-0"
-            >
-              <Star 
-                className={`h-4 w-4 ${application.is_favorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
-              />
-            </Button>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <User className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{application.candidate_name}</p>
-                  {currentStage === 'admissao' && documentsRequested && (
-                    <Badge variant="outline" className="text-xs gap-1">
-                      <FileText className="h-3 w-3" />
-                      Docs solicitados
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">{application.candidate_email}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{application.candidate_name}</p>
+                <p className="text-sm text-muted-foreground truncate">{application.candidate_email}</p>
               </div>
             </div>
-          </div>
-        </TableCell>
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            <span className="font-semibold">{application.score || 0}</span>
-          </div>
-        </TableCell>
-        <TableCell>
-          {getStatusBadge(application.status)}
-        </TableCell>
-        <TableCell>
-          <p className="text-sm text-muted-foreground">
-            {new Date(application.applied_at).toLocaleDateString('pt-BR')}
-          </p>
-        </TableCell>
-        <TableCell>
-          <div className="flex gap-2">
-            {currentStage === 'admissao' && (
+            
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                    <TrendingUp className="h-3 w-3 text-primary" />
+                    <span className="text-sm font-semibold">{application.score || 0}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Score de compatibilidade</p>
+                </TooltipContent>
+              </Tooltip>
+              
               <Button
-                variant={documentsRequested ? "secondary" : "outline"}
+                variant="ghost"
                 size="sm"
-                className="gap-2"
-                disabled={documentsRequested}
-                onClick={async () => {
-                  try {
-                    const origin = window.location.origin;
-                    const { data, error } = await supabase.functions.invoke('send-hiring-documents-email', {
-                      body: {
-                        applicationId: application.id,
-                        candidateEmail: application.candidate_email,
-                        candidateName: application.candidate_name,
-                        jobTitle: job?.title || 'Vaga',
-                      },
-                    });
-
-                    if (error) throw error;
-
-                    // Adiciona uma nota registrando o envio dos documentos
-                    const currentNotes = application.notes || [];
-                    const documentNote = {
-                      id: uuidv4(),
-                      authorId: 'company-user',
-                      authorName: 'Sistema',
-                      content: `📄 Documentos Solicitados\n\nEmail de solicitação de documentos enviado para ${application.candidate_email} em ${new Date().toLocaleString('pt-BR')}`,
-                      createdAt: new Date().toISOString(),
-                    };
-
-                    await supabase
-                      .from('applications')
-                      .update({
-                        notes: [...currentNotes, documentNote] as any,
-                        updated_at: new Date().toISOString(),
-                      })
-                      .eq('id', application.id);
-
-                    loadJobAndApplications();
-
-                    toast({
-                      title: 'Email enviado!',
-                      description: 'O candidato receberá um email com instruções para envio dos documentos.',
-                    });
-                  } catch (error: any) {
-                    console.error('Error sending email:', error);
-                    toast({
-                      title: 'Erro ao enviar email',
-                      description: error.message || 'Tente novamente mais tarde.',
-                      variant: 'destructive',
-                    });
-                  }
-                }}
+                className="h-8 w-8 p-0"
+                onClick={() => handleToggleFavorite(application)}
               >
-                <FileText className="h-4 w-4" />
-                {documentsRequested ? 'Documentos Solicitados' : 'Solicitar Documentos'}
+                <Star className={`h-4 w-4 ${application.is_favorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
               </Button>
-            )}
-            {currentStage === 'entrevista' && candidatePhone && (
-              <a
-                href={`https://api.whatsapp.com/send?phone=${formatWhatsAppNumber(candidatePhone)}&text=${encodeURIComponent('Olá! Gostaria de agendar uma entrevista.')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  type="button"
-                >
-                  <Phone className="h-4 w-4" />
-                  WhatsApp
-                </Button>
-              </a>
-            )}
-            {currentStage === 'avaliacao' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  setSelectedForTest(application);
-                  setShowTestDialog(true);
-                }}
-              >
-                <FileText className="h-4 w-4" />
-                Aplicar Teste
-              </Button>
-            )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-3">
+            {getStatusBadge(application.status)}
+            <span className="text-xs text-muted-foreground">
+              {new Date(application.applied_at).toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4">
             <Dialog>
               <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedApplication(application)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setSelectedApplication(application)}>
+                  <Eye className="h-3 w-3 mr-1" />
                   Detalhes
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{application.candidate_name}</DialogTitle>
                   <DialogDescription>{application.candidate_email}</DialogDescription>
                 </DialogHeader>
+                
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Informações</h4>
-                    <div className="grid gap-2 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{application.candidate_email}</span>
+                    </div>
+                    {application.candidate_phone && (
                       <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{application.candidate_email}</span>
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{application.candidate_phone}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                        <span>Score: {application.score || 0}</span>
-                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Score: {application.score || 0}</span>
                     </div>
                   </div>
 
-                  {application.notes && Array.isArray(application.notes) && application.notes.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewProfile(application.candidate_id, application.candidate_email)}
+                      disabled={loadingProfile}
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      Ver Perfil Completo
+                    </Button>
+                    {whatsappNumber && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                      >
+                        <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
+                          <Phone className="h-4 w-4 mr-1" />
+                          WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Histórico de Etapas */}
+                  {application.stage_history && application.stage_history.length > 0 && (
                     <div>
-                      <h4 className="font-semibold mb-2">Notas</h4>
+                      <h4 className="font-semibold mb-2">Histórico de Etapas</h4>
                       <div className="space-y-2">
-                        {application.notes.map((note: any) => (
-                          <div key={note.id} className="text-sm bg-muted/50 p-3 rounded">
-                            <p className="font-medium">{note.authorName}</p>
-                            <p className="text-muted-foreground mb-1">{new Date(note.createdAt).toLocaleString('pt-BR')}</p>
-                            <p>{note.content}</p>
+                        {application.stage_history.map((entry: any, idx: number) => (
+                          <div key={idx} className="text-sm border-l-2 border-primary/20 pl-3 py-1">
+                            <p className="font-medium">{entry.stage_name}</p>
+                            <p className="text-muted-foreground">
+                              {new Date(entry.entered_at).toLocaleString('pt-BR')}
+                            </p>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
+                  {/* Notas */}
+                  {application.notes && application.notes.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Notas</h4>
+                      <ScrollArea className="h-40">
+                        <div className="space-y-2">
+                          {application.notes.map((note: any) => (
+                            <div key={note.id} className="text-sm bg-muted/50 p-3 rounded">
+                              <p className="font-medium">{note.authorName}</p>
+                              <p className="text-xs text-muted-foreground mb-1">
+                                {new Date(note.createdAt).toLocaleString('pt-BR')}
+                              </p>
+                              <p className="whitespace-pre-wrap">{note.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+
+                  {/* Adicionar Nota */}
                   <div className="space-y-2">
                     <Label>Adicionar Nota</Label>
                     <Textarea
                       value={noteContent}
                       onChange={(e) => setNoteContent(e.target.value)}
                       placeholder="Escreva observações sobre o candidato..."
+                      rows={3}
                     />
                     <Button onClick={handleAddNote} size="sm">
                       <MessageSquare className="mr-2 h-4 w-4" />
@@ -711,24 +741,44 @@ export default function SelectionProcessDetails() {
                     </Button>
                   </div>
 
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button 
-                      onClick={() => handleViewProfile(application.candidate_id, application.candidate_email)} 
-                      variant="outline" 
-                      size="sm"
-                      disabled={loadingProfile}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      {loadingProfile ? 'Carregando...' : 'Ver Perfil'}
-                    </Button>
-                    {(application.current_stage || 'triagem') === 'admissao' && application.status !== 'approved' && (
-                      <Button onClick={() => handleUpdateStatus(application, 'approved')} size="sm">
+                  {/* Ações */}
+                  <div className="flex flex-wrap gap-2 pt-4 border-t">
+                    {previousStage && application.status !== 'rejected' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMoveToStage(application, previousStage.id)}
+                      >
+                        ← Voltar para {previousStage.name}
+                      </Button>
+                    )}
+                    
+                    {nextStage && application.status !== 'rejected' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleMoveToStage(application, nextStage.id)}
+                      >
+                        Avançar para {nextStage.name} →
+                      </Button>
+                    )}
+                    
+                    {isLast && application.status !== 'approved' && application.status !== 'rejected' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateStatus(application, 'approved')}
+                        className="bg-success hover:bg-success/90"
+                      >
                         <CheckCircle className="mr-2 h-4 w-4" />
                         Aprovar e Contratar
                       </Button>
                     )}
+                    
                     {application.status !== 'rejected' && (
-                      <Button onClick={() => handleUpdateStatus(application, 'rejected')} variant="destructive" size="sm">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleUpdateStatus(application, 'rejected')}
+                      >
                         <XCircle className="mr-2 h-4 w-4" />
                         Reprovar
                       </Button>
@@ -738,32 +788,27 @@ export default function SelectionProcessDetails() {
               </DialogContent>
             </Dialog>
 
-            <Select
-              value={application.current_stage || 'triagem'}
-              onValueChange={(stageId) => handleMoveToStage(application, stageId)}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Mover para..." />
-              </SelectTrigger>
-              <SelectContent>
-                {WORKFLOW_STAGES.map(stage => (
-                  <SelectItem key={stage.id} value={stage.id}>
-                    {stage.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {nextStage && application.status !== 'rejected' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-primary"
+                onClick={() => handleMoveToStage(application, nextStage.id)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        </TableCell>
-      </TableRow>
+        </CardContent>
+      </Card>
     );
   };
 
   if (loading) {
     return (
-      <CompanyLayout>
-        <div className="space-y-6">
-          <p>Carregando dados...</p>
+      <CompanyLayout title="Carregando...">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Carregando processo seletivo...</p>
         </div>
       </CompanyLayout>
     );
@@ -771,13 +816,13 @@ export default function SelectionProcessDetails() {
 
   if (!job) {
     return (
-      <CompanyLayout>
-        <div className="space-y-6">
-          <Button variant="ghost" onClick={() => navigate('/company/selection-process')}>
+      <CompanyLayout title="Vaga não encontrada">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">Esta vaga não foi encontrada.</p>
+          <Button onClick={() => navigate('/company/selection-process')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
-          <p>Vaga não encontrada</p>
         </div>
       </CompanyLayout>
     );
@@ -785,187 +830,206 @@ export default function SelectionProcessDetails() {
 
   return (
     <TooltipProvider>
-      <CompanyLayout>
+      <CompanyLayout 
+        title={job.title}
+        description="Gerencie o processo seletivo desta vaga"
+      >
         <div className="space-y-6">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <Button variant="ghost" onClick={() => navigate('/company/selection-process')} className="mb-2">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
-              </Button>
-              <h1 className="text-3xl font-bold">{job.title}</h1>
-              <p className="text-muted-foreground">Processo Seletivo</p>
-            </div>
-            {hasApprovedCandidates() && !job.is_archived && (
-              <Button
-                variant="outline"
-                onClick={() => setShowArchiveDialog(true)}
-                className="gap-2"
+            <Button variant="ghost" onClick={() => navigate('/company/selection-process')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={showFavoritesOnly ? 'bg-yellow-50 border-yellow-200' : ''}
               >
-                <Archive className="h-4 w-4" />
-                Arquivar Vaga
+                <Star className={`h-4 w-4 mr-1 ${showFavoritesOnly ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                {showFavoritesOnly ? 'Todos' : 'Favoritos'}
               </Button>
-            )}
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(`/company/workflow/${id}`)}
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Configurar Workflow
+              </Button>
+
+              {hasApprovedCandidates() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowArchiveDialog(true)}
+                >
+                  <Archive className="h-4 w-4 mr-1" />
+                  Arquivar
+                </Button>
+              )}
+            </div>
           </div>
 
+          {/* Métricas */}
           <div className="grid gap-4 md:grid-cols-4">
-            {WORKFLOW_STAGES.map(stage => {
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{applications.length}</div>
+                <p className="text-xs text-muted-foreground">candidatos</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Favoritos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-500">
+                  {applications.filter(a => a.is_favorite).length}
+                </div>
+                <p className="text-xs text-muted-foreground">marcados</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-success">
+                  {applications.filter(a => a.status === 'approved').length}
+                </div>
+                <p className="text-xs text-muted-foreground">contratados</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Reprovados</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-destructive">
+                  {applications.filter(a => a.status === 'rejected').length}
+                </div>
+                <p className="text-xs text-muted-foreground">descartados</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Indicador de Workflow */}
+          {!workflowId && (
+            <Card className="border-warning/50 bg-warning/5">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-warning" />
+                    <p className="text-sm">
+                      <span className="font-medium">Workflow padrão:</span> Configure um workflow personalizado para esta vaga
+                    </p>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate(`/company/workflow/${id}`)}
+                  >
+                    Configurar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pipeline de Etapas */}
+          <div className="grid gap-4" style={{ 
+            gridTemplateColumns: `repeat(${workflowStages.length}, minmax(280px, 1fr))` 
+          }}>
+            {workflowStages.map((stage, index) => {
               const stageApps = getApplicationsByStage(stage.id);
               
               return (
-                <Card key={stage.id}>
-                  <CardHeader className="pb-3">
+                <div key={stage.id} className="flex flex-col">
+                  <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-base">{stage.name}</CardTitle>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">{stage.description}</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <h3 className="font-semibold">{stage.name}</h3>
+                      <Badge variant="secondary" className="text-xs">
+                        {stageApps.length}
+                      </Badge>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{stageApps.length}</div>
-                    <p className="text-sm text-muted-foreground">candidatos</p>
-                  </CardContent>
-                </Card>
+                  </div>
+                  
+                  <Card className="flex-1 bg-muted/30">
+                    <CardContent className="p-3">
+                      {stageApps.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">Nenhum candidato</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {stageApps
+                            .filter(a => a.status !== 'rejected')
+                            .sort((a, b) => (b.score || 0) - (a.score || 0))
+                            .map(app => (
+                              <CandidateCard key={app.id} application={app} stageId={stage.id} />
+                            ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               );
             })}
           </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Candidatos por Etapa</CardTitle>
-                  <CardDescription>Visualize e gerencie candidatos em cada fase do processo</CardDescription>
-                </div>
-                <Button
-                  variant={showFavoritesOnly ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className="gap-2"
-                >
-                  <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                  {showFavoritesOnly ? 'Todos' : 'Favoritos'}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="triagem">
-                <TabsList className="grid w-full grid-cols-4">
-                  {WORKFLOW_STAGES.map(stage => (
-                    <TabsTrigger key={stage.id} value={stage.id}>
-                      {stage.name} ({getApplicationsByStage(stage.id).length})
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-
-                {WORKFLOW_STAGES.map(stage => (
-                  <TabsContent key={stage.id} value={stage.id}>
-                    {getApplicationsByStage(stage.id).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Nenhum candidato nesta etapa
+          {/* Candidatos Reprovados */}
+          {applications.filter(a => a.status === 'rejected').length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-destructive">Candidatos Reprovados</CardTitle>
+                <CardDescription>
+                  {applications.filter(a => a.status === 'rejected').length} candidatos foram reprovados neste processo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {applications
+                    .filter(a => a.status === 'rejected')
+                    .map(app => (
+                      <div key={app.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{app.candidate_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{app.candidate_email}</p>
+                        </div>
                       </div>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Candidato</TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-2">
-                                Score
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="max-w-xs">
-                                      Pontuação do candidato baseada em qualificações, experiência e adequação à vaga. 
-                                      Quanto maior o score, melhor o fit do candidato.
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-2">
-                                Status
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <div className="max-w-xs space-y-1">
-                                      <p className="font-semibold">Status da Candidatura:</p>
-                                      <p className="text-xs"><strong>Pendente:</strong> Aguardando análise inicial</p>
-                                      <p className="text-xs"><strong>Em Análise:</strong> Candidatura sendo avaliada</p>
-                                      <p className="text-xs"><strong>Aprovado:</strong> Candidato aprovado para próxima etapa</p>
-                                      <p className="text-xs"><strong>Reprovado:</strong> Candidatura não aprovada</p>
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-2">
-                                Data
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="max-w-xs">
-                                      Data em que o candidato aplicou para a vaga
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TableHead>
-                            <TableHead>
-                              <div className="flex items-center gap-2">
-                                Ações
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="max-w-xs">
-                                      WhatsApp (apenas na etapa Entrevista), visualizar detalhes e mover candidato entre etapas
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {getApplicationsByStage(stage.id)
-                            .sort((a, b) => (b.score || 0) - (a.score || 0))
-                            .map(app => (
-                              <CandidateRow key={app.id} application={app} currentStage={stage.id} />
-                            ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </CardContent>
-          </Card>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
+        {/* Dialog de Arquivar */}
         <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Arquivar vaga?</AlertDialogTitle>
               <AlertDialogDescription>
                 Esta ação irá mover a vaga para o histórico de processos. A vaga não
-                receberá mais candidaturas, mas você poderá visualizar todos os dados do
-                processo seletivo no histórico.
+                receberá mais candidaturas, mas você poderá visualizar todos os dados.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -977,79 +1041,62 @@ export default function SelectionProcessDetails() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Dialog de Perfil */}
         <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Perfil do Candidato</DialogTitle>
-              <DialogDescription>
-                {candidateProfile?.name}
-              </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
-              {candidateProfile && (
-                <CandidateProfileView 
-                  profile={candidateProfile}
-                  email={selectedApplication?.candidate_email}
-                />
-              )}
-            </ScrollArea>
+            {candidateProfile && (
+              <CandidateProfileView 
+                profile={candidateProfile} 
+                email={selectedApplication?.candidate_email} 
+              />
+            )}
           </DialogContent>
         </Dialog>
 
+        {/* Dialog de Teste */}
         <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
-          <DialogContent className="max-w-lg">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Aplicar Teste ou Avaliação</DialogTitle>
+              <DialogTitle>Aplicar Teste/Avaliação</DialogTitle>
               <DialogDescription>
-                {selectedForTest?.candidate_name}
+                Registre um teste ou avaliação para o candidato
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="test-name">Nome do Teste *</Label>
+                <Label>Nome do Teste *</Label>
                 <Input
-                  id="test-name"
                   value={testName}
                   onChange={(e) => setTestName(e.target.value)}
                   placeholder="Ex: Teste Técnico de React"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="test-description">Descrição (opcional)</Label>
+                <Label>Descrição</Label>
                 <Textarea
-                  id="test-description"
                   value={testDescription}
                   onChange={(e) => setTestDescription(e.target.value)}
-                  placeholder="Instruções ou detalhes sobre o teste..."
+                  placeholder="Descreva o teste..."
                   rows={3}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="test-link">Link (opcional)</Label>
-                <div className="flex gap-2">
-                  <LinkIcon className="h-4 w-4 text-muted-foreground mt-2.5" />
-                  <Input
-                    id="test-link"
-                    value={testLink}
-                    onChange={(e) => setTestLink(e.target.value)}
-                    placeholder="https://..."
-                    type="url"
-                  />
-                </div>
+                <Label>Link do Teste</Label>
+                <Input
+                  value={testLink}
+                  onChange={(e) => setTestLink(e.target.value)}
+                  placeholder="https://..."
+                />
               </div>
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleSendTest} disabled={!testName.trim()}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Aplicar Teste
-                </Button>
-                <Button variant="outline" onClick={() => {
-                  setShowTestDialog(false);
-                  setTestName('');
-                  setTestDescription('');
-                  setTestLink('');
-                  setSelectedForTest(null);
-                }}>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowTestDialog(false)}>
                   Cancelar
+                </Button>
+                <Button onClick={handleSendTest}>
+                  Aplicar Teste
                 </Button>
               </div>
             </div>
