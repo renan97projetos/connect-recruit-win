@@ -114,15 +114,42 @@ export default function CandidateProfile() {
     queryFn: async () => {
       if (!user) return null;
       
+      // First try to get existing profile
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Profile fetch error:', error);
         throw error;
+      }
+      
+      // If no profile exists, create one
+      if (!data) {
+        const newProfile = {
+          id: user.id,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+        };
+        
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error('Profile create error:', createError);
+          throw createError;
+        }
+        
+        return {
+          ...createdProfile,
+          experiences: [],
+          educations: [],
+          skills: [],
+        } as ProfileData;
       }
       
       return {
