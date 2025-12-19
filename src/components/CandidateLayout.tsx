@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { ReactNode, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Briefcase, User, Home, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,19 @@ const menuItems = [
 
 export function CandidateLayout({ children, title, description }: CandidateLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut } = useSupabaseAuth();
+
+  const handleViewJobs = () => {
+    navigate('/#vagas');
+    // Small delay to ensure navigation completes before scrolling
+    setTimeout(() => {
+      const element = document.getElementById('vagas');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,14 +74,14 @@ export function CandidateLayout({ children, title, description }: CandidateLayou
               );
             })}
             
-            {/* Back to Home */}
-            <Link
-              to="/"
+            {/* View Jobs - Scrolls to jobs section */}
+            <button
+              onClick={handleViewJobs}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-3 font-bold text-sm bg-cyan text-foreground border-foreground hover:-translate-y-0.5 hover:shadow-brutal transition-all"
             >
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Ver Vagas</span>
-            </Link>
+            </button>
             
             {/* Logout */}
             <button
