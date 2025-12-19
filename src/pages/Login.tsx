@@ -5,12 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
-import { SRHIcon } from '@/components/icons/SRHIcon';
+import { Eye, EyeOff, Zap, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
-// Schema de validação
 const loginSchema = z.object({
   email: z
     .string()
@@ -39,7 +37,6 @@ export default function Login() {
     e.preventDefault();
     setErrors({});
     
-    // Validação client-side
     try {
       loginSchema.parse({ email, password });
     } catch (error) {
@@ -65,7 +62,6 @@ export default function Login() {
         description: 'Redirecionando...',
       });
       
-      // Aguarda um momento para o userRole ser atualizado
       setTimeout(() => {
         const dashboardRoutes = {
           admin: '/admin/dashboard',
@@ -78,7 +74,6 @@ export default function Login() {
     } else {
       let errorMessage = 'Verifique suas credenciais';
       
-      // Mensagens de erro mais amigáveis
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos';
       } else if (error.message.includes('Email not confirmed')) {
@@ -96,95 +91,141 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-soft p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center flex justify-center">
-          <Link to="/" className="inline-flex items-center">
-            <SRHIcon size={80} />
-          </Link>
+    <div className="min-h-screen flex bg-background">
+      {/* Left side - Decorative */}
+      <div className="hidden lg:flex lg:w-1/2 bg-primary border-r-3 border-foreground items-center justify-center p-12 relative overflow-hidden">
+        {/* Decorative shapes */}
+        <div className="absolute top-12 left-12 w-24 h-24 bg-yellow rounded-xl border-3 border-foreground shadow-brutal-lg tilt-left" />
+        <div className="absolute bottom-24 right-12 w-32 h-32 bg-cyan rounded-xl border-3 border-foreground shadow-brutal-lg tilt-right" />
+        <div className="absolute top-1/3 right-24 w-16 h-16 bg-pink rounded-full border-3 border-foreground" />
+        
+        <div className="text-center text-primary-foreground z-10 max-w-md">
+          <div className="w-20 h-20 bg-background rounded-xl border-3 border-foreground shadow-brutal-lg flex items-center justify-center mx-auto mb-8">
+            <Zap className="h-10 w-10 text-primary" />
+          </div>
+          <h1 className="text-5xl font-black mb-4 leading-tight">
+            Bom te ver de novo!
+          </h1>
+          <p className="text-xl opacity-90">
+            Entre na sua conta e continue construindo o futuro do seu RH.
+          </p>
         </div>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Entrar</CardTitle>
-            <CardDescription>
+      {/* Right side - Form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-md space-y-8">
+          {/* Mobile logo */}
+          <div className="text-center lg:hidden">
+            <Link to="/" className="inline-flex items-center gap-3 group">
+              <div className="w-12 h-12 bg-primary rounded-xl border-3 border-foreground shadow-brutal flex items-center justify-center group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] transition-all">
+                <Zap className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <span className="font-black text-2xl">SinapseRH</span>
+            </Link>
+          </div>
+
+          <div>
+            <h2 className="text-4xl font-black mb-2">Entrar</h2>
+            <p className="text-muted-foreground">
               Entre com sua conta para continuar
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="font-bold uppercase tracking-wide text-sm">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                required
+                autoComplete="email"
+                className={`h-12 border-3 ${errors.email ? 'border-destructive' : 'border-foreground'} shadow-brutal focus:shadow-brutal-hover focus:translate-x-[-2px] focus:translate-y-[-2px] transition-all`}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive font-semibold">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="font-bold uppercase tracking-wide text-sm">
+                Senha
+              </Label>
+              <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
                   onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrors((prev) => ({ ...prev, email: undefined }));
+                    setPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, password: undefined }));
                   }}
                   required
-                  autoComplete="email"
-                  className={errors.email ? 'border-destructive' : ''}
+                  autoComplete="current-password"
+                  className={`h-12 border-3 pr-12 ${errors.password ? 'border-destructive' : 'border-foreground'} shadow-brutal focus:shadow-brutal-hover focus:translate-x-[-2px] focus:translate-y-[-2px] transition-all`}
                 />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 h-10 w-10 hover:bg-secondary"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, password: undefined }));
-                    }}
-                    required
-                    autoComplete="current-password"
-                    className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
-              <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Esqueci minha senha
-                </Link>
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Entrando...' : 'Entrar'}
-              </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                Não tem uma conta?{' '}
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  Cadastre-se
-                </Link>
-              </p>
-            </CardFooter>
+              {errors.password && (
+                <p className="text-sm text-destructive font-semibold">{errors.password}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Link 
+                to="/forgot-password" 
+                className="text-sm font-semibold text-primary hover:underline underline-offset-4"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+
+            <p className="text-center text-sm">
+              Não tem uma conta?{' '}
+              <Link 
+                to="/register" 
+                className="font-bold text-primary hover:underline underline-offset-4"
+              >
+                Cadastre-se
+              </Link>
+            </p>
           </form>
-        </Card>
+
+          <div className="text-center">
+            <Link 
+              to="/" 
+              className="text-sm text-muted-foreground hover:text-foreground font-semibold"
+            >
+              ← Voltar para o início
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

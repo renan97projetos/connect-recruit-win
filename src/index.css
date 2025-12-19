@@ -1,151 +1,139 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400;1,9..40,500&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================
-   HUMANIST EDITORIAL DESIGN SYSTEM
-   Warm, organic, human-centered aesthetic
+   NEUBRUTALISM DESIGN SYSTEM
+   Bold, chunky, playful, no-nonsense
    ============================================ */
 
 @layer base {
   :root {
-    /* Core palette - Warm neutrals & earthy tones */
-    --background: 45 30% 97%;
-    --foreground: 30 15% 12%;
+    /* Core - Creamy white base */
+    --background: 50 50% 98%;
+    --foreground: 0 0% 5%;
 
-    --card: 45 40% 99%;
-    --card-foreground: 30 15% 12%;
+    --card: 50 100% 96%;
+    --card-foreground: 0 0% 5%;
 
-    --popover: 45 40% 99%;
-    --popover-foreground: 30 15% 12%;
+    --popover: 50 100% 96%;
+    --popover-foreground: 0 0% 5%;
 
-    /* Primary - Warm terracotta instead of cold blue */
-    --primary: 16 65% 48%;
-    --primary-foreground: 45 30% 97%;
-    --primary-soft: 16 45% 94%;
+    /* Primary - Electric violet */
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 262 70% 95%;
 
-    /* Secondary - Sage green for contrast */
-    --secondary: 145 20% 92%;
-    --secondary-foreground: 145 30% 25%;
+    /* Secondary - Lime punch */
+    --secondary: 82 85% 67%;
+    --secondary-foreground: 0 0% 5%;
 
-    --muted: 45 20% 93%;
-    --muted-foreground: 30 10% 45%;
+    --muted: 45 30% 94%;
+    --muted-foreground: 0 0% 35%;
 
-    /* Accent - Deep ink for emphasis */
-    --accent: 220 25% 18%;
-    --accent-foreground: 45 30% 97%;
+    /* Accent - Hot coral */
+    --accent: 12 90% 62%;
+    --accent-foreground: 0 0% 5%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 85%;
-    --input: 30 15% 85%;
-    --ring: 16 65% 48%;
+    /* Strong black borders */
+    --border: 0 0% 5%;
+    --input: 0 0% 5%;
+    --ring: 262 83% 58%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Status colors - warmer versions */
-    --success: 145 55% 38%;
+    /* Status - saturated */
+    --success: 142 70% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 30 15% 12%;
+    --warning: 45 95% 55%;
+    --warning-foreground: 0 0% 5%;
 
-    --info: 200 70% 45%;
+    --info: 200 90% 50%;
     --info-foreground: 0 0% 100%;
 
-    /* Sidebar - warm & inviting */
-    --sidebar-background: 30 20% 10%;
-    --sidebar-foreground: 45 30% 90%;
-    --sidebar-primary: 16 65% 55%;
-    --sidebar-primary-foreground: 45 30% 97%;
-    --sidebar-accent: 30 20% 18%;
-    --sidebar-accent-foreground: 45 30% 90%;
-    --sidebar-border: 30 15% 20%;
-    --sidebar-ring: 16 65% 48%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 50 50% 95%;
+    --sidebar-primary: 262 83% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 50 50% 95%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 262 83% 58%;
 
-    /* Custom gradients - organic feel */
-    --gradient-primary: linear-gradient(135deg, hsl(16 65% 48%), hsl(25 70% 42%));
-    --gradient-soft: linear-gradient(180deg, hsl(45 30% 97%), hsl(45 25% 94%));
-    --gradient-warm: linear-gradient(135deg, hsl(45 40% 96%), hsl(30 30% 92%));
-    --gradient-editorial: linear-gradient(145deg, hsl(30 20% 10%), hsl(25 25% 8%));
+    /* Neubrutalist shadows - hard offset, no blur */
+    --shadow-brutal: 4px 4px 0 hsl(0 0% 5%);
+    --shadow-brutal-lg: 6px 6px 0 hsl(0 0% 5%);
+    --shadow-brutal-xl: 8px 8px 0 hsl(0 0% 5%);
+    --shadow-brutal-hover: 6px 6px 0 hsl(0 0% 5%);
 
-    /* Shadows - softer, warmer */
-    --shadow-sm: 0 1px 3px 0 hsl(30 15% 12% / 0.04);
-    --shadow-md: 0 4px 12px -2px hsl(30 15% 12% / 0.08);
-    --shadow-lg: 0 12px 32px -8px hsl(30 15% 12% / 0.12);
-    --shadow-editorial: 8px 8px 0 hsl(30 20% 10%);
-
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* Editorial accents */
-    --stamp: 16 65% 48%;
-    --ink: 220 25% 18%;
-    --cream: 45 40% 96%;
-    --sage: 145 25% 75%;
-    --terracotta: 16 65% 48%;
-    --clay: 25 35% 65%;
+    /* Feature colors */
+    --yellow: 50 100% 60%;
+    --pink: 330 85% 70%;
+    --cyan: 185 90% 55%;
+    --lime: 82 85% 67%;
+    --violet: 262 83% 58%;
+    --coral: 12 90% 62%;
   }
 
   .dark {
-    --background: 30 20% 8%;
-    --foreground: 45 25% 92%;
+    --background: 0 0% 8%;
+    --foreground: 50 50% 95%;
 
-    --card: 30 18% 12%;
-    --card-foreground: 45 25% 92%;
+    --card: 0 0% 12%;
+    --card-foreground: 50 50% 95%;
 
-    --popover: 30 18% 12%;
-    --popover-foreground: 45 25% 92%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 50 50% 95%;
 
-    --primary: 16 60% 55%;
-    --primary-foreground: 30 20% 8%;
-    --primary-soft: 16 40% 18%;
+    --primary: 262 80% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 262 50% 20%;
 
-    --secondary: 145 15% 18%;
-    --secondary-foreground: 145 30% 85%;
+    --secondary: 82 75% 55%;
+    --secondary-foreground: 0 0% 5%;
 
-    --muted: 30 15% 18%;
-    --muted-foreground: 45 15% 60%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 50 20% 60%;
 
-    --accent: 45 35% 85%;
-    --accent-foreground: 30 20% 8%;
+    --accent: 12 85% 58%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 12% 22%;
-    --input: 30 12% 22%;
-    --ring: 16 60% 55%;
+    --border: 50 50% 90%;
+    --input: 50 50% 90%;
+    --ring: 262 80% 65%;
 
-    --success: 145 50% 42%;
+    --success: 142 65% 50%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 45 90% 50%;
+    --warning-foreground: 0 0% 5%;
 
-    --info: 200 65% 50%;
+    --info: 200 85% 55%;
     --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 30 20% 6%;
-    --sidebar-foreground: 45 25% 90%;
-    --sidebar-primary: 16 60% 55%;
-    --sidebar-primary-foreground: 30 20% 8%;
-    --sidebar-accent: 30 18% 15%;
-    --sidebar-accent-foreground: 45 25% 90%;
-    --sidebar-border: 30 12% 18%;
-    --sidebar-ring: 16 60% 55%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 50 50% 95%;
+    --sidebar-primary: 262 80% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 50 50% 95%;
+    --sidebar-border: 50 30% 25%;
+    --sidebar-ring: 262 80% 65%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(16 60% 55%), hsl(25 65% 48%));
-    --gradient-soft: linear-gradient(180deg, hsl(30 18% 12%), hsl(30 20% 8%));
-    --gradient-warm: linear-gradient(135deg, hsl(30 18% 14%), hsl(30 15% 10%));
-    --gradient-editorial: linear-gradient(145deg, hsl(45 30% 92%), hsl(45 25% 88%));
-
-    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.2);
-    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 12px 32px -8px hsl(0 0% 0% / 0.4);
-    --shadow-editorial: 6px 6px 0 hsl(45 25% 85%);
+    --shadow-brutal: 4px 4px 0 hsl(50 50% 90%);
+    --shadow-brutal-lg: 6px 6px 0 hsl(50 50% 90%);
+    --shadow-brutal-xl: 8px 8px 0 hsl(50 50% 90%);
+    --shadow-brutal-hover: 6px 6px 0 hsl(50 50% 90%);
   }
 }
 
@@ -155,127 +143,140 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 
-  h1, h2, h3 {
-    font-family: 'Playfair Display', Georgia, serif;
+  /* All headings use main font but bolder */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 800;
+  }
+
+  code, pre, .mono {
+    font-family: 'Space Mono', monospace;
   }
 }
 
 @layer components {
-  /* Editorial stamp effect */
-  .stamp {
-    @apply inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest;
-    @apply border-2 border-current rotate-[-3deg];
-    @apply bg-transparent;
+  /* NEUBRUTALIST CARD - thick border, hard shadow */
+  .card-brutal {
+    @apply relative bg-card border-[3px] border-foreground rounded-xl;
+    box-shadow: var(--shadow-brutal);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
 
-  /* Organic blob shape */
-  .blob {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-  }
-
-  /* Hand-drawn border effect */
-  .sketch-border {
-    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  }
-
-  /* Editorial card with shadow offset */
-  .card-editorial {
-    @apply relative bg-card;
-    box-shadow: var(--shadow-editorial);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .card-editorial:hover {
+  .card-brutal:hover {
     transform: translate(-2px, -2px);
-    box-shadow: 10px 10px 0 hsl(var(--ink));
+    box-shadow: var(--shadow-brutal-hover);
   }
 
-  /* Rotated label effect */
-  .label-rotated {
-    @apply inline-block;
+  /* Colored card variants */
+  .card-yellow {
+    @apply card-brutal;
+    background: hsl(var(--yellow));
+  }
+
+  .card-pink {
+    @apply card-brutal;
+    background: hsl(var(--pink));
+  }
+
+  .card-cyan {
+    @apply card-brutal;
+    background: hsl(var(--cyan));
+  }
+
+  .card-lime {
+    @apply card-brutal;
+    background: hsl(var(--lime));
+  }
+
+  .card-violet {
+    @apply card-brutal;
+    background: hsl(var(--violet));
+    color: white;
+  }
+
+  /* Pill badge - chunky */
+  .badge-brutal {
+    @apply inline-flex items-center px-3 py-1 text-sm font-bold uppercase tracking-wide;
+    @apply border-2 border-foreground rounded-full;
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  /* Marquee stripe */
+  .stripe-marquee {
+    @apply py-3 border-y-[3px] border-foreground;
+    background: repeating-linear-gradient(
+      -45deg,
+      hsl(var(--yellow)),
+      hsl(var(--yellow)) 20px,
+      hsl(var(--foreground)) 20px,
+      hsl(var(--foreground)) 22px
+    );
+  }
+
+  /* Squiggle underline using SVG */
+  .squiggle {
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: hsl(var(--primary));
+    text-underline-offset: 4px;
+  }
+
+  /* Rotation utilities */
+  .tilt-left {
     transform: rotate(-2deg);
   }
-
-  /* Underline animation - editorial style */
-  .link-editorial {
-    @apply relative inline-block;
-    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary)));
-    background-size: 0% 2px;
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    transition: background-size 0.3s ease;
+  
+  .tilt-right {
+    transform: rotate(2deg);
   }
 
-  .link-editorial:hover {
-    background-size: 100% 2px;
-  }
-
-  /* Organic section divider */
-  .divider-organic {
-    height: 4px;
-    background: linear-gradient(90deg, 
-      transparent, 
-      hsl(var(--primary) / 0.3) 20%, 
-      hsl(var(--primary)) 50%, 
-      hsl(var(--primary) / 0.3) 80%, 
-      transparent
-    );
-    border-radius: 2px;
-  }
-
-  /* Warm glow effect */
-  .glow-warm {
-    box-shadow: 0 0 40px hsl(var(--primary) / 0.15);
-  }
-
-  /* Texture overlay */
-  .texture-paper {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 150px;
-    opacity: 0.03;
-  }
-
-  /* Marquee animation */
-  .animate-marquee-slow {
-    animation: marquee 40s linear infinite;
+  /* Sticker effect */
+  .sticker {
+    @apply inline-block px-4 py-2 font-bold uppercase tracking-wider text-sm;
+    @apply border-[3px] border-foreground rounded-full;
+    @apply bg-accent text-accent-foreground;
+    transform: rotate(-3deg);
   }
 }
 
 @layer utilities {
-  /* Font utilities */
   .font-display {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 800;
   }
 
   .font-body {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 
-  /* Organic shapes utilities */
-  .rounded-organic {
-    border-radius: 60% 40% 55% 45% / 45% 55% 45% 55%;
+  .font-mono {
+    font-family: 'Space Mono', monospace;
   }
 
-  .rounded-blob {
-    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  /* Shadow utilities */
+  .shadow-brutal {
+    box-shadow: var(--shadow-brutal);
   }
 
-  /* Rotation utilities for playful elements */
-  .rotate-slight-left {
-    transform: rotate(-2deg);
+  .shadow-brutal-lg {
+    box-shadow: var(--shadow-brutal-lg);
   }
 
-  .rotate-slight-right {
-    transform: rotate(2deg);
+  .shadow-brutal-xl {
+    box-shadow: var(--shadow-brutal-xl);
   }
 
-  /* Text shadow for emphasis */
-  .text-shadow-warm {
-    text-shadow: 2px 2px 0 hsl(var(--primary) / 0.2);
+  /* Border utilities */
+  .border-brutal {
+    border-width: 3px;
+  }
+
+  .border-brutal-lg {
+    border-width: 4px;
   }
 }
 
@@ -285,21 +286,24 @@
   100% { transform: translateX(-50%); }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
-@keyframes pulse-warm {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
 }
 
-/* Animation classes */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.animate-marquee {
+  animation: marquee 25s linear infinite;
 }
 
-.animate-pulse-warm {
-  animation: pulse-warm 2s ease-in-out infinite;
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
 }
