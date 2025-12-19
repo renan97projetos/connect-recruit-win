@@ -113,16 +113,18 @@ export function CompanySidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4 border-b">
+    <Sidebar className="border-r border-sidebar-border">
+      <SidebarHeader className="p-4 border-b border-sidebar-border bg-sidebar-accent/30">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-10 w-10 ring-2 ring-sidebar-primary/20">
             <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'User'} />
-            <AvatarFallback>{profile?.name ? getInitials(profile.name) : 'U'}</AvatarFallback>
+            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground font-semibold">
+              {profile?.name ? getInitials(profile.name) : 'U'}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{profile?.name || 'Usuário'}</p>
-            <p className="text-xs text-muted-foreground">Empresa</p>
+            <p className="text-sm font-semibold truncate text-sidebar-foreground">{profile?.name || 'Usuário'}</p>
+            <p className="text-xs text-sidebar-foreground/60">Empresa</p>
           </div>
         </div>
       </SidebarHeader>
@@ -157,7 +159,9 @@ export function CompanySidebar() {
                           to={item.url}
                           end={item.url === '/company'}
                           className={({ isActive }) =>
-                            isActive ? 'bg-muted text-primary font-medium' : 'hover:bg-muted/50'
+                            isActive 
+                              ? 'bg-sidebar-accent text-sidebar-primary font-semibold' 
+                              : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                           }
                         >
                           <item.icon className="mr-2 h-4 w-4" />
@@ -171,10 +175,10 @@ export function CompanySidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t space-y-2">
+      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-2">
         <Button 
           variant="ghost" 
-          className="w-full justify-start"
+          className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
           onClick={() => navigate('/')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
