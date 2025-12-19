@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { SRHIcon } from '@/components/icons/SRHIcon';
+import srhLogo from '@/assets/srh-logo-official.png';
 
 // Schema de validação
 const registerSchema = z.object({
@@ -112,7 +112,7 @@ export default function Register() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <Link to="/" className="inline-flex items-center justify-center">
-            <SRHIcon size={80} />
+            <img src={srhLogo} alt="SRH Logo" className="h-20 w-auto" />
           </Link>
         </div>
 
