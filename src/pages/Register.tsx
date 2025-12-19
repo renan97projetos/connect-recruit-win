@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import srhLogo from '@/assets/srh-logo-official.png';
+import srhLogo from '@/assets/srh-logo-main.png';
 
 // Schema de validação
 const registerSchema = z.object({
