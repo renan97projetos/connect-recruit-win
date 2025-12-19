@@ -2,41 +2,34 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Linkedin, Instagram, Zap, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
 export function Footer() {
   const [socialLinks, setSocialLinks] = useState({
     instagram: '',
-    linkedin: '',
+    linkedin: ''
   });
-
   useEffect(() => {
     fetchSocialLinks();
   }, []);
-
   const fetchSocialLinks = async () => {
     try {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('instagram_url, linkedin_url')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
+      const {
+        data,
+        error
+      } = await supabase.from('system_settings').select('instagram_url, linkedin_url').order('created_at', {
+        ascending: true
+      }).limit(1).maybeSingle();
       if (error) throw error;
-
       if (data) {
         setSocialLinks({
           instagram: data.instagram_url || '',
-          linkedin: data.linkedin_url || '',
+          linkedin: data.linkedin_url || ''
         });
       }
     } catch (error) {
       console.error('Error fetching social links:', error);
     }
   };
-
-  return (
-    <footer className="bg-foreground text-background border-t-3 border-foreground">
+  return <footer className="bg-foreground text-background border-t-3 border-foreground">
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-4 gap-12">
           {/* Brand */}
@@ -56,17 +49,11 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-black uppercase tracking-wide">Empresa</h4>
             <nav className="flex flex-col space-y-2">
-              <Link 
-                to="/about" 
-                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
-              >
+              <Link to="/about" className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group">
                 Sobre
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <Link 
-                to="/contact" 
-                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
-              >
+              <Link to="/contact" className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group">
                 Contato
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
@@ -77,17 +64,11 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-black uppercase tracking-wide">Legal</h4>
             <nav className="flex flex-col space-y-2">
-              <Link 
-                to="/privacy-policy" 
-                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
-              >
+              <Link to="/privacy-policy" className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group">
                 Privacidade
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <Link 
-                to="/terms-of-use" 
-                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
-              >
+              <Link to="/terms-of-use" className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group">
                 Termos
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
@@ -98,26 +79,12 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-black uppercase tracking-wide">Social</h4>
             <div className="flex gap-3">
-              {socialLinks.linkedin && (
-                <a 
-                  href={socialLinks.linkedin} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-background text-foreground flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all border-3 border-background"
-                >
+              {socialLinks.linkedin && <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-background text-foreground flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all border-3 border-background">
                   <Linkedin className="h-5 w-5" />
-                </a>
-              )}
-              {socialLinks.instagram && (
-                <a 
-                  href={socialLinks.instagram} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-background text-foreground flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all border-3 border-background"
-                >
+                </a>}
+              {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-background text-foreground flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all border-3 border-background">
                   <Instagram className="h-5 w-5" />
-                </a>
-              )}
+                </a>}
             </div>
           </div>
         </div>
@@ -128,12 +95,9 @@ export function Footer() {
             <p className="text-sm opacity-60">
               © {new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.
             </p>
-            <p className="text-xs opacity-40 font-mono">
-              FEITO COM ❤️ PARA HUMANOS
-            </p>
+            
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 }
