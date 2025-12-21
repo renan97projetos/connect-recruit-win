@@ -563,7 +563,12 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     const isRequest = type === 'request';
     const title = isRequest ? (item as JobRequest).position_title : (item as PublishedJob).title;
     const appCount = !isRequest ? ((item as PublishedJob).applications?.length || 0) : 0;
-    const canDelete = isRequest && ['draft', 'pending_approval', 'rejected'].includes((item as JobRequest).status);
+    const requestStatus = isRequest ? (item as JobRequest).status : '';
+    // Permitir excluir em draft, pending_approval, rejected sempre. Em in_creation só o owner pode excluir.
+    const canDelete = isRequest && (
+      ['draft', 'pending_approval', 'rejected'].includes(requestStatus) ||
+      (requestStatus === 'in_creation' && isOwner)
+    );
     const canArchive = !isRequest && (item as PublishedJob).applications?.some(a => a.status === 'approved');
     const department = isRequest ? (item as JobRequest).department : null;
 
