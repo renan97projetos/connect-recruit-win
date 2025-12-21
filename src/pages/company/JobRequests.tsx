@@ -185,27 +185,6 @@ export default function JobRequests() {
           />
         )}
 
-        {/* Legenda do fluxo */}
-        <div className="bg-muted/50 rounded-xl p-4 border-2 border-dashed border-foreground/20">
-          <h4 className="font-bold text-sm mb-2">Fluxo de Vagas</h4>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className="bg-muted px-2 py-1 rounded font-medium">Rascunho</span>
-            <span>→</span>
-            <span className="bg-yellow px-2 py-1 rounded font-medium text-foreground">Aguardando Aprovação</span>
-            <span>→</span>
-            <span className="bg-lime px-2 py-1 rounded font-medium text-foreground">Aprovada</span>
-            <span>→</span>
-            <span className="bg-cyan px-2 py-1 rounded font-medium text-foreground">Em Criação</span>
-            <span>→</span>
-            <span className="bg-pink px-2 py-1 rounded font-medium text-foreground">Revisão</span>
-            <span>→</span>
-            <span className="bg-violet px-2 py-1 rounded font-medium text-background">Publicada</span>
-            <span>→</span>
-            <span className="bg-primary px-2 py-1 rounded font-medium text-primary-foreground">Seleção</span>
-            <span>→</span>
-            <span className="bg-success px-2 py-1 rounded font-medium text-success-foreground">Contratação</span>
-          </div>
-        </div>
       </div>
     </CompanyLayout>
   );
