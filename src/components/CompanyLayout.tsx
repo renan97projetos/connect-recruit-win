@@ -108,8 +108,8 @@ export function CompanyLayout({ children, title, description }: CompanyLayoutPro
                       : "bg-background text-foreground border-foreground hover:bg-lime hover:-translate-y-0.5 hover:shadow-brutal"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden lg:inline">{item.label}</span>
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{item.label}</span>
                 </Link>
               );
             })}
@@ -117,18 +117,18 @@ export function CompanyLayout({ children, title, description }: CompanyLayoutPro
             {/* HR Dropdown - Only for Owners */}
             {!roleLoading && isOwner && (
               <DropdownMenu open={openDropdown === 'hr'} onOpenChange={(open) => setOpenDropdown(open ? 'hr' : null)}>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={cn(
-                      "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
-                      isInGroup(hrMenuItems)
-                        ? "bg-cyan text-foreground border-foreground shadow-brutal"
-                        : "bg-background text-foreground border-foreground hover:bg-cyan hover:-translate-y-0.5 hover:shadow-brutal"
-                    )}
-                  >
-                    <Users className="h-4 w-4" />
-                    <span className="hidden lg:inline">Gestão RH</span>
-                    <ChevronDown className="h-3 w-3" />
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
+                    isInGroup(hrMenuItems)
+                      ? "bg-cyan text-foreground border-foreground shadow-brutal"
+                      : "bg-background text-foreground border-foreground hover:bg-cyan hover:-translate-y-0.5 hover:shadow-brutal"
+                  )}
+                >
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Gestão RH</span>
+                  <ChevronDown className="h-3 w-3 flex-shrink-0" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -171,9 +171,9 @@ export function CompanyLayout({ children, title, description }: CompanyLayoutPro
                       : "bg-background text-foreground border-foreground hover:bg-pink hover:-translate-y-0.5 hover:shadow-brutal"
                   )}
                 >
-                  <Settings className="h-4 w-4" />
-                  <span className="hidden lg:inline">Config</span>
-                  <ChevronDown className="h-3 w-3" />
+                  <Settings className="h-4 w-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Configurações</span>
+                  <ChevronDown className="h-3 w-3 flex-shrink-0" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
@@ -211,8 +211,8 @@ export function CompanyLayout({ children, title, description }: CompanyLayoutPro
               onClick={() => signOut()}
               className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm bg-destructive text-destructive-foreground border-foreground hover:-translate-y-0.5 hover:shadow-brutal transition-all"
             >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden lg:inline">Sair</span>
+              <LogOut className="h-4 w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Sair</span>
             </button>
           </div>
         </div>
