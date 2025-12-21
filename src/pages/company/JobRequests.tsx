@@ -87,7 +87,7 @@ export default function JobRequests() {
   };
 
   const canDeleteRequest = (status: string) => {
-    return status === 'draft' || status === 'rejected';
+    return status === 'draft' || status === 'pending_approval' || status === 'rejected';
   };
 
   const fetchRequests = async () => {

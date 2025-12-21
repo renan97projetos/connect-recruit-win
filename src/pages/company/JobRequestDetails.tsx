@@ -280,8 +280,11 @@ export default function JobRequestDetails() {
     request.status === 'pending_review'
   );
   
-  // Usuário pode excluir se for rascunho ou rejeitado
-  const canDeleteRequest = request.status === 'draft' || request.status === 'rejected';
+  // Usuário pode excluir se for rascunho, pendente de aprovação ou rejeitado
+  const canDeleteRequest = 
+    request.status === 'draft' || 
+    request.status === 'pending_approval' || 
+    request.status === 'rejected';
   
   console.log('🔐 Permission Flags:', {
     canApproveRequisition,
