@@ -655,8 +655,8 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                     )}
                     {provided.placeholder}
                     {column.items.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground text-xs border-2 border-dashed rounded-lg">
-                        Nenhum item
+                      <div className="text-center py-8 text-muted-foreground text-xs">
+                        
                       </div>
                     )}
                   </div>
