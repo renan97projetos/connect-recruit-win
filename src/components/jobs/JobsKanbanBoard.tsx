@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,15 @@ import {
   Award,
   FileCheck,
   Send,
-  Settings
+  Settings,
+  Plus,
+  X,
+  Phone,
+  Video,
+  Target,
+  Sparkles,
+  Shield,
+  HeartHandshake
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -45,8 +53,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -82,15 +102,20 @@ interface PublishedJob {
   job_request_id?: string;
 }
 
-interface KanbanColumn {
+interface ColumnConfig {
   id: string;
   title: string;
   color: string;
   icon: React.ElementType;
-  items: (JobRequest | PublishedJob)[];
   type: 'request' | 'job';
   phase: 'requisition' | 'recruitment' | 'selection';
   description?: string;
+  isRequired?: boolean;
+  isOptional?: boolean;
+}
+
+interface KanbanColumn extends ColumnConfig {
+  items: (JobRequest | PublishedJob)[];
 }
 
 interface JobsKanbanBoardProps {
@@ -100,158 +125,276 @@ interface JobsKanbanBoardProps {
   onRefresh: () => void;
 }
 
-// Fases de Requisição (antes da publicação)
-const REQUISITION_COLUMNS = [
+// Todas as etapas disponíveis
+const ALL_AVAILABLE_STAGES: ColumnConfig[] = [
+  // Requisição (obrigatórias)
   { 
     id: 'draft', 
     title: 'Rascunho', 
     color: 'bg-slate-100 dark:bg-slate-800', 
     icon: FileText, 
-    type: 'request' as const,
-    phase: 'requisition' as const,
-    description: 'Requisições em elaboração'
+    type: 'request',
+    phase: 'requisition',
+    description: 'Requisições em elaboração',
+    isRequired: true
   },
   { 
     id: 'pending_approval', 
     title: 'Aguardando Aprovação', 
     color: 'bg-amber-100 dark:bg-amber-900/30', 
     icon: Clock, 
-    type: 'request' as const,
-    phase: 'requisition' as const,
-    description: 'Aguardando aprovação do gestor'
+    type: 'request',
+    phase: 'requisition',
+    description: 'Aguardando aprovação do gestor',
+    isRequired: true
   },
   { 
     id: 'approved', 
     title: 'Aprovada', 
     color: 'bg-lime-100 dark:bg-lime-900/30', 
     icon: CheckCircle, 
-    type: 'request' as const,
-    phase: 'requisition' as const,
-    description: 'Aprovada, pronta para criação'
+    type: 'request',
+    phase: 'requisition',
+    description: 'Aprovada, pronta para criação',
+    isRequired: true
   },
   { 
     id: 'in_creation', 
     title: 'Em Criação', 
     color: 'bg-cyan-100 dark:bg-cyan-900/30', 
     icon: Edit, 
-    type: 'request' as const,
-    phase: 'requisition' as const,
-    description: 'Descrição sendo elaborada'
+    type: 'request',
+    phase: 'requisition',
+    description: 'Descrição sendo elaborada',
+    isRequired: true
   },
   { 
     id: 'pending_review', 
     title: 'Revisão Final', 
     color: 'bg-pink-100 dark:bg-pink-900/30', 
     icon: Eye, 
-    type: 'request' as const,
-    phase: 'requisition' as const,
-    description: 'Pronta para revisão e publicação'
+    type: 'request',
+    phase: 'requisition',
+    description: 'Pronta para revisão e publicação',
+    isRequired: true
   },
-];
-
-// Fases de Recrutamento (após publicação)
-const RECRUITMENT_COLUMNS = [
+  // Recrutamento
   { 
     id: 'published', 
     title: 'Publicada', 
     color: 'bg-violet-100 dark:bg-violet-900/30', 
     icon: Send, 
-    type: 'job' as const,
-    phase: 'recruitment' as const,
-    description: 'Vaga ativa recebendo candidaturas'
+    type: 'job',
+    phase: 'recruitment',
+    description: 'Vaga ativa recebendo candidaturas',
+    isRequired: true
   },
   { 
     id: 'screening', 
     title: 'Triagem', 
     color: 'bg-blue-100 dark:bg-blue-900/30', 
     icon: Filter, 
-    type: 'job' as const,
-    phase: 'recruitment' as const,
-    description: 'Análise inicial de currículos'
+    type: 'job',
+    phase: 'recruitment',
+    description: 'Análise inicial de currículos',
+    isOptional: true
+  },
+  { 
+    id: 'phone_screening', 
+    title: 'Triagem Telefônica', 
+    color: 'bg-sky-100 dark:bg-sky-900/30', 
+    icon: Phone, 
+    type: 'job',
+    phase: 'recruitment',
+    description: 'Contato inicial por telefone',
+    isOptional: true
   },
   { 
     id: 'interview', 
-    title: 'Entrevistas', 
+    title: 'Entrevista RH', 
     color: 'bg-indigo-100 dark:bg-indigo-900/30', 
     icon: MessageSquare, 
-    type: 'job' as const,
-    phase: 'recruitment' as const,
-    description: 'Candidatos em fase de entrevista'
+    type: 'job',
+    phase: 'recruitment',
+    description: 'Entrevista com RH',
+    isOptional: true
   },
-];
-
-// Fases de Seleção (decisão final)
-const SELECTION_COLUMNS = [
+  { 
+    id: 'video_interview', 
+    title: 'Entrevista por Vídeo', 
+    color: 'bg-blue-100 dark:bg-blue-900/30', 
+    icon: Video, 
+    type: 'job',
+    phase: 'recruitment',
+    description: 'Entrevista remota por vídeo',
+    isOptional: true
+  },
+  // Seleção
   { 
     id: 'assessment', 
     title: 'Avaliação Técnica', 
     color: 'bg-orange-100 dark:bg-orange-900/30', 
     icon: ClipboardList, 
-    type: 'job' as const,
-    phase: 'selection' as const,
-    description: 'Testes e avaliações técnicas'
+    type: 'job',
+    phase: 'selection',
+    description: 'Testes e avaliações técnicas',
+    isOptional: true
+  },
+  { 
+    id: 'practical_test', 
+    title: 'Teste Prático', 
+    color: 'bg-amber-100 dark:bg-amber-900/30', 
+    icon: Target, 
+    type: 'job',
+    phase: 'selection',
+    description: 'Desafio ou case prático',
+    isOptional: true
+  },
+  { 
+    id: 'behavioral', 
+    title: 'Avaliação Comportamental', 
+    color: 'bg-rose-100 dark:bg-rose-900/30', 
+    icon: Sparkles, 
+    type: 'job',
+    phase: 'selection',
+    description: 'Análise de perfil comportamental',
+    isOptional: true
   },
   { 
     id: 'final_interview', 
     title: 'Entrevista Final', 
     color: 'bg-purple-100 dark:bg-purple-900/30', 
     icon: Award, 
-    type: 'job' as const,
-    phase: 'selection' as const,
-    description: 'Entrevista com gestores'
+    type: 'job',
+    phase: 'selection',
+    description: 'Entrevista com gestores',
+    isOptional: true
+  },
+  { 
+    id: 'reference_check', 
+    title: 'Verificação de Referências', 
+    color: 'bg-teal-100 dark:bg-teal-900/30', 
+    icon: Shield, 
+    type: 'job',
+    phase: 'selection',
+    description: 'Contato com referências profissionais',
+    isOptional: true
   },
   { 
     id: 'offer', 
     title: 'Proposta', 
     color: 'bg-emerald-100 dark:bg-emerald-900/30', 
     icon: FileCheck, 
-    type: 'job' as const,
-    phase: 'selection' as const,
-    description: 'Elaboração e envio de proposta'
+    type: 'job',
+    phase: 'selection',
+    description: 'Elaboração e envio de proposta',
+    isOptional: true
+  },
+  { 
+    id: 'negotiation', 
+    title: 'Negociação', 
+    color: 'bg-yellow-100 dark:bg-yellow-900/30', 
+    icon: HeartHandshake, 
+    type: 'job',
+    phase: 'selection',
+    description: 'Negociação de termos e benefícios',
+    isOptional: true
   },
   { 
     id: 'hiring', 
     title: 'Contratação', 
     color: 'bg-green-100 dark:bg-green-900/30', 
     icon: UserCheck, 
-    type: 'job' as const,
-    phase: 'selection' as const,
-    description: 'Candidatos aprovados e contratados'
+    type: 'job',
+    phase: 'selection',
+    description: 'Candidatos aprovados e contratados',
+    isRequired: true
   },
 ];
 
-const ALL_COLUMNS = [...REQUISITION_COLUMNS, ...RECRUITMENT_COLUMNS, ...SELECTION_COLUMNS];
+const STORAGE_KEY = 'kanban_enabled_stages';
+
+const DEFAULT_ENABLED_STAGES = [
+  'draft', 'pending_approval', 'approved', 'in_creation', 'pending_review',
+  'published', 'screening', 'interview', 'assessment', 'final_interview', 'offer', 'hiring'
+];
 
 export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh }: JobsKanbanBoardProps) {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ id: string; type: 'request' | 'job'; title: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [enabledStages, setEnabledStages] = useState<string[]>(DEFAULT_ENABLED_STAGES);
+
+  // Carregar configuração do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setEnabledStages(parsed);
+      } catch {
+        setEnabledStages(DEFAULT_ENABLED_STAGES);
+      }
+    }
+  }, []);
+
+  // Salvar configuração
+  const saveEnabledStages = (stages: string[]) => {
+    setEnabledStages(stages);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stages));
+  };
+
+  const toggleStage = (stageId: string) => {
+    const stage = ALL_AVAILABLE_STAGES.find(s => s.id === stageId);
+    if (stage?.isRequired) return; // Não pode desabilitar etapas obrigatórias
+
+    const newStages = enabledStages.includes(stageId)
+      ? enabledStages.filter(id => id !== stageId)
+      : [...enabledStages, stageId];
+    
+    saveEnabledStages(newStages);
+  };
+
+  // Filtrar colunas habilitadas
+  const getEnabledColumns = (): ColumnConfig[] => {
+    return ALL_AVAILABLE_STAGES.filter(stage => enabledStages.includes(stage.id));
+  };
 
   // Função auxiliar para determinar a fase de uma vaga publicada
   const getJobPhase = (job: PublishedJob): string => {
     const apps = job.applications || [];
     const hasApproved = apps.some(a => a.status === 'approved');
-    const hasInOffer = apps.some(a => a.current_stage === 'offer' || a.current_stage === 'proposta');
-    const hasInFinalInterview = apps.some(a => a.current_stage === 'final_interview' || a.current_stage === 'entrevista_final');
-    const hasInAssessment = apps.some(a => a.current_stage === 'assessment' || a.current_stage === 'avaliacao');
-    const hasInInterview = apps.some(a => a.current_stage === 'interview' || a.current_stage === 'entrevista');
-    const hasInScreening = apps.some(a => a.current_stage === 'screening' || a.current_stage === 'triagem');
     
-    if (hasApproved) return 'hiring';
-    if (hasInOffer) return 'offer';
-    if (hasInFinalInterview) return 'final_interview';
-    if (hasInAssessment) return 'assessment';
-    if (hasInInterview) return 'interview';
-    if (hasInScreening || apps.length > 0) return 'screening';
+    // Verificar em ordem reversa de prioridade
+    const stageChecks = [
+      { id: 'hiring', check: hasApproved },
+      { id: 'negotiation', check: apps.some(a => a.current_stage === 'negotiation') },
+      { id: 'offer', check: apps.some(a => a.current_stage === 'offer' || a.current_stage === 'proposta') },
+      { id: 'reference_check', check: apps.some(a => a.current_stage === 'reference_check') },
+      { id: 'final_interview', check: apps.some(a => a.current_stage === 'final_interview' || a.current_stage === 'entrevista_final') },
+      { id: 'behavioral', check: apps.some(a => a.current_stage === 'behavioral') },
+      { id: 'practical_test', check: apps.some(a => a.current_stage === 'practical_test') },
+      { id: 'assessment', check: apps.some(a => a.current_stage === 'assessment' || a.current_stage === 'avaliacao') },
+      { id: 'video_interview', check: apps.some(a => a.current_stage === 'video_interview') },
+      { id: 'interview', check: apps.some(a => a.current_stage === 'interview' || a.current_stage === 'entrevista') },
+      { id: 'phone_screening', check: apps.some(a => a.current_stage === 'phone_screening') },
+      { id: 'screening', check: apps.some(a => a.current_stage === 'screening' || a.current_stage === 'triagem') || apps.length > 0 },
+    ];
+
+    for (const { id, check } of stageChecks) {
+      if (check && enabledStages.includes(id)) return id;
+    }
+
     return 'published';
   };
 
   // Organizar items nas colunas
-  const getColumns = (columnsConfig: typeof ALL_COLUMNS): KanbanColumn[] => {
+  const getColumns = (columnsConfig: ColumnConfig[]): KanbanColumn[] => {
     return columnsConfig.map(col => {
       let items: (JobRequest | PublishedJob)[] = [];
       
@@ -282,15 +425,16 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
   };
 
   const getFilteredColumns = () => {
+    const enabledCols = getEnabledColumns();
     switch (activeTab) {
       case 'requisition':
-        return getColumns(REQUISITION_COLUMNS);
+        return getColumns(enabledCols.filter(c => c.phase === 'requisition'));
       case 'recruitment':
-        return getColumns(RECRUITMENT_COLUMNS);
+        return getColumns(enabledCols.filter(c => c.phase === 'recruitment'));
       case 'selection':
-        return getColumns(SELECTION_COLUMNS);
+        return getColumns(enabledCols.filter(c => c.phase === 'selection'));
       default:
-        return getColumns(ALL_COLUMNS);
+        return getColumns(enabledCols);
     }
   };
 
@@ -304,7 +448,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     
     if (sourceColId === destColId) return;
 
-    const allCols = getColumns(ALL_COLUMNS);
+    const allCols = getColumns(getEnabledColumns());
     const sourceCol = allCols.find(c => c.id === sourceColId);
     const destCol = allCols.find(c => c.id === destColId);
     
@@ -316,33 +460,6 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     // Verificar permissões
     if (!isOwner && ['approved', 'pending_review', 'published'].includes(destColId)) {
       toast.error('Apenas o gestor pode aprovar requisições');
-      return;
-    }
-
-    // Validar transições permitidas para requisições
-    const validRequestTransitions: Record<string, string[]> = {
-      'draft': ['pending_approval'],
-      'pending_approval': ['approved', 'draft'],
-      'approved': ['in_creation'],
-      'in_creation': ['pending_review'],
-      'pending_review': ['published', 'in_creation'],
-    };
-
-    // Validar transições para vagas publicadas
-    const validJobTransitions: Record<string, string[]> = {
-      'published': ['screening'],
-      'screening': ['interview', 'published'],
-      'interview': ['assessment', 'screening'],
-      'assessment': ['final_interview', 'interview'],
-      'final_interview': ['offer', 'assessment'],
-      'offer': ['hiring', 'final_interview'],
-      'hiring': [],
-    };
-
-    const transitions = sourceCol.type === 'request' ? validRequestTransitions : validJobTransitions;
-
-    if (!transitions[sourceColId]?.includes(destColId)) {
-      toast.error('Movimento não permitido neste fluxo');
       return;
     }
 
@@ -368,7 +485,6 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
         toast.info('Use o botão "Aprovar e Publicar" na página de detalhes');
         return;
       } else if (sourceCol.type === 'job' && destCol.type === 'job') {
-        // Para vagas publicadas, redirecionar para gestão de candidatos
         toast.info('Gerencie candidatos na página de processo seletivo');
         navigate(`/company/selection-process/${item.id}`);
         return;
@@ -571,12 +687,17 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
   ).length;
   const recruitmentCount = publishedJobs.filter(j => {
     const phase = getJobPhase(j);
-    return ['published', 'screening', 'interview'].includes(phase) && j.is_active;
+    return getEnabledColumns().filter(c => c.phase === 'recruitment').some(c => c.id === phase) && j.is_active;
   }).length;
   const selectionCount = publishedJobs.filter(j => {
     const phase = getJobPhase(j);
-    return ['assessment', 'final_interview', 'offer', 'hiring'].includes(phase) && j.is_active;
+    return getEnabledColumns().filter(c => c.phase === 'selection').some(c => c.id === phase) && j.is_active;
   }).length;
+
+  // Agrupar etapas por fase para o modal de configuração
+  const getStagesByPhase = (phase: 'requisition' | 'recruitment' | 'selection') => {
+    return ALL_AVAILABLE_STAGES.filter(s => s.phase === phase);
+  };
 
   return (
     <div className="space-y-4">
@@ -608,14 +729,24 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
           </TabsList>
         </Tabs>
 
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar vagas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar vagas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => setSettingsDialogOpen(true)}
+            title="Configurar Etapas"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -654,11 +785,6 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                       renderCard(item, column.type, index)
                     )}
                     {provided.placeholder}
-                    {column.items.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground text-xs">
-                        
-                      </div>
-                    )}
                   </div>
                 )}
               </Droppable>
@@ -666,6 +792,151 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
           ))}
         </div>
       </DragDropContext>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Configurar Etapas do Kanban
+            </DialogTitle>
+            <DialogDescription>
+              Selecione quais etapas deseja exibir no seu fluxo de gestão de vagas. Etapas obrigatórias não podem ser desativadas.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-6">
+              {/* Requisição */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Fase de Requisição
+                </h4>
+                <div className="grid gap-2">
+                  {getStagesByPhase('requisition').map(stage => (
+                    <div 
+                      key={stage.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border",
+                        enabledStages.includes(stage.id) ? stage.color : "bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <stage.icon className="h-4 w-4" />
+                        <div>
+                          <p className="font-medium text-sm">{stage.title}</p>
+                          <p className="text-xs text-muted-foreground">{stage.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {stage.isRequired && (
+                          <Badge variant="secondary" className="text-xs">Obrigatória</Badge>
+                        )}
+                        <Switch
+                          checked={enabledStages.includes(stage.id)}
+                          onCheckedChange={() => toggleStage(stage.id)}
+                          disabled={stage.isRequired}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recrutamento */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Fase de Recrutamento
+                </h4>
+                <div className="grid gap-2">
+                  {getStagesByPhase('recruitment').map(stage => (
+                    <div 
+                      key={stage.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border",
+                        enabledStages.includes(stage.id) ? stage.color : "bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <stage.icon className="h-4 w-4" />
+                        <div>
+                          <p className="font-medium text-sm">{stage.title}</p>
+                          <p className="text-xs text-muted-foreground">{stage.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {stage.isRequired && (
+                          <Badge variant="secondary" className="text-xs">Obrigatória</Badge>
+                        )}
+                        {stage.isOptional && (
+                          <Badge variant="outline" className="text-xs">Opcional</Badge>
+                        )}
+                        <Switch
+                          checked={enabledStages.includes(stage.id)}
+                          onCheckedChange={() => toggleStage(stage.id)}
+                          disabled={stage.isRequired}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Seleção */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Award className="h-4 w-4" />
+                  Fase de Seleção
+                </h4>
+                <div className="grid gap-2">
+                  {getStagesByPhase('selection').map(stage => (
+                    <div 
+                      key={stage.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border",
+                        enabledStages.includes(stage.id) ? stage.color : "bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <stage.icon className="h-4 w-4" />
+                        <div>
+                          <p className="font-medium text-sm">{stage.title}</p>
+                          <p className="text-xs text-muted-foreground">{stage.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {stage.isRequired && (
+                          <Badge variant="secondary" className="text-xs">Obrigatória</Badge>
+                        )}
+                        {stage.isOptional && (
+                          <Badge variant="outline" className="text-xs">Opcional</Badge>
+                        )}
+                        <Switch
+                          checked={enabledStages.includes(stage.id)}
+                          onCheckedChange={() => toggleStage(stage.id)}
+                          disabled={stage.isRequired}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => saveEnabledStages(DEFAULT_ENABLED_STAGES)}>
+              Restaurar Padrão
+            </Button>
+            <Button onClick={() => setSettingsDialogOpen(false)}>
+              Concluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
