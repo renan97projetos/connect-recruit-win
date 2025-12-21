@@ -293,9 +293,16 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
               snapshot.isDragging && "shadow-brutal-lg"
             )}
           >
-            <Card className="border-2 border-foreground hover:shadow-brutal transition-all bg-background">
+            <Card 
+              className="border-2 border-foreground hover:shadow-brutal transition-all bg-background cursor-pointer"
+              onClick={() => navigate(
+                isRequest 
+                  ? `/company/job-requests/${item.id}`
+                  : `/company/selection-process/${item.id}`
+              )}
+            >
               <CardHeader className="p-3 pb-2">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2" onClick={(e) => e.stopPropagation()}>
                   <div 
                     {...provided.dragHandleProps}
                     className="cursor-grab active:cursor-grabbing mt-1"
@@ -326,7 +333,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                         )}
                       >
                         <Eye className="mr-2 h-4 w-4" />
-                        Ver Detalhes
+                        {isRequest ? 'Ver Detalhes' : 'Gerenciar Candidatos'}
                       </DropdownMenuItem>
                       {isRequest && (item as JobRequest).status === 'in_creation' && (
                         <DropdownMenuItem onClick={() => navigate(`/company/job-requests/${item.id}/edit`)}>

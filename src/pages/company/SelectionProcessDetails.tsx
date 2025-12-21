@@ -190,7 +190,7 @@ export default function SelectionProcessDetails() {
         title: 'Vaga arquivada',
         description: 'A vaga foi movida para o histórico de processos.',
       });
-      navigate('/company/selection-process');
+      navigate('/company/job-requests');
     }
 
     setShowArchiveDialog(false);
@@ -837,9 +837,9 @@ export default function SelectionProcessDetails() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate('/company/selection-process')}>
+            <Button variant="ghost" onClick={() => navigate('/company/job-requests')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
+              Voltar ao Kanban
             </Button>
             
             <div className="flex items-center gap-2">
