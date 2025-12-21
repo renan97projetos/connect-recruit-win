@@ -35,8 +35,7 @@ interface CompanyLayoutProps {
 
 const mainMenuItems = [
   { path: '/company', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/company/job-requests', label: 'Criação de Vagas', icon: ClipboardList },
-  { path: '/company/selection-process', label: 'Processo Seletivo', icon: ClipboardList },
+  { path: '/company/job-requests', label: 'Gestão de Vagas', icon: ClipboardList },
   { path: '/company/job-history', label: 'Histórico', icon: Archive },
   { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp },
 ];
