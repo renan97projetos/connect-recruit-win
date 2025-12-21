@@ -9,8 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Eye, Clock, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Plus, Eye, Clock, CheckCircle, XCircle, FileText, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface JobRequest {
   id: string;
@@ -47,12 +58,37 @@ export default function JobRequests() {
   const { hasPermission } = usePermissions();
   const [requests, setRequests] = useState<JobRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && (userRole === 'company' || userRole === 'admin') && companyId && !roleLoading) {
       fetchRequests();
     }
   }, [user, userRole, companyId, roleLoading]);
+
+  const handleDeleteRequest = async (requestId: string) => {
+    setDeletingId(requestId);
+    try {
+      const { error } = await supabase
+        .from('job_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast.success('Requisição excluída com sucesso!');
+      setRequests(requests.filter(r => r.id !== requestId));
+    } catch (error: any) {
+      console.error('Error deleting request:', error);
+      toast.error('Erro ao excluir requisição');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const canDeleteRequest = (status: string) => {
+    return status === 'draft' || status === 'rejected';
+  };
 
   const fetchRequests = async () => {
     try {
@@ -162,13 +198,44 @@ export default function JobRequests() {
                         Criado em {new Date(request.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/company/job-requests/${request.id}`)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver Detalhes
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate(`/company/job-requests/${request.id}`)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver Detalhes
+                      </Button>
+                      
+                      {canDeleteRequest(request.status) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Excluir Requisição</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir a requisição "{request.position_title}"? 
+                                Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteRequest(request.id)}
+                                disabled={deletingId === request.id}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {deletingId === request.id ? 'Excluindo...' : 'Excluir'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
