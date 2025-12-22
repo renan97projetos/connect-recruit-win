@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { CandidateLayout } from '@/components/CandidateLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +25,8 @@ import {
   Award,
   Save,
   X,
-  Loader2
+  Loader2,
+  CalendarIcon
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -509,18 +515,45 @@ export default function CandidateProfile() {
                   }}
                 />
                 <div className="space-y-2">
-                  <Label htmlFor="birthDate">Data de Nascimento *</Label>
-                  <Input
-                    id="birthDate"
-                    type="date"
-                    value={profile.birth_date || ''}
-                    onChange={(e) => {
-                      queryClient.setQueryData(['candidate-profile', user?.id], {
-                        ...profile,
-                        birth_date: e.target.value
-                      });
-                    }}
-                  />
+                  <Label>Data de Nascimento *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !profile.birth_date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {profile.birth_date ? (
+                          format(parse(profile.birth_date, 'yyyy-MM-dd', new Date()), "dd/MM/yyyy")
+                        ) : (
+                          <span>Selecione a data</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={profile.birth_date ? parse(profile.birth_date, 'yyyy-MM-dd', new Date()) : undefined}
+                        onSelect={(date) => {
+                          queryClient.setQueryData(['candidate-profile', user?.id], {
+                            ...profile,
+                            birth_date: date ? format(date, 'yyyy-MM-dd') : null
+                          });
+                        }}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1940-01-01")
+                        }
+                        captionLayout="dropdown-buttons"
+                        fromYear={1940}
+                        toYear={new Date().getFullYear()}
+                        locale={ptBR}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
