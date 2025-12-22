@@ -392,20 +392,27 @@ export default function CandidateProfile() {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-cv-${Date.now()}.${fileExt}`;
+      // Salvar na pasta do usuário para atender à política RLS
+      const filePath = `${user.id}/cv-${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       updateProfileMutation.mutate({ cv_url: publicUrl });
+      
+      toast({
+        title: 'CV enviado!',
+        description: 'Seu currículo foi atualizado com sucesso.',
+      });
     } catch (error) {
+      console.error('Erro no upload:', error);
       toast({
         title: 'Erro ao enviar CV',
         description: 'Não foi possível fazer o upload do arquivo.',
