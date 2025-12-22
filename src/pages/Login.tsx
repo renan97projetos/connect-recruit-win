@@ -54,7 +54,7 @@ export default function Login() {
 
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error, role } = await signIn(email, password);
     
     if (!error) {
       toast({
@@ -62,15 +62,13 @@ export default function Login() {
         description: 'Redirecionando...',
       });
       
-      setTimeout(() => {
-        const dashboardRoutes = {
-          admin: '/admin/dashboard',
-          company: '/company',
-          candidate: '/candidate',
-        };
-        
-        navigate(userRole ? dashboardRoutes[userRole] : '/');
-      }, 500);
+      const dashboardRoutes = {
+        admin: '/admin/dashboard',
+        company: '/company',
+        candidate: '/candidate',
+      };
+      
+      navigate(role ? dashboardRoutes[role] : '/');
     } else {
       let errorMessage = 'Verifique suas credenciais';
       

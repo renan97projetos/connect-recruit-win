@@ -8,7 +8,7 @@ interface AuthContextType {
   userRole: 'admin' | 'company' | 'candidate' | null;
   loading: boolean;
   signUp: (email: string, password: string, name: string, role: 'admin' | 'company' | 'candidate') => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; role?: 'admin' | 'company' | 'candidate' | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
@@ -100,13 +100,32 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+  const signIn = async (email: string, password: string): Promise<{ error: any; role?: 'admin' | 'company' | 'candidate' | null }> => {
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    return { error };
+    if (error) return { error };
+
+    // Buscar o role imediatamente após o login
+    if (data.user) {
+      try {
+        const { data: roleData } = await (supabase as any)
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+        
+        const role = (roleData?.role as 'admin' | 'company' | 'candidate') || null;
+        setUserRole(role);
+        return { error: null, role };
+      } catch (e) {
+        return { error: null, role: null };
+      }
+    }
+
+    return { error: null };
   };
 
   const signOut = async () => {
