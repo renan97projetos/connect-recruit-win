@@ -100,8 +100,8 @@ export default function BackofficePlans() {
         super_admin_id: user?.id,
         action: 'CREATE',
         entity_type: 'plan',
-        new_data: formData,
-      });
+        new_data: formData as any,
+      } as any);
 
       toast({ title: 'Plano criado com sucesso!' });
       setIsCreateOpen(false);
@@ -147,9 +147,9 @@ export default function BackofficePlans() {
         action: 'UPDATE',
         entity_type: 'plan',
         entity_id: selectedPlan.id,
-        old_data: selectedPlan,
-        new_data: formData,
-      });
+        old_data: selectedPlan as any,
+        new_data: formData as any,
+      } as any);
 
       toast({ title: 'Plano atualizado com sucesso!' });
       setIsEditOpen(false);
@@ -178,8 +178,8 @@ export default function BackofficePlans() {
         action: 'DELETE',
         entity_type: 'plan',
         entity_id: plan.id,
-        old_data: plan,
-      });
+        old_data: plan as any,
+      } as any);
 
       toast({ title: 'Plano excluído com sucesso!' });
       fetchPlans();
