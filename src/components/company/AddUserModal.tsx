@@ -19,17 +19,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Mail, Loader2, Info } from 'lucide-react';
 
 const PERMISSIONS = [
   { key: 'view_vagas', label: 'Ver vagas abertas' },
@@ -40,14 +35,11 @@ const PERMISSIONS = [
   { key: 'avaliar_candidatos', label: 'Inserir feedbacks ou notas' },
   { key: 'view_dashboard', label: 'Acessar relatórios e indicadores' },
   { key: 'manage_configuracoes', label: 'Alterar configurações da conta' },
-  // NOTA: manage_usuarios não está disponível para colaboradores
-  // Apenas o Owner (gestor da empresa) pode gerenciar usuários
 ];
 
 const formSchema = z.object({
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
   email: z.string().email('E-mail inválido'),
-  status: z.enum(['ativo', 'inativo']),
   permissions: z.array(z.string()).default([]),
 });
 
@@ -69,7 +61,6 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
     defaultValues: {
       name: '',
       email: '',
-      status: 'ativo',
       permissions: [],
     },
   });
@@ -78,72 +69,92 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
     try {
       setLoading(true);
 
-      // Gerar senha temporária de 12 caracteres
-      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase();
+      // Verificar se já existe um convite pendente para este email
+      const { data: existingInvitation } = await supabase
+        .from('company_invitations')
+        .select('id, status')
+        .eq('email', values.email)
+        .eq('company_id', user?.id)
+        .eq('status', 'pending')
+        .maybeSingle();
 
-      // Criar usuário no Supabase Auth via edge function
-      const { data: authResponse, error: authError } = await supabase.functions.invoke('create-company-user', {
-        body: {
-          email: values.email,
-          name: values.name,
-          tempPassword: tempPassword,
-        },
-      });
+      if (existingInvitation) {
+        toast({
+          title: 'Convite já enviado',
+          description: 'Já existe um convite pendente para este email. Cancele o anterior para enviar um novo.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-      if (authError || !authResponse?.userId) throw authError || new Error('Erro ao criar usuário');
-
-      // Criar usuário na tabela company_users
-      const { data: userData, error: userError } = await supabase
+      // Verificar se o usuário já está cadastrado na empresa
+      const { data: existingUser } = await supabase
         .from('company_users')
+        .select('id')
+        .eq('email', values.email)
+        .eq('company_id', user?.id)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast({
+          title: 'Usuário já cadastrado',
+          description: 'Este email já está cadastrado como colaborador desta empresa.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Criar convite
+      const { data: invitation, error: inviteError } = await supabase
+        .from('company_invitations')
         .insert({
           company_id: user?.id,
-          user_id: authResponse.userId,
-          name: values.name,
           email: values.email,
-          status: values.status,
+          name: values.name,
+          permissions: values.permissions,
+          invited_by: user?.id,
+          status: 'pending',
         })
         .select()
         .single();
 
-      if (userError) throw userError;
+      if (inviteError) throw inviteError;
 
-      // Criar permissões
-      if (values.permissions.length > 0) {
-        const permissionsData = values.permissions.map(permission => ({
-          company_user_id: userData.id,
-          permission_key: permission as any,
-          allowed: true,
-        }));
+      // Enviar email de convite
+      const { error: emailError } = await supabase.functions.invoke('send-invitation-email', {
+        body: {
+          invitationId: invitation.id,
+        },
+      });
 
-        const { error: permError } = await supabase
-          .from('user_permissions')
-          .insert(permissionsData);
-
-        if (permError) throw permError;
+      if (emailError) {
+        console.error('Erro ao enviar email:', emailError);
+        // Não falha a operação, apenas avisa
+        toast({
+          title: 'Convite criado',
+          description: 'O convite foi criado, mas houve um problema ao enviar o email. O usuário pode acessar o link diretamente.',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Convite enviado!',
+          description: `Um email de convite foi enviado para ${values.email}`,
+        });
       }
 
       // Registrar log de auditoria
       await supabase.from('audit_logs').insert({
         company_id: user?.id,
-        company_user_id: userData.id,
-        action: `Usuário ${values.name} foi adicionado com permissões: ${values.permissions.join(', ')}`,
+        action: `Convite enviado para ${values.name} (${values.email}) com permissões: ${values.permissions.join(', ') || 'nenhuma'}`,
         changed_by: user?.id,
-      });
-
-      // TODO: Automação de email temporariamente desativada
-      // Senha temporária gerada: disponível apenas no console para debug
-      console.log('Usuário criado. Senha temporária:', tempPassword);
-
-      toast({
-        title: 'Usuário criado com sucesso',
-        description: 'O usuário receberá um email com as credenciais de acesso em breve.',
       });
 
       form.reset();
       onSuccess();
     } catch (error: any) {
+      console.error('Erro ao criar convite:', error);
       toast({
-        title: 'Erro ao adicionar usuário',
+        title: 'Erro ao enviar convite',
         description: error.message,
         variant: 'destructive',
       });
@@ -156,11 +167,22 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar Usuário</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Convidar Colaborador
+          </DialogTitle>
           <DialogDescription>
-            Preencha os dados do novo usuário e defina suas permissões
+            Envie um convite por email para o novo colaborador criar sua conta
           </DialogDescription>
         </DialogHeader>
+
+        <Alert className="bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            O colaborador receberá um email com um link para criar sua própria senha e ativar o acesso.
+            O convite expira em 7 dias.
+          </AlertDescription>
+        </Alert>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -194,35 +216,16 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
 
             <FormField
               control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="ativo">Ativo</SelectItem>
-                      <SelectItem value="inativo">Inativo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="permissions"
               render={() => (
                 <FormItem>
                   <div className="mb-4">
                     <FormLabel>Permissões</FormLabel>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Selecione as permissões que o colaborador terá após aceitar o convite
+                    </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
                     {PERMISSIONS.map((permission) => (
                       <FormField
                         key={permission.key}
@@ -248,7 +251,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
                                   }}
                                 />
                               </FormControl>
-                              <FormLabel className="font-normal">
+                              <FormLabel className="font-normal cursor-pointer">
                                 {permission.label}
                               </FormLabel>
                             </FormItem>
@@ -262,7 +265,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
               )}
             />
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -272,7 +275,17 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
                 Cancelar
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Salvando...' : 'Adicionar Usuário'}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Enviar Convite
+                  </>
+                )}
               </Button>
             </div>
           </form>
