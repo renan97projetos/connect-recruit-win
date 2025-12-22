@@ -135,18 +135,18 @@ export default function JobRequestDetails() {
   const handleApproveReview = async () => {
     setActionLoading(true);
     try {
-      // Buscar nome da empresa do perfil
+      // Buscar nome da empresa do perfil do DONO da requisição (não do admin)
       const { data: profileData } = await supabase
         .from('profiles')
         .select('company_name')
-        .eq('id', user?.id)
+        .eq('id', request?.company_id)
         .single();
 
-      // Criar a vaga no sistema
+      // Criar a vaga no sistema - a vaga pertence à empresa (company_id da requisição)
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .insert({
-          company_id: user?.id,
+          company_id: request?.company_id,
           company_name: profileData?.company_name || 'Empresa',
           title: request?.position_title,
           description: request?.job_description || request?.desired_profile,
@@ -259,39 +259,24 @@ export default function JobRequestDetails() {
   const isAdmin = userRole === 'admin';
   const isCompanyOwnerForRequest = user?.id === request.company_id;
   
-  console.log('🔐 JobRequestDetails - Auth Check:', {
-    isAdmin,
-    isOwner,
-    userId: user?.id,
-    companyId: request.company_id,
-    requestStatus: request.status,
-    isUserTheCompanyOwner: isCompanyOwnerForRequest
-  });
+  // APENAS o admin (master) pode aprovar/rejeitar vagas
+  // O owner da empresa NÃO pode aprovar, apenas visualiza o status
+  const canApproveRequisition = isAdmin && request.status === 'pending_approval';
+  const canApproveReview = isAdmin && request.status === 'pending_review';
   
-  // Apenas o dono da empresa (ID igual ao company_id da requisição) ou admin pode aprovar/rejeitar
-  // Colaborador (conta B) NUNCA aprova, mesmo que tenha criado a requisição
-  const canApproveRequisition = (
-    (isAdmin || isCompanyOwnerForRequest) &&
-    request.status === 'pending_approval'
-  );
-  
-  const canApproveReview = (
-    (isAdmin || isCompanyOwnerForRequest) &&
+  // Verifica se está aguardando aprovação do admin (para mostrar mensagem ao owner)
+  const isWaitingAdminApproval = !isAdmin && (
+    request.status === 'pending_approval' || 
     request.status === 'pending_review'
   );
   
-  // Usuário pode excluir se for rascunho, pendente de aprovação ou rejeitado
-  const canDeleteRequest = 
-    request.status === 'draft' || 
-    request.status === 'pending_approval' || 
-    request.status === 'rejected';
-  
-  console.log('🔐 Permission Flags:', {
-    canApproveRequisition,
-    canApproveReview,
-    canDeleteRequest,
-    reason: !isAdmin && !isCompanyOwnerForRequest ? 'Not owner or admin' : 'Owner or admin'
-  });
+  // Usuário pode excluir se for rascunho ou rejeitado (não pode excluir se estiver pendente)
+  const canDeleteRequest = isAdmin || (
+    isCompanyOwnerForRequest && (
+      request.status === 'draft' || 
+      request.status === 'rejected'
+    )
+  );
 
   return (
     <CompanyLayout title={request.position_title}>
@@ -332,14 +317,33 @@ export default function JobRequestDetails() {
           )}
         </div>
 
-        {/* Ações de Aprovação/Rejeição */}
+        {/* Mensagem para empresa aguardando aprovação do admin */}
+        {isWaitingAdminApproval && (
+          <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+            <CardHeader>
+              <CardTitle className="text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Aguardando Aprovação
+              </CardTitle>
+              <CardDescription className="text-amber-600 dark:text-amber-300">
+                {request.status === 'pending_approval' 
+                  ? 'Esta requisição está aguardando aprovação do administrador SRH.'
+                  : 'Esta vaga está aguardando revisão e publicação pelo administrador SRH.'}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {/* Ações de Aprovação/Rejeição - APENAS ADMIN */}
         {(canApproveRequisition || canApproveReview) && (
           <Card className="border-primary">
             <CardHeader>
               <CardTitle>Ações Necessárias</CardTitle>
               <CardDescription>
-                {canApproveRequisition && 'Como gestor da empresa, você precisa aprovar esta requisição'}
-                {canApproveReview && 'Como gestor da empresa, você precisa revisar e publicar esta vaga'}
+                {canApproveRequisition && 'Como administrador, você precisa aprovar esta requisição'}
+                {canApproveReview && 'Como administrador, você precisa revisar e publicar esta vaga'}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-4">
