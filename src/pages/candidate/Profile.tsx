@@ -705,8 +705,9 @@ export default function CandidateProfile() {
                   )}
                 </div>
                 {profile.cv_url && (
-                  <p className="text-sm text-muted-foreground">
-                    CV enviado
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="text-green-600">✓</span>
+                    CV enviado: <span className="font-medium text-foreground">{profile.cv_url.split('/').pop()?.split('?')[0] || 'arquivo.pdf'}</span>
                   </p>
                 )}
               </div>
