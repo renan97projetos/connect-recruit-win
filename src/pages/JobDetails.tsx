@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function JobDetails() {
   const { id } = useParams<{ id: string }>();
   const [job, setJob] = useState<any | null>(null);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [hasApplied, setHasApplied] = useState(false);
   const [applying, setApplying] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,19 @@ export default function JobDetails() {
       }
 
       setJob(jobData);
+
+      // Fetch company logo from profiles (avatar_url)
+      if (jobData.company_id) {
+        const { data: companyProfile } = await supabase
+          .from('profiles')
+          .select('avatar_url, company_name')
+          .eq('id', jobData.company_id)
+          .maybeSingle();
+        
+        if (companyProfile?.avatar_url) {
+          setCompanyLogo(companyProfile.avatar_url);
+        }
+      }
       
       // Check user role and if has applied
       if (user) {
@@ -245,6 +259,19 @@ export default function JobDetails() {
         </Button>
 
         <div className="max-w-4xl mx-auto grid gap-6">
+          {/* Company Logo Header */}
+          {companyLogo && (
+            <div className="flex justify-center py-6">
+              <div className="bg-card rounded-2xl p-6 shadow-sm border">
+                <img 
+                  src={companyLogo} 
+                  alt={`Logo ${job.company_name}`}
+                  className="h-20 w-auto object-contain max-w-[200px]"
+                />
+              </div>
+            </div>
+          )}
+
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
@@ -252,11 +279,11 @@ export default function JobDetails() {
                   <CardTitle className="text-3xl mb-2">{job.title}</CardTitle>
                   <CardDescription className="flex items-center gap-2 text-base">
                     <Building2 className="h-4 w-4" />
-                    {job.companyName}
+                    {job.company_name}
                   </CardDescription>
                 </div>
                 <Badge variant="secondary" className="text-sm">
-                  {getJobTypeLabel(job.type)}
+                  {getJobTypeLabel(job.job_type)}
                 </Badge>
               </div>
 
@@ -264,7 +291,7 @@ export default function JobDetails() {
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   {getLocationLabel(job.location)}
-                  {job.city && ` • ${job.city}, ${job.state}`}
+                  {job.city && `, ${job.city}`}{job.state && ` - ${job.state}`}
                 </div>
                 {job.salary_min && job.salary_max && (
                   <div className="flex items-center gap-1">
