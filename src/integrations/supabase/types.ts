@@ -105,6 +105,45 @@ export type Database = {
           },
         ]
       }
+      backoffice_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          super_admin_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          super_admin_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          super_admin_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       candidate_stages: {
         Row: {
           candidate_id: string
@@ -771,6 +810,96 @@ export type Database = {
           },
         ]
       }
+      platform_metrics: {
+        Row: {
+          active_tenants: number | null
+          churned_tenants: number | null
+          created_at: string | null
+          date: string
+          id: string
+          new_tenants: number | null
+          revenue_monthly: number | null
+          total_applications: number | null
+          total_employees: number | null
+          total_jobs: number | null
+          total_tenants: number | null
+          total_users: number | null
+        }
+        Insert: {
+          active_tenants?: number | null
+          churned_tenants?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          new_tenants?: number | null
+          revenue_monthly?: number | null
+          total_applications?: number | null
+          total_employees?: number | null
+          total_jobs?: number | null
+          total_tenants?: number | null
+          total_users?: number | null
+        }
+        Update: {
+          active_tenants?: number | null
+          churned_tenants?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          new_tenants?: number | null
+          revenue_monthly?: number | null
+          total_applications?: number | null
+          total_employees?: number | null
+          total_jobs?: number | null
+          total_tenants?: number | null
+          total_users?: number | null
+        }
+        Relationships: []
+      }
+      platform_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          max_employees: number | null
+          max_jobs: number | null
+          max_users: number | null
+          name: string
+          price_monthly: number | null
+          price_yearly: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_employees?: number | null
+          max_jobs?: number | null
+          max_users?: number | null
+          name: string
+          price_monthly?: number | null
+          price_yearly?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_employees?: number | null
+          max_jobs?: number | null
+          max_users?: number | null
+          name?: string
+          price_monthly?: number | null
+          price_yearly?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -932,6 +1061,80 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      tenants: {
+        Row: {
+          billing_email: string | null
+          cnpj: string | null
+          company_email: string
+          company_id: string
+          company_name: string
+          company_phone: string | null
+          created_at: string | null
+          current_employees_count: number | null
+          current_jobs_count: number | null
+          current_users_count: number | null
+          id: string
+          notes: string | null
+          plan_id: string | null
+          settings: Json | null
+          status: string
+          subscription_ends_at: string | null
+          subscription_starts_at: string | null
+          trial_ends_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_email?: string | null
+          cnpj?: string | null
+          company_email: string
+          company_id: string
+          company_name: string
+          company_phone?: string | null
+          created_at?: string | null
+          current_employees_count?: number | null
+          current_jobs_count?: number | null
+          current_users_count?: number | null
+          id?: string
+          notes?: string | null
+          plan_id?: string | null
+          settings?: Json | null
+          status?: string
+          subscription_ends_at?: string | null
+          subscription_starts_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_email?: string | null
+          cnpj?: string | null
+          company_email?: string
+          company_id?: string
+          company_name?: string
+          company_phone?: string | null
+          created_at?: string | null
+          current_employees_count?: number | null
+          current_jobs_count?: number | null
+          current_users_count?: number | null
+          id?: string
+          notes?: string | null
+          plan_id?: string | null
+          settings?: Json | null
+          status?: string
+          subscription_ends_at?: string | null
+          subscription_starts_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "platform_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_permissions: {
         Row: {
@@ -1130,6 +1333,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       user_has_any_permission: {
         Args: {
           _company_id: string
