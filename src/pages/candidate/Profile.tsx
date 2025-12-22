@@ -88,22 +88,71 @@ interface Skill {
   level: 'basico' | 'intermediario' | 'avancado';
 }
 
-const SKILL_SUGGESTIONS = [
-  'Microsoft Excel', 'Microsoft Word', 'Microsoft PowerPoint', 'Google Sheets',
-  'Pacote Office', 'SAP', 'ERP', 'CRM', 'Salesforce', 'Power BI',
-  'Inglês', 'Espanhol', 'Alemão', 'Francês', 'Mandarim',
-  'Liderança', 'Gestão de Pessoas', 'Gestão de Projetos', 'Comunicação',
-  'Trabalho em Equipe', 'Resolução de Problemas', 'Pensamento Crítico',
-  'Negociação', 'Vendas', 'Atendimento ao Cliente', 'Marketing Digital',
-  'SEO', 'Google Ads', 'Facebook Ads', 'Redes Sociais',
-  'JavaScript', 'Python', 'Java', 'C#', 'SQL', 'React', 'Node.js',
-  'HTML', 'CSS', 'Git', 'AWS', 'Azure', 'Docker',
-  'Photoshop', 'Illustrator', 'Figma', 'Canva', 'AutoCAD',
-  'Contabilidade', 'Finanças', 'Análise de Dados', 'Estatística',
-  'Logística', 'Compras', 'Estoque', 'Supply Chain',
-  'RH', 'Recrutamento', 'Treinamento', 'Departamento Pessoal',
-  'Qualidade', 'ISO 9001', 'Lean', 'Six Sigma', 'Kaizen',
-  'Segurança do Trabalho', 'NR-10', 'NR-35', 'Primeiros Socorros'
+const SKILL_SUGGESTIONS: { name: string; level: 'basico' | 'intermediario' | 'avancado' }[] = [
+  // Ferramentas de escritório - geralmente intermediário
+  { name: 'Microsoft Excel', level: 'intermediario' },
+  { name: 'Microsoft Word', level: 'intermediario' },
+  { name: 'Microsoft PowerPoint', level: 'intermediario' },
+  { name: 'Google Sheets', level: 'intermediario' },
+  { name: 'Pacote Office', level: 'intermediario' },
+  // Sistemas corporativos - geralmente básico para iniciantes
+  { name: 'SAP', level: 'basico' },
+  { name: 'ERP', level: 'basico' },
+  { name: 'CRM', level: 'basico' },
+  { name: 'Salesforce', level: 'basico' },
+  { name: 'Power BI', level: 'intermediario' },
+  // Idiomas - geralmente intermediário
+  { name: 'Inglês', level: 'intermediario' },
+  { name: 'Espanhol', level: 'basico' },
+  { name: 'Alemão', level: 'basico' },
+  { name: 'Francês', level: 'basico' },
+  { name: 'Mandarim', level: 'basico' },
+  // Soft skills - geralmente intermediário
+  { name: 'Liderança', level: 'intermediario' },
+  { name: 'Gestão de Pessoas', level: 'intermediario' },
+  { name: 'Gestão de Projetos', level: 'intermediario' },
+  { name: 'Comunicação', level: 'avancado' },
+  { name: 'Trabalho em Equipe', level: 'avancado' },
+  { name: 'Resolução de Problemas', level: 'intermediario' },
+  { name: 'Pensamento Crítico', level: 'intermediario' },
+  // Comercial
+  { name: 'Negociação', level: 'intermediario' },
+  { name: 'Vendas', level: 'intermediario' },
+  { name: 'Atendimento ao Cliente', level: 'intermediario' },
+  { name: 'Marketing Digital', level: 'basico' },
+  { name: 'SEO', level: 'basico' },
+  { name: 'Google Ads', level: 'basico' },
+  { name: 'Facebook Ads', level: 'basico' },
+  { name: 'Redes Sociais', level: 'intermediario' },
+  // Programação
+  { name: 'JavaScript', level: 'intermediario' },
+  { name: 'Python', level: 'intermediario' },
+  { name: 'Java', level: 'intermediario' },
+  { name: 'SQL', level: 'intermediario' },
+  { name: 'React', level: 'intermediario' },
+  { name: 'Node.js', level: 'intermediario' },
+  { name: 'HTML', level: 'intermediario' },
+  { name: 'CSS', level: 'intermediario' },
+  { name: 'Git', level: 'basico' },
+  // Design e ferramentas visuais
+  { name: 'Photoshop', level: 'intermediario' },
+  { name: 'Illustrator', level: 'intermediario' },
+  { name: 'Figma', level: 'intermediario' },
+  { name: 'Canva', level: 'intermediario' },
+  { name: 'AutoCAD', level: 'intermediario' },
+  // Administrativo
+  { name: 'Contabilidade', level: 'intermediario' },
+  { name: 'Finanças', level: 'intermediario' },
+  { name: 'Análise de Dados', level: 'intermediario' },
+  { name: 'Logística', level: 'intermediario' },
+  // RH
+  { name: 'Recrutamento', level: 'intermediario' },
+  { name: 'Treinamento', level: 'intermediario' },
+  { name: 'Departamento Pessoal', level: 'intermediario' },
+  // Qualidade
+  { name: 'ISO 9001', level: 'basico' },
+  { name: 'Lean', level: 'basico' },
+  { name: 'Six Sigma', level: 'basico' },
 ];
 
 const SKILL_LEVELS = {
@@ -442,7 +491,7 @@ export default function CandidateProfile() {
     updateProfileMutation.mutate({ educations: updatedEducations });
   };
 
-  const handleAddSkill = (skillName?: string) => {
+  const handleAddSkill = (skillName?: string, skillLevel?: 'basico' | 'intermediario' | 'avancado') => {
     if (!profile) return;
     const skillToAdd = skillName || newSkill.trim();
     if (!skillToAdd) return;
@@ -457,7 +506,9 @@ export default function CandidateProfile() {
       return;
     }
 
-    const newSkillObj: Skill = { name: skillToAdd, level: newSkillLevel };
+    // Use o nível passado como parâmetro (para sugestões) ou o nível do dropdown (para input manual)
+    const levelToUse = skillLevel || newSkillLevel;
+    const newSkillObj: Skill = { name: skillToAdd, level: levelToUse };
     const updatedSkills = [...currentSkills, newSkillObj];
     updateProfileMutation.mutate({ skills: updatedSkills as any });
     setNewSkill('');
@@ -978,20 +1029,21 @@ export default function CandidateProfile() {
               {/* Sugestões de habilidades */}
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">
-                  Sugestões (clique para adicionar como {SKILL_LEVELS[newSkillLevel].label}):
+                  Sugestões (clique para adicionar):
                 </Label>
                 <div className="flex flex-wrap gap-1.5">
                   {SKILL_SUGGESTIONS.filter(suggestion => 
-                    !normalizeSkills(profile.skills).some(s => s.name.toLowerCase() === suggestion.toLowerCase())
+                    !normalizeSkills(profile.skills).some(s => s.name.toLowerCase() === suggestion.name.toLowerCase())
                   ).slice(0, 20).map((suggestion) => (
                     <Badge
-                      key={suggestion}
+                      key={suggestion.name}
                       variant="outline"
-                      className={`cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs border-${SKILL_LEVELS[newSkillLevel].color.split(' ')[0].replace('bg-', '')}`}
-                      onClick={() => handleAddSkill(suggestion)}
+                      className={`cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs ${SKILL_LEVELS[suggestion.level].color}`}
+                      onClick={() => handleAddSkill(suggestion.name, suggestion.level)}
                     >
                       <Plus className="h-3 w-3 mr-1" />
-                      {suggestion}
+                      {suggestion.name}
+                      <span className="ml-1 opacity-70">• {SKILL_LEVELS[suggestion.level].label}</span>
                     </Badge>
                   ))}
                 </div>
