@@ -130,20 +130,9 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
         changed_by: user?.id,
       });
 
-      // Enviar email de boas-vindas com credenciais em background
-      supabase.functions.invoke('send-user-welcome-email', {
-        body: {
-          userName: values.name,
-          userEmail: values.email,
-          companyId: user?.id,
-          permissions: values.permissions,
-          tempPassword: tempPassword,
-        },
-      }).then(() => {
-        console.log('Email de boas-vindas enviado em background');
-      }).catch((emailError: any) => {
-        console.error('Erro ao enviar email de boas-vindas:', emailError);
-      });
+      // TODO: Automação de email temporariamente desativada
+      // Senha temporária gerada: disponível apenas no console para debug
+      console.log('Usuário criado. Senha temporária:', tempPassword);
 
       toast({
         title: 'Usuário criado com sucesso',
