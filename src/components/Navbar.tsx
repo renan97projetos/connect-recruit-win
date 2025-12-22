@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -81,12 +81,38 @@ export function Navbar() {
     }
   };
 
+  const location = useLocation();
+
   const navLinks = [
-    { to: "/", label: "Vagas" },
+    { to: "/#vagas", label: "Vagas" },
     { to: "/about", label: "Empresas" },
     { to: "/about", label: "Sobre" },
     { to: "/contact", label: "Ajuda" },
   ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+    if (to.includes('#')) {
+      e.preventDefault();
+      const [path, hash] = to.split('#');
+      
+      // Se já estamos na página correta, apenas faz scroll
+      if (location.pathname === path || (path === '/' && location.pathname === '/')) {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        // Navega para a página e depois faz scroll
+        navigate(path || '/');
+        setTimeout(() => {
+          const element = document.getElementById(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b-3 border-foreground bg-background">
@@ -111,6 +137,7 @@ export function Navbar() {
                 key={link.label}
                 to={link.to} 
                 className="px-4 py-2 font-semibold text-sm uppercase tracking-wide hover:bg-secondary rounded-lg transition-colors"
+                onClick={(e) => handleNavClick(e, link.to)}
               >
                 {link.label}
               </Link>
@@ -189,7 +216,10 @@ export function Navbar() {
                   key={link.label}
                   to={link.to} 
                   className="font-semibold py-3 px-4 rounded-lg hover:bg-secondary transition-colors uppercase tracking-wide"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(e, link.to);
+                    setMobileMenuOpen(false);
+                  }}
                 >
                   {link.label}
                 </Link>
