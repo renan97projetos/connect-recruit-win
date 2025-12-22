@@ -20,6 +20,7 @@ interface PermissionGuardProps {
   requireAll?: boolean; // Se true, requer todas as permissões. Se false, requer pelo menos uma
   fallback?: ReactNode;
   showAlert?: boolean;
+  requireOwner?: boolean; // Se true, requer que seja o OWNER da empresa
 }
 
 export function PermissionGuard({
@@ -28,11 +29,32 @@ export function PermissionGuard({
   requireAll = false,
   fallback,
   showAlert = true,
+  requireOwner = false,
 }: PermissionGuardProps) {
-  const { hasPermission, hasAnyPermission, hasAllPermissions, loading } = usePermissions();
+  const { hasPermission, hasAnyPermission, hasAllPermissions, isOwner, loading } = usePermissions();
 
   if (loading) {
     return <div className="text-center py-4">Verificando permissões...</div>;
+  }
+
+  // Se requireOwner é true, verifica se é OWNER
+  if (requireOwner && !isOwner) {
+    if (fallback) {
+      return <>{fallback}</>;
+    }
+    
+    if (showAlert) {
+      return (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Apenas o gestor da empresa (OWNER) pode acessar este recurso.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    return null;
   }
 
   const permissions = Array.isArray(permission) ? permission : [permission];
