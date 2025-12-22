@@ -34,7 +34,20 @@ import {
   Target,
   Sparkles,
   Shield,
-  HeartHandshake
+  HeartHandshake,
+  Mail,
+  ThumbsUp,
+  ThumbsDown,
+  CalendarCheck,
+  FileSearch,
+  Play,
+  Pause,
+  Copy,
+  ExternalLink,
+  ListChecks,
+  BarChart3,
+  Building2,
+  type LucideIcon
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -312,6 +325,113 @@ const ALL_AVAILABLE_STAGES: ColumnConfig[] = [
   },
 ];
 
+// Ações específicas por etapa
+interface StageAction {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  action: string; // Identificador da ação para o handler
+  variant?: 'default' | 'destructive';
+}
+
+const STAGE_ACTIONS: Record<string, StageAction[]> = {
+  // Fase de Requisição
+  draft: [
+    { id: 'edit', label: 'Editar Requisição', icon: Edit, action: 'edit_request' },
+    { id: 'submit', label: 'Enviar para Aprovação', icon: Send, action: 'submit_approval' },
+    { id: 'duplicate', label: 'Duplicar', icon: Copy, action: 'duplicate_request' },
+  ],
+  pending_approval: [
+    { id: 'view', label: 'Ver Detalhes', icon: Eye, action: 'view_request' },
+    { id: 'approve', label: 'Aprovar', icon: ThumbsUp, action: 'approve_request' },
+    { id: 'reject', label: 'Rejeitar', icon: ThumbsDown, action: 'reject_request', variant: 'destructive' },
+  ],
+  approved: [
+    { id: 'view', label: 'Ver Detalhes', icon: Eye, action: 'view_request' },
+    { id: 'start_creation', label: 'Iniciar Criação da Vaga', icon: Play, action: 'start_creation' },
+  ],
+  in_creation: [
+    { id: 'edit_job', label: 'Editar Descrição', icon: Edit, action: 'edit_job_description' },
+    { id: 'preview', label: 'Pré-visualizar', icon: Eye, action: 'preview_job' },
+    { id: 'submit_review', label: 'Enviar para Revisão', icon: FileCheck, action: 'submit_review' },
+  ],
+  pending_review: [
+    { id: 'view', label: 'Revisar Vaga', icon: FileSearch, action: 'review_job' },
+    { id: 'approve', label: 'Aprovar e Publicar', icon: Send, action: 'publish_job' },
+    { id: 'request_changes', label: 'Solicitar Alterações', icon: MessageSquare, action: 'request_changes' },
+  ],
+  // Fase de Recrutamento
+  published: [
+    { id: 'view_candidates', label: 'Ver Candidaturas', icon: Users, action: 'view_candidates' },
+    { id: 'share', label: 'Compartilhar Vaga', icon: ExternalLink, action: 'share_job' },
+    { id: 'edit', label: 'Editar Vaga', icon: Edit, action: 'edit_job' },
+    { id: 'pause', label: 'Pausar Vaga', icon: Pause, action: 'pause_job' },
+  ],
+  screening: [
+    { id: 'screen', label: 'Triar Currículos', icon: Filter, action: 'screen_resumes' },
+    { id: 'bulk_approve', label: 'Aprovar Selecionados', icon: ThumbsUp, action: 'bulk_approve' },
+    { id: 'bulk_reject', label: 'Reprovar Selecionados', icon: ThumbsDown, action: 'bulk_reject' },
+    { id: 'view_all', label: 'Ver Todos Candidatos', icon: Users, action: 'view_candidates' },
+  ],
+  phone_screening: [
+    { id: 'contact_list', label: 'Lista de Contatos', icon: Phone, action: 'contact_list' },
+    { id: 'schedule_calls', label: 'Agendar Ligações', icon: CalendarCheck, action: 'schedule_calls' },
+    { id: 'log_call', label: 'Registrar Ligação', icon: MessageSquare, action: 'log_call' },
+  ],
+  interview: [
+    { id: 'schedule', label: 'Agendar Entrevistas', icon: CalendarCheck, action: 'schedule_interviews' },
+    { id: 'view_scheduled', label: 'Ver Agendamentos', icon: Calendar, action: 'view_scheduled' },
+    { id: 'evaluate', label: 'Avaliar Candidatos', icon: ClipboardList, action: 'evaluate_candidates' },
+  ],
+  video_interview: [
+    { id: 'send_link', label: 'Enviar Link da Entrevista', icon: Video, action: 'send_video_link' },
+    { id: 'schedule', label: 'Agendar Entrevista', icon: CalendarCheck, action: 'schedule_video' },
+    { id: 'view_recordings', label: 'Ver Gravações', icon: Eye, action: 'view_recordings' },
+  ],
+  // Fase de Seleção
+  assessment: [
+    { id: 'send_test', label: 'Enviar Teste', icon: Send, action: 'send_test' },
+    { id: 'view_results', label: 'Ver Resultados', icon: BarChart3, action: 'view_test_results' },
+    { id: 'configure_test', label: 'Configurar Avaliação', icon: Settings, action: 'configure_test' },
+  ],
+  practical_test: [
+    { id: 'send_challenge', label: 'Enviar Desafio', icon: Target, action: 'send_challenge' },
+    { id: 'review_submissions', label: 'Revisar Entregas', icon: FileSearch, action: 'review_submissions' },
+    { id: 'set_deadline', label: 'Definir Prazo', icon: Clock, action: 'set_deadline' },
+  ],
+  behavioral: [
+    { id: 'send_assessment', label: 'Enviar Avaliação', icon: Sparkles, action: 'send_behavioral' },
+    { id: 'view_profiles', label: 'Ver Perfis', icon: Users, action: 'view_behavioral_profiles' },
+    { id: 'compare', label: 'Comparar Candidatos', icon: BarChart3, action: 'compare_candidates' },
+  ],
+  final_interview: [
+    { id: 'schedule', label: 'Agendar com Gestor', icon: CalendarCheck, action: 'schedule_final' },
+    { id: 'invite_manager', label: 'Convidar Gestor', icon: UserPlus, action: 'invite_manager' },
+    { id: 'prepare_brief', label: 'Preparar Briefing', icon: FileText, action: 'prepare_brief' },
+  ],
+  reference_check: [
+    { id: 'request_references', label: 'Solicitar Referências', icon: Mail, action: 'request_references' },
+    { id: 'contact_references', label: 'Contatar Referências', icon: Phone, action: 'contact_references' },
+    { id: 'log_feedback', label: 'Registrar Feedback', icon: MessageSquare, action: 'log_reference_feedback' },
+  ],
+  offer: [
+    { id: 'create_offer', label: 'Criar Proposta', icon: FileText, action: 'create_offer' },
+    { id: 'send_offer', label: 'Enviar Proposta', icon: Send, action: 'send_offer' },
+    { id: 'view_template', label: 'Ver Modelos', icon: FileCheck, action: 'view_offer_templates' },
+  ],
+  negotiation: [
+    { id: 'update_terms', label: 'Atualizar Termos', icon: Edit, action: 'update_terms' },
+    { id: 'compare_offers', label: 'Comparar Propostas', icon: BarChart3, action: 'compare_offers' },
+    { id: 'finalize', label: 'Finalizar Negociação', icon: CheckCircle, action: 'finalize_negotiation' },
+  ],
+  hiring: [
+    { id: 'collect_docs', label: 'Coletar Documentos', icon: FileText, action: 'collect_documents' },
+    { id: 'send_welcome', label: 'Enviar Boas-vindas', icon: Mail, action: 'send_welcome' },
+    { id: 'onboarding', label: 'Iniciar Onboarding', icon: Building2, action: 'start_onboarding' },
+    { id: 'complete', label: 'Concluir Contratação', icon: CheckCircle, action: 'complete_hiring' },
+  ],
+};
+
 const STORAGE_KEY = 'kanban_enabled_stages';
 
 const DEFAULT_ENABLED_STAGES = [
@@ -537,6 +657,163 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     }
   };
 
+  // Handler para ações específicas de cada etapa
+  const handleStageAction = (action: string, item: JobRequest | PublishedJob, type: 'request' | 'job') => {
+    const itemId = item.id;
+    
+    switch (action) {
+      // Ações de Requisição
+      case 'edit_request':
+      case 'view_request':
+        navigate(`/company/job-requests/${itemId}`);
+        break;
+      case 'submit_approval':
+        handleStatusChange(item as JobRequest, 'pending_approval');
+        break;
+      case 'duplicate_request':
+        toast.info('Funcionalidade de duplicar em desenvolvimento');
+        break;
+      case 'approve_request':
+        handleStatusChange(item as JobRequest, 'approved');
+        break;
+      case 'reject_request':
+        toast.info('Rejeição via página de detalhes');
+        navigate(`/company/job-requests/${itemId}`);
+        break;
+      case 'start_creation':
+        handleStatusChange(item as JobRequest, 'in_creation');
+        break;
+      case 'edit_job_description':
+        navigate(`/company/job-requests/${itemId}/edit`);
+        break;
+      case 'preview_job':
+        navigate(`/company/job-requests/${itemId}`);
+        break;
+      case 'submit_review':
+        handleStatusChange(item as JobRequest, 'pending_review');
+        break;
+      case 'review_job':
+      case 'publish_job':
+      case 'request_changes':
+        navigate(`/company/job-requests/${itemId}`);
+        break;
+      
+      // Ações de Recrutamento
+      case 'view_candidates':
+      case 'screen_resumes':
+      case 'bulk_approve':
+      case 'bulk_reject':
+        navigate(`/company/selection-process/${itemId}`);
+        break;
+      case 'share_job':
+        navigator.clipboard.writeText(`${window.location.origin}/jobs/${itemId}`);
+        toast.success('Link da vaga copiado!');
+        break;
+      case 'edit_job':
+        navigate(`/company/jobs/${itemId}/edit`);
+        break;
+      case 'pause_job':
+        handlePauseJob(itemId);
+        break;
+      case 'contact_list':
+      case 'schedule_calls':
+      case 'log_call':
+      case 'schedule_interviews':
+      case 'view_scheduled':
+      case 'evaluate_candidates':
+      case 'send_video_link':
+      case 'schedule_video':
+      case 'view_recordings':
+        navigate(`/company/selection-process/${itemId}`);
+        break;
+      
+      // Ações de Seleção
+      case 'send_test':
+      case 'view_test_results':
+      case 'configure_test':
+      case 'send_challenge':
+      case 'review_submissions':
+      case 'set_deadline':
+      case 'send_behavioral':
+      case 'view_behavioral_profiles':
+      case 'compare_candidates':
+      case 'schedule_final':
+      case 'invite_manager':
+      case 'prepare_brief':
+      case 'request_references':
+      case 'contact_references':
+      case 'log_reference_feedback':
+      case 'create_offer':
+      case 'send_offer':
+      case 'view_offer_templates':
+      case 'update_terms':
+      case 'compare_offers':
+      case 'finalize_negotiation':
+        navigate(`/company/selection-process/${itemId}`);
+        break;
+      
+      // Ações de Contratação
+      case 'collect_documents':
+        navigate(`/company/selection-process/${itemId}?tab=documents`);
+        break;
+      case 'send_welcome':
+        toast.info('Funcionalidade de boas-vindas em desenvolvimento');
+        break;
+      case 'start_onboarding':
+        navigate(`/company/selection-process/${itemId}?tab=onboarding`);
+        break;
+      case 'complete_hiring':
+        navigate(`/company/selection-process/${itemId}`);
+        break;
+      
+      default:
+        toast.info(`Ação "${action}" em desenvolvimento`);
+    }
+  };
+
+  const handleStatusChange = async (request: JobRequest, newStatus: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'in_creation' | 'pending_review' | 'published') => {
+    try {
+      setActionLoading(true);
+      await supabase
+        .from('job_requests')
+        .update({ status: newStatus })
+        .eq('id', request.id);
+      
+      const statusLabels: Record<string, string> = {
+        draft: 'Rascunho',
+        pending_approval: 'Aguardando Aprovação',
+        approved: 'Aprovada',
+        rejected: 'Rejeitada',
+        in_creation: 'Em Criação',
+        pending_review: 'Revisão Final',
+        published: 'Publicada',
+      };
+      toast.success(`Status atualizado para ${statusLabels[newStatus]}`);
+      onRefresh();
+    } catch (error) {
+      toast.error('Erro ao atualizar status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePauseJob = async (jobId: string) => {
+    try {
+      setActionLoading(true);
+      await supabase
+        .from('jobs')
+        .update({ is_active: false })
+        .eq('id', jobId);
+      
+      toast.success('Vaga pausada');
+      onRefresh();
+    } catch (error) {
+      toast.error('Erro ao pausar vaga');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const getJobTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       'full-time': 'Integral',
@@ -559,6 +836,14 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     return reasons[reason] || reason;
   };
 
+  // Obter a etapa atual do item para buscar as ações corretas
+  const getItemStage = (item: JobRequest | PublishedJob, type: 'request' | 'job'): string => {
+    if (type === 'request') {
+      return (item as JobRequest).status;
+    }
+    return getJobPhase(item as PublishedJob);
+  };
+
   const renderCard = (item: JobRequest | PublishedJob, type: 'request' | 'job', index: number) => {
     const isRequest = type === 'request';
     const title = isRequest ? (item as JobRequest).position_title : (item as PublishedJob).title;
@@ -571,6 +856,10 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     );
     const canArchive = !isRequest && (item as PublishedJob).applications?.some(a => a.status === 'approved');
     const department = isRequest ? (item as JobRequest).department : null;
+    
+    // Obter ações da etapa atual
+    const currentStage = getItemStage(item, type);
+    const stageActions = STAGE_ACTIONS[currentStage] || [];
 
     return (
       <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -614,30 +903,24 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                         <MoreVertical className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem 
-                        onClick={() => navigate(
-                          isRequest 
-                            ? `/company/job-requests/${item.id}`
-                            : `/company/selection-process/${item.id}`
-                        )}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        {isRequest ? 'Ver Detalhes' : 'Gerenciar Candidatos'}
-                      </DropdownMenuItem>
-                      {isRequest && (item as JobRequest).status === 'in_creation' && (
-                        <DropdownMenuItem onClick={() => navigate(`/company/job-requests/${item.id}/edit`)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar Vaga
+                    <DropdownMenuContent align="end" className="w-52">
+                      {/* Ações específicas da etapa */}
+                      {stageActions.map((action) => (
+                        <DropdownMenuItem 
+                          key={action.id}
+                          className={action.variant === 'destructive' ? 'text-destructive' : ''}
+                          onClick={() => handleStageAction(action.action, item, type)}
+                        >
+                          <action.icon className="mr-2 h-4 w-4" />
+                          {action.label}
                         </DropdownMenuItem>
+                      ))}
+                      
+                      {stageActions.length > 0 && (canDelete || canArchive) && (
+                        <DropdownMenuSeparator />
                       )}
-                      {!isRequest && (
-                        <DropdownMenuItem onClick={() => navigate(`/company/workflow/${item.id}`)}>
-                          <Settings className="mr-2 h-4 w-4" />
-                          Configurar Etapas
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
+                      
+                      {/* Ações destrutivas */}
                       {canDelete && (
                         <DropdownMenuItem 
                           className="text-destructive"
