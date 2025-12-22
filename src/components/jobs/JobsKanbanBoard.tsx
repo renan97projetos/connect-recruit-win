@@ -800,143 +800,111 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
 
       {/* Settings Dialog */}
       <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
               Configurar Etapas do Kanban
             </DialogTitle>
             <DialogDescription>
-              Selecione quais etapas deseja exibir no seu fluxo de gestão de vagas. Etapas obrigatórias não podem ser desativadas.
+              Selecione quais etapas deseja exibir. Etapas obrigatórias não podem ser desativadas.
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-6">
-              {/* Requisição */}
-              <div>
-                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Fase de Requisição
-                </h4>
-                <div className="grid gap-2">
-                  {getStagesByPhase('requisition').map(stage => (
-                    <div 
-                      key={stage.id}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-lg border",
-                        enabledStages.includes(stage.id) ? stage.color : "bg-muted/50"
+          <div className="max-h-[400px] overflow-y-auto pr-2 space-y-4">
+            {/* Requisição */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                Fase de Requisição
+              </h4>
+              <div className="space-y-1">
+                {getStagesByPhase('requisition').map(stage => (
+                  <div 
+                    key={stage.id}
+                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <stage.icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{stage.title}</span>
+                      {stage.isRequired && (
+                        <Badge variant="outline" className="text-xs">Obrigatória</Badge>
                       )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <stage.icon className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium text-sm">{stage.title}</p>
-                          <p className="text-xs text-muted-foreground">{stage.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {stage.isRequired && (
-                          <Badge variant="secondary" className="text-xs">Obrigatória</Badge>
-                        )}
-                        <Switch
-                          checked={enabledStages.includes(stage.id)}
-                          onCheckedChange={() => toggleStage(stage.id)}
-                          disabled={stage.isRequired}
-                        />
-                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recrutamento */}
-              <div>
-                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Fase de Recrutamento
-                </h4>
-                <div className="grid gap-2">
-                  {getStagesByPhase('recruitment').map(stage => (
-                    <div 
-                      key={stage.id}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-lg border",
-                        enabledStages.includes(stage.id) ? stage.color : "bg-muted/50"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <stage.icon className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium text-sm">{stage.title}</p>
-                          <p className="text-xs text-muted-foreground">{stage.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {stage.isRequired && (
-                          <Badge variant="secondary" className="text-xs">Obrigatória</Badge>
-                        )}
-                        {stage.isOptional && (
-                          <Badge variant="outline" className="text-xs">Opcional</Badge>
-                        )}
-                        <Switch
-                          checked={enabledStages.includes(stage.id)}
-                          onCheckedChange={() => toggleStage(stage.id)}
-                          disabled={stage.isRequired}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Seleção */}
-              <div>
-                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <Award className="h-4 w-4" />
-                  Fase de Seleção
-                </h4>
-                <div className="grid gap-2">
-                  {getStagesByPhase('selection').map(stage => (
-                    <div 
-                      key={stage.id}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-lg border",
-                        enabledStages.includes(stage.id) ? stage.color : "bg-muted/50"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <stage.icon className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium text-sm">{stage.title}</p>
-                          <p className="text-xs text-muted-foreground">{stage.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {stage.isRequired && (
-                          <Badge variant="secondary" className="text-xs">Obrigatória</Badge>
-                        )}
-                        {stage.isOptional && (
-                          <Badge variant="outline" className="text-xs">Opcional</Badge>
-                        )}
-                        <Switch
-                          checked={enabledStages.includes(stage.id)}
-                          onCheckedChange={() => toggleStage(stage.id)}
-                          disabled={stage.isRequired}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    <Switch
+                      checked={enabledStages.includes(stage.id)}
+                      onCheckedChange={() => toggleStage(stage.id)}
+                      disabled={stage.isRequired}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
-          </ScrollArea>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => saveEnabledStages(DEFAULT_ENABLED_STAGES)}>
+            {/* Recrutamento */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                Fase de Recrutamento
+              </h4>
+              <div className="space-y-1">
+                {getStagesByPhase('recruitment').map(stage => (
+                  <div 
+                    key={stage.id}
+                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <stage.icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{stage.title}</span>
+                      {stage.isRequired && (
+                        <Badge variant="outline" className="text-xs">Obrigatória</Badge>
+                      )}
+                    </div>
+                    <Switch
+                      checked={enabledStages.includes(stage.id)}
+                      onCheckedChange={() => toggleStage(stage.id)}
+                      disabled={stage.isRequired}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Seleção */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-muted-foreground">
+                <Award className="h-4 w-4" />
+                Fase de Seleção
+              </h4>
+              <div className="space-y-1">
+                {getStagesByPhase('selection').map(stage => (
+                  <div 
+                    key={stage.id}
+                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <stage.icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{stage.title}</span>
+                      {stage.isRequired && (
+                        <Badge variant="outline" className="text-xs">Obrigatória</Badge>
+                      )}
+                    </div>
+                    <Switch
+                      checked={enabledStages.includes(stage.id)}
+                      onCheckedChange={() => toggleStage(stage.id)}
+                      disabled={stage.isRequired}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => saveEnabledStages(DEFAULT_ENABLED_STAGES)}>
               Restaurar Padrão
             </Button>
-            <Button onClick={() => setSettingsDialogOpen(false)}>
+            <Button size="sm" onClick={() => setSettingsDialogOpen(false)}>
               Concluir
             </Button>
           </DialogFooter>
