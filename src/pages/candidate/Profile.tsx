@@ -977,7 +977,9 @@ export default function CandidateProfile() {
 
               {/* Sugestões de habilidades */}
               <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Sugestões (clique para adicionar):</Label>
+                <Label className="text-sm text-muted-foreground">
+                  Sugestões (clique para adicionar como {SKILL_LEVELS[newSkillLevel].label}):
+                </Label>
                 <div className="flex flex-wrap gap-1.5">
                   {SKILL_SUGGESTIONS.filter(suggestion => 
                     !normalizeSkills(profile.skills).some(s => s.name.toLowerCase() === suggestion.toLowerCase())
@@ -985,7 +987,7 @@ export default function CandidateProfile() {
                     <Badge
                       key={suggestion}
                       variant="outline"
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                      className={`cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs border-${SKILL_LEVELS[newSkillLevel].color.split(' ')[0].replace('bg-', '')}`}
                       onClick={() => handleAddSkill(suggestion)}
                     >
                       <Plus className="h-3 w-3 mr-1" />
