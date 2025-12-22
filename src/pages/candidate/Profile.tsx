@@ -79,9 +79,38 @@ interface ProfileData {
   portfolio_url: string;
   experiences: Experience[];
   educations: Education[];
-  skills: string[];
+  skills: Array<{ name: string; level: 'basico' | 'intermediario' | 'avancado' }> | string[];
   cv_url: string;
 }
+
+interface Skill {
+  name: string;
+  level: 'basico' | 'intermediario' | 'avancado';
+}
+
+const SKILL_SUGGESTIONS = [
+  'Microsoft Excel', 'Microsoft Word', 'Microsoft PowerPoint', 'Google Sheets',
+  'Pacote Office', 'SAP', 'ERP', 'CRM', 'Salesforce', 'Power BI',
+  'Inglês', 'Espanhol', 'Alemão', 'Francês', 'Mandarim',
+  'Liderança', 'Gestão de Pessoas', 'Gestão de Projetos', 'Comunicação',
+  'Trabalho em Equipe', 'Resolução de Problemas', 'Pensamento Crítico',
+  'Negociação', 'Vendas', 'Atendimento ao Cliente', 'Marketing Digital',
+  'SEO', 'Google Ads', 'Facebook Ads', 'Redes Sociais',
+  'JavaScript', 'Python', 'Java', 'C#', 'SQL', 'React', 'Node.js',
+  'HTML', 'CSS', 'Git', 'AWS', 'Azure', 'Docker',
+  'Photoshop', 'Illustrator', 'Figma', 'Canva', 'AutoCAD',
+  'Contabilidade', 'Finanças', 'Análise de Dados', 'Estatística',
+  'Logística', 'Compras', 'Estoque', 'Supply Chain',
+  'RH', 'Recrutamento', 'Treinamento', 'Departamento Pessoal',
+  'Qualidade', 'ISO 9001', 'Lean', 'Six Sigma', 'Kaizen',
+  'Segurança do Trabalho', 'NR-10', 'NR-35', 'Primeiros Socorros'
+];
+
+const SKILL_LEVELS = {
+  basico: { label: 'Básico', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
+  intermediario: { label: 'Intermediário', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+  avancado: { label: 'Avançado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
+};
 
 export default function CandidateProfile() {
   const { user } = useSupabaseAuth();
@@ -114,6 +143,16 @@ export default function CandidateProfile() {
 
   // Skills state
   const [newSkill, setNewSkill] = useState('');
+  const [newSkillLevel, setNewSkillLevel] = useState<'basico' | 'intermediario' | 'avancado'>('intermediario');
+
+  // Helper to normalize skills (handles both old string[] and new Skill[] format)
+  const normalizeSkills = (skills: Array<{ name: string; level: 'basico' | 'intermediario' | 'avancado' }> | string[] | null): Skill[] => {
+    if (!skills || skills.length === 0) return [];
+    if (typeof skills[0] === 'string') {
+      return (skills as string[]).map(s => ({ name: s, level: 'intermediario' as const }));
+    }
+    return skills as Skill[];
+  };
 
   // Fetch profile data
   const { data: profile, isLoading, error: profileError } = useQuery({
@@ -370,10 +409,14 @@ export default function CandidateProfile() {
     updateProfileMutation.mutate({ educations: updatedEducations });
   };
 
-  const handleAddSkill = () => {
-    if (!profile || !newSkill.trim()) return;
+  const handleAddSkill = (skillName?: string) => {
+    if (!profile) return;
+    const skillToAdd = skillName || newSkill.trim();
+    if (!skillToAdd) return;
 
-    if (profile.skills.includes(newSkill.trim())) {
+    const currentSkills = normalizeSkills(profile.skills);
+    
+    if (currentSkills.some(s => s.name.toLowerCase() === skillToAdd.toLowerCase())) {
       toast({
         title: 'Habilidade já existe',
         variant: 'destructive',
@@ -381,16 +424,18 @@ export default function CandidateProfile() {
       return;
     }
 
-    const updatedSkills = [...profile.skills, newSkill.trim()];
-    updateProfileMutation.mutate({ skills: updatedSkills });
+    const newSkillObj: Skill = { name: skillToAdd, level: newSkillLevel };
+    const updatedSkills = [...currentSkills, newSkillObj];
+    updateProfileMutation.mutate({ skills: updatedSkills as any });
     setNewSkill('');
   };
 
-  const handleDeleteSkill = (skill: string) => {
+  const handleDeleteSkill = (skillName: string) => {
     if (!profile) return;
 
-    const updatedSkills = profile.skills.filter(s => s !== skill);
-    updateProfileMutation.mutate({ skills: updatedSkills });
+    const currentSkills = normalizeSkills(profile.skills);
+    const updatedSkills = currentSkills.filter(s => s.name !== skillName);
+    updateProfileMutation.mutate({ skills: updatedSkills as any });
   };
 
   const handleCVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -870,37 +915,82 @@ export default function CandidateProfile() {
                 Liste suas principais competências e tecnologias
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Digite uma habilidade..."
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
-                />
-                <Button onClick={handleAddSkill}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+            <CardContent className="space-y-6">
+              {/* Input para adicionar habilidade */}
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Digite uma habilidade..."
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+                    className="flex-1"
+                  />
+                  <Select value={newSkillLevel} onValueChange={(v) => setNewSkillLevel(v as any)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="basico">Básico</SelectItem>
+                      <SelectItem value="intermediario">Intermediário</SelectItem>
+                      <SelectItem value="avancado">Avançado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={() => handleAddSkill()}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
-              {profile.skills.length === 0 ? (
+              {/* Sugestões de habilidades */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Sugestões (clique para adicionar):</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {SKILL_SUGGESTIONS.filter(suggestion => 
+                    !normalizeSkills(profile.skills).some(s => s.name.toLowerCase() === suggestion.toLowerCase())
+                  ).slice(0, 20).map((suggestion) => (
+                    <Badge
+                      key={suggestion}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                      onClick={() => handleAddSkill(suggestion)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {suggestion}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lista de habilidades adicionadas */}
+              {normalizeSkills(profile.skills).length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Award className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Nenhuma habilidade adicionada ainda</p>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="text-sm py-1.5 px-3">
-                      {skill}
-                      <button
-                        onClick={() => handleDeleteSkill(skill)}
-                        className="ml-2 hover:text-destructive"
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Suas habilidades:</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {normalizeSkills(profile.skills).map((skill) => (
+                      <Badge 
+                        key={skill.name} 
+                        variant="secondary" 
+                        className={cn("text-sm py-1.5 px-3", SKILL_LEVELS[skill.level].color)}
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
+                        {skill.name}
+                        <span className="ml-1.5 text-xs opacity-75">
+                          ({SKILL_LEVELS[skill.level].label})
+                        </span>
+                        <button
+                          onClick={() => handleDeleteSkill(skill.name)}
+                          className="ml-2 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
