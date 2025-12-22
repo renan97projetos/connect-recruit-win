@@ -182,6 +182,16 @@ export default function JobRequests() {
             publishedJobs={publishedJobs}
             isOwner={isOwner}
             onRefresh={fetchData}
+            permissions={{
+              canCreate: hasPermission('create_vagas'),
+              canEdit: hasPermission('edit_vagas'),
+              canPublish: hasPermission('publish_vagas'),
+              canApprove: hasPermission('approve_vagas'),
+              canReject: hasPermission('reject_vagas'),
+              canDelete: hasPermission('delete_vagas'),
+              canManageCandidates: hasPermission('manage_candidatos'),
+              canEvaluate: hasPermission('avaliar_candidatos'),
+            }}
           />
         )}
 

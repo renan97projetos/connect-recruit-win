@@ -131,11 +131,23 @@ interface KanbanColumn extends ColumnConfig {
   items: (JobRequest | PublishedJob)[];
 }
 
+interface PermissionsProps {
+  canCreate: boolean;
+  canEdit: boolean;
+  canPublish: boolean;
+  canApprove: boolean;
+  canReject: boolean;
+  canDelete: boolean;
+  canManageCandidates: boolean;
+  canEvaluate: boolean;
+}
+
 interface JobsKanbanBoardProps {
   jobRequests: JobRequest[];
   publishedJobs: PublishedJob[];
   isOwner: boolean;
   onRefresh: () => void;
+  permissions: PermissionsProps;
 }
 
 // Todas as etapas disponíveis
@@ -439,7 +451,7 @@ const DEFAULT_ENABLED_STAGES = [
   'published', 'screening', 'interview', 'assessment', 'final_interview', 'offer', 'hiring'
 ];
 
-export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh }: JobsKanbanBoardProps) {
+export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh, permissions }: JobsKanbanBoardProps) {
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
@@ -577,10 +589,23 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     const item = sourceCol.items[result.source.index];
     if (!item) return;
 
-    // Verificar permissões
-    if (!isOwner && ['approved', 'pending_review', 'published'].includes(destColId)) {
-      toast.error('Apenas o gestor pode aprovar requisições');
-      return;
+    // Verificar permissões para mover entre colunas
+    if (sourceCol.type === 'request' && destCol.type === 'request') {
+      // Aprovar requisição: precisa de approve_vagas
+      if (destColId === 'approved' && !permissions.canApprove && !isOwner) {
+        toast.error('Você não tem permissão para aprovar requisições');
+        return;
+      }
+      // Publicar (via pending_review ou published): precisa de publish_vagas
+      if (['pending_review', 'published'].includes(destColId) && !permissions.canPublish && !isOwner) {
+        toast.error('Você não tem permissão para publicar vagas');
+        return;
+      }
+      // Editar requisição: precisa de edit_vagas
+      if (['in_creation', 'draft'].includes(destColId) && !permissions.canEdit && !isOwner) {
+        toast.error('Você não tem permissão para editar requisições');
+        return;
+      }
     }
 
     setActionLoading(true);
@@ -844,22 +869,54 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     return getJobPhase(item as PublishedJob);
   };
 
+  // Filtrar ações baseado nas permissões
+  const filterActionsByPermission = (actions: StageAction[], stage: string): StageAction[] => {
+    if (isOwner) return actions; // Owner tem todas as permissões
+    
+    return actions.filter(action => {
+      // Ações que requerem permissões específicas
+      const requiresApprove = ['approve_request', 'publish_job'].includes(action.action);
+      const requiresReject = ['reject_request'].includes(action.action);
+      const requiresEdit = ['edit_request', 'edit_job_description', 'edit_job', 'start_creation', 'submit_review', 'request_changes'].includes(action.action);
+      const requiresPublish = ['publish_job', 'submit_review'].includes(action.action);
+      const requiresManageCandidates = ['view_candidates', 'screen_resumes', 'bulk_approve', 'bulk_reject', 'contact_list', 'schedule_calls', 'schedule_interviews', 'send_video_link', 'schedule_video'].includes(action.action);
+      const requiresEvaluate = ['evaluate_candidates', 'send_test', 'view_test_results', 'send_challenge', 'review_submissions', 'send_behavioral', 'view_behavioral_profiles', 'compare_candidates'].includes(action.action);
+      const requiresDelete = ['delete'].includes(action.action);
+
+      // View actions são sempre permitidas
+      const isViewAction = ['view', 'view_request', 'preview_job', 'review_job', 'share_job', 'view_scheduled', 'view_recordings', 'view_offer_templates', 'view_behavioral_profiles'].includes(action.action);
+      if (isViewAction) return true;
+
+      if (requiresApprove && !permissions.canApprove) return false;
+      if (requiresReject && !permissions.canReject) return false;
+      if (requiresEdit && !permissions.canEdit) return false;
+      if (requiresPublish && !permissions.canPublish) return false;
+      if (requiresManageCandidates && !permissions.canManageCandidates) return false;
+      if (requiresEvaluate && !permissions.canEvaluate) return false;
+      if (requiresDelete && !permissions.canDelete) return false;
+
+      return true;
+    });
+  };
+
   const renderCard = (item: JobRequest | PublishedJob, type: 'request' | 'job', index: number) => {
     const isRequest = type === 'request';
     const title = isRequest ? (item as JobRequest).position_title : (item as PublishedJob).title;
     const appCount = !isRequest ? ((item as PublishedJob).applications?.length || 0) : 0;
     const requestStatus = isRequest ? (item as JobRequest).status : '';
-    // Permitir excluir em draft, pending_approval, rejected sempre. Em in_creation só o owner pode excluir.
-    const canDelete = isRequest && (
+    
+    // Permitir excluir com permissão delete_vagas
+    const canDeleteItem = isRequest && (permissions.canDelete || isOwner) && (
       ['draft', 'pending_approval', 'rejected'].includes(requestStatus) ||
-      (requestStatus === 'in_creation' && isOwner)
+      (requestStatus === 'in_creation')
     );
-    const canArchive = !isRequest && (item as PublishedJob).applications?.some(a => a.status === 'approved');
+    const canArchive = !isRequest && (permissions.canEdit || isOwner) && (item as PublishedJob).applications?.some(a => a.status === 'approved');
     const department = isRequest ? (item as JobRequest).department : null;
     
-    // Obter ações da etapa atual
+    // Obter ações da etapa atual e filtrar por permissões
     const currentStage = getItemStage(item, type);
-    const stageActions = STAGE_ACTIONS[currentStage] || [];
+    const allStageActions = STAGE_ACTIONS[currentStage] || [];
+    const stageActions = filterActionsByPermission(allStageActions, currentStage);
 
     return (
       <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -916,12 +973,12 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                         </DropdownMenuItem>
                       ))}
                       
-                      {stageActions.length > 0 && (canDelete || canArchive) && (
+                      {stageActions.length > 0 && (canDeleteItem || canArchive) && (
                         <DropdownMenuSeparator />
                       )}
                       
                       {/* Ações destrutivas */}
-                      {canDelete && (
+                      {canDeleteItem && (
                         <DropdownMenuItem 
                           className="text-destructive"
                           onClick={() => {
