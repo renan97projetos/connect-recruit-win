@@ -145,13 +145,46 @@ export default function CandidateProfile() {
   const [newSkill, setNewSkill] = useState('');
   const [newSkillLevel, setNewSkillLevel] = useState<'basico' | 'intermediario' | 'avancado'>('intermediario');
 
-  // Helper to normalize skills (handles both old string[] and new Skill[] format)
-  const normalizeSkills = (skills: Array<{ name: string; level: 'basico' | 'intermediario' | 'avancado' }> | string[] | null): Skill[] => {
+  // Helper to normalize skills (handles string[], JSON strings, and Skill[] formats)
+  const normalizeSkills = (skills: any[] | null): Skill[] => {
     if (!skills || skills.length === 0) return [];
-    if (typeof skills[0] === 'string') {
-      return (skills as string[]).map(s => ({ name: s, level: 'intermediario' as const }));
-    }
-    return skills as Skill[];
+    
+    return skills.map(skill => {
+      // If it's already a proper Skill object
+      if (typeof skill === 'object' && skill !== null && typeof skill.name === 'string' && !skill.name.startsWith('{')) {
+        return { name: skill.name, level: skill.level || 'intermediario' } as Skill;
+      }
+      
+      // If it's a string (could be plain text or JSON)
+      if (typeof skill === 'string') {
+        try {
+          let parsed = JSON.parse(skill);
+          // Handle nested JSON strings
+          while (typeof parsed.name === 'string' && parsed.name.startsWith('{')) {
+            parsed = JSON.parse(parsed.name);
+          }
+          return { name: parsed.name, level: parsed.level || 'intermediario' } as Skill;
+        } catch {
+          // Plain string skill
+          return { name: skill, level: 'intermediario' as const };
+        }
+      }
+      
+      // If skill.name is a JSON string (corrupted data)
+      if (typeof skill === 'object' && typeof skill.name === 'string' && skill.name.startsWith('{')) {
+        try {
+          let parsed = JSON.parse(skill.name);
+          while (typeof parsed.name === 'string' && parsed.name.startsWith('{')) {
+            parsed = JSON.parse(parsed.name);
+          }
+          return { name: parsed.name, level: parsed.level || 'intermediario' } as Skill;
+        } catch {
+          return { name: skill.name, level: skill.level || 'intermediario' } as Skill;
+        }
+      }
+      
+      return { name: String(skill), level: 'intermediario' as const };
+    }).filter(s => s.name && !s.name.startsWith('{'));
   };
 
   // Fetch profile data
