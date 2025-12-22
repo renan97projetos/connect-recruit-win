@@ -36,6 +36,11 @@ interface Education {
   current: boolean;
 }
 
+interface Skill {
+  name: string;
+  level: 'basico' | 'intermediario' | 'avancado';
+}
+
 interface ProfileData {
   name: string;
   phone?: string;
@@ -50,9 +55,22 @@ interface ProfileData {
   portfolio_url?: string;
   experiences: Experience[];
   educations: Education[];
-  skills: string[];
+  skills: Array<Skill | string>;
   cv_url?: string;
 }
+
+const SKILL_LEVELS = {
+  basico: { label: 'Básico', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
+  intermediario: { label: 'Intermediário', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+  avancado: { label: 'Avançado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
+};
+
+const normalizeSkill = (skill: Skill | string): Skill => {
+  if (typeof skill === 'string') {
+    return { name: skill, level: 'intermediario' };
+  }
+  return skill;
+};
 
 interface CandidateProfileViewProps {
   profile: ProfileData;
@@ -208,11 +226,21 @@ export function CandidateProfileView({ profile, email }: CandidateProfileViewPro
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {profile.skills.map((skill, index) => (
-                <Badge key={index} variant="secondary">
-                  {skill}
-                </Badge>
-              ))}
+              {profile.skills.map((skill, index) => {
+                const normalizedSkill = normalizeSkill(skill);
+                return (
+                  <Badge 
+                    key={index} 
+                    variant="secondary"
+                    className={SKILL_LEVELS[normalizedSkill.level].color}
+                  >
+                    {normalizedSkill.name}
+                    <span className="ml-1.5 text-xs opacity-75">
+                      ({SKILL_LEVELS[normalizedSkill.level].label})
+                    </span>
+                  </Badge>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
