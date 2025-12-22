@@ -22,6 +22,7 @@ import {
   X,
   BarChart3,
   Shield,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ interface BackofficeLayoutProps {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/backoffice/dashboard' },
+  { icon: Briefcase, label: 'Vagas', path: '/backoffice/jobs' },
   { icon: Building2, label: 'Empresas', path: '/backoffice/tenants' },
   { icon: CreditCard, label: 'Planos', path: '/backoffice/plans' },
   { icon: Users, label: 'Usuários', path: '/backoffice/users' },
