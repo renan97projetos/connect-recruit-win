@@ -52,6 +52,7 @@ import TermsOfUse from "./pages/TermsOfUse";
 import ApiDocumentation from "./pages/ApiDocumentation";
 import NotFound from "./pages/NotFound";
 import ProspectFunnel from "./pages/ProspectFunnel";
+import RegisterInvitation from "./pages/RegisterInvitation";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/register-invitation" element={<RegisterInvitation />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/jobs/:id" element={<JobDetails />} />
