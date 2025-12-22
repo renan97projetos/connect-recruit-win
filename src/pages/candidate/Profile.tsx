@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -1003,12 +1004,26 @@ export default function CandidateProfile() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="edu-degree">Grau *</Label>
-                <Input
-                  id="edu-degree"
-                  placeholder="Ex: Bacharelado"
+                <Select
                   value={educationForm.degree}
-                  onChange={(e) => setEducationForm({ ...educationForm, degree: e.target.value })}
-                />
+                  onValueChange={(value) => setEducationForm({ ...educationForm, degree: value })}
+                >
+                  <SelectTrigger id="edu-degree">
+                    <SelectValue placeholder="Selecione o grau" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Ensino Médio">Ensino Médio</SelectItem>
+                    <SelectItem value="Técnico">Técnico</SelectItem>
+                    <SelectItem value="Tecnólogo">Tecnólogo</SelectItem>
+                    <SelectItem value="Bacharelado">Bacharelado</SelectItem>
+                    <SelectItem value="Licenciatura">Licenciatura</SelectItem>
+                    <SelectItem value="Pós-graduação">Pós-graduação</SelectItem>
+                    <SelectItem value="MBA">MBA</SelectItem>
+                    <SelectItem value="Mestrado">Mestrado</SelectItem>
+                    <SelectItem value="Doutorado">Doutorado</SelectItem>
+                    <SelectItem value="Pós-doutorado">Pós-doutorado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edu-field">Área *</Label>
