@@ -1037,12 +1037,113 @@ export default function CandidateProfile() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edu-field">Área *</Label>
-                <Input
-                  id="edu-field"
-                  placeholder="Ex: Ciência da Computação"
+                <Select
                   value={educationForm.field}
-                  onChange={(e) => setEducationForm({ ...educationForm, field: e.target.value })}
-                />
+                  onValueChange={(value) => setEducationForm({ ...educationForm, field: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Administração">Administração</SelectItem>
+                    <SelectItem value="Administração Pública">Administração Pública</SelectItem>
+                    <SelectItem value="Agronomia">Agronomia</SelectItem>
+                    <SelectItem value="Análise e Desenvolvimento de Sistemas">Análise e Desenvolvimento de Sistemas</SelectItem>
+                    <SelectItem value="Antropologia">Antropologia</SelectItem>
+                    <SelectItem value="Arquitetura e Urbanismo">Arquitetura e Urbanismo</SelectItem>
+                    <SelectItem value="Artes Cênicas">Artes Cênicas</SelectItem>
+                    <SelectItem value="Artes Visuais">Artes Visuais</SelectItem>
+                    <SelectItem value="Biblioteconomia">Biblioteconomia</SelectItem>
+                    <SelectItem value="Biologia">Biologia</SelectItem>
+                    <SelectItem value="Biomedicina">Biomedicina</SelectItem>
+                    <SelectItem value="Ciência da Computação">Ciência da Computação</SelectItem>
+                    <SelectItem value="Ciência de Dados">Ciência de Dados</SelectItem>
+                    <SelectItem value="Ciências Atuariais">Ciências Atuariais</SelectItem>
+                    <SelectItem value="Ciências Contábeis">Ciências Contábeis</SelectItem>
+                    <SelectItem value="Ciências Econômicas">Ciências Econômicas</SelectItem>
+                    <SelectItem value="Ciências Sociais">Ciências Sociais</SelectItem>
+                    <SelectItem value="Cinema e Audiovisual">Cinema e Audiovisual</SelectItem>
+                    <SelectItem value="Comércio Exterior">Comércio Exterior</SelectItem>
+                    <SelectItem value="Comunicação Social">Comunicação Social</SelectItem>
+                    <SelectItem value="Design">Design</SelectItem>
+                    <SelectItem value="Design de Interiores">Design de Interiores</SelectItem>
+                    <SelectItem value="Design de Moda">Design de Moda</SelectItem>
+                    <SelectItem value="Design Gráfico">Design Gráfico</SelectItem>
+                    <SelectItem value="Direito">Direito</SelectItem>
+                    <SelectItem value="Educação Física">Educação Física</SelectItem>
+                    <SelectItem value="Enfermagem">Enfermagem</SelectItem>
+                    <SelectItem value="Engenharia Aeronáutica">Engenharia Aeronáutica</SelectItem>
+                    <SelectItem value="Engenharia Agrícola">Engenharia Agrícola</SelectItem>
+                    <SelectItem value="Engenharia Ambiental">Engenharia Ambiental</SelectItem>
+                    <SelectItem value="Engenharia Biomédica">Engenharia Biomédica</SelectItem>
+                    <SelectItem value="Engenharia Civil">Engenharia Civil</SelectItem>
+                    <SelectItem value="Engenharia da Computação">Engenharia da Computação</SelectItem>
+                    <SelectItem value="Engenharia de Alimentos">Engenharia de Alimentos</SelectItem>
+                    <SelectItem value="Engenharia de Controle e Automação">Engenharia de Controle e Automação</SelectItem>
+                    <SelectItem value="Engenharia de Materiais">Engenharia de Materiais</SelectItem>
+                    <SelectItem value="Engenharia de Minas">Engenharia de Minas</SelectItem>
+                    <SelectItem value="Engenharia de Petróleo">Engenharia de Petróleo</SelectItem>
+                    <SelectItem value="Engenharia de Produção">Engenharia de Produção</SelectItem>
+                    <SelectItem value="Engenharia de Software">Engenharia de Software</SelectItem>
+                    <SelectItem value="Engenharia de Telecomunicações">Engenharia de Telecomunicações</SelectItem>
+                    <SelectItem value="Engenharia Elétrica">Engenharia Elétrica</SelectItem>
+                    <SelectItem value="Engenharia Florestal">Engenharia Florestal</SelectItem>
+                    <SelectItem value="Engenharia Mecânica">Engenharia Mecânica</SelectItem>
+                    <SelectItem value="Engenharia Mecatrônica">Engenharia Mecatrônica</SelectItem>
+                    <SelectItem value="Engenharia Naval">Engenharia Naval</SelectItem>
+                    <SelectItem value="Engenharia Nuclear">Engenharia Nuclear</SelectItem>
+                    <SelectItem value="Engenharia Química">Engenharia Química</SelectItem>
+                    <SelectItem value="Estatística">Estatística</SelectItem>
+                    <SelectItem value="Farmácia">Farmácia</SelectItem>
+                    <SelectItem value="Filosofia">Filosofia</SelectItem>
+                    <SelectItem value="Física">Física</SelectItem>
+                    <SelectItem value="Fisioterapia">Fisioterapia</SelectItem>
+                    <SelectItem value="Fonoaudiologia">Fonoaudiologia</SelectItem>
+                    <SelectItem value="Gastronomia">Gastronomia</SelectItem>
+                    <SelectItem value="Geografia">Geografia</SelectItem>
+                    <SelectItem value="Gestão Ambiental">Gestão Ambiental</SelectItem>
+                    <SelectItem value="Gestão Comercial">Gestão Comercial</SelectItem>
+                    <SelectItem value="Gestão da Qualidade">Gestão da Qualidade</SelectItem>
+                    <SelectItem value="Gestão de Recursos Humanos">Gestão de Recursos Humanos</SelectItem>
+                    <SelectItem value="Gestão de TI">Gestão de TI</SelectItem>
+                    <SelectItem value="Gestão Financeira">Gestão Financeira</SelectItem>
+                    <SelectItem value="Gestão Hospitalar">Gestão Hospitalar</SelectItem>
+                    <SelectItem value="Gestão Pública">Gestão Pública</SelectItem>
+                    <SelectItem value="História">História</SelectItem>
+                    <SelectItem value="Hotelaria">Hotelaria</SelectItem>
+                    <SelectItem value="Jornalismo">Jornalismo</SelectItem>
+                    <SelectItem value="Letras">Letras</SelectItem>
+                    <SelectItem value="Logística">Logística</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Matemática">Matemática</SelectItem>
+                    <SelectItem value="Medicina">Medicina</SelectItem>
+                    <SelectItem value="Medicina Veterinária">Medicina Veterinária</SelectItem>
+                    <SelectItem value="Música">Música</SelectItem>
+                    <SelectItem value="Nutrição">Nutrição</SelectItem>
+                    <SelectItem value="Oceanografia">Oceanografia</SelectItem>
+                    <SelectItem value="Odontologia">Odontologia</SelectItem>
+                    <SelectItem value="Pedagogia">Pedagogia</SelectItem>
+                    <SelectItem value="Processos Gerenciais">Processos Gerenciais</SelectItem>
+                    <SelectItem value="Psicologia">Psicologia</SelectItem>
+                    <SelectItem value="Publicidade e Propaganda">Publicidade e Propaganda</SelectItem>
+                    <SelectItem value="Química">Química</SelectItem>
+                    <SelectItem value="Radiologia">Radiologia</SelectItem>
+                    <SelectItem value="Redes de Computadores">Redes de Computadores</SelectItem>
+                    <SelectItem value="Relações Internacionais">Relações Internacionais</SelectItem>
+                    <SelectItem value="Relações Públicas">Relações Públicas</SelectItem>
+                    <SelectItem value="Secretariado Executivo">Secretariado Executivo</SelectItem>
+                    <SelectItem value="Segurança da Informação">Segurança da Informação</SelectItem>
+                    <SelectItem value="Segurança do Trabalho">Segurança do Trabalho</SelectItem>
+                    <SelectItem value="Serviço Social">Serviço Social</SelectItem>
+                    <SelectItem value="Sistemas de Informação">Sistemas de Informação</SelectItem>
+                    <SelectItem value="Sociologia">Sociologia</SelectItem>
+                    <SelectItem value="Teologia">Teologia</SelectItem>
+                    <SelectItem value="Terapia Ocupacional">Terapia Ocupacional</SelectItem>
+                    <SelectItem value="Turismo">Turismo</SelectItem>
+                    <SelectItem value="Zootecnia">Zootecnia</SelectItem>
+                    <SelectItem value="Outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
