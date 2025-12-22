@@ -259,19 +259,20 @@ export default function JobRequestDetails() {
   const isAdmin = userRole === 'admin';
   const isCompanyOwnerForRequest = user?.id === request.company_id;
   
-  // APENAS o admin (master) pode aprovar/rejeitar vagas
-  // O owner da empresa NÃO pode aprovar, apenas visualiza o status
-  const canApproveRequisition = isAdmin && request.status === 'pending_approval';
-  const canApproveReview = isAdmin && request.status === 'pending_review';
+  // OWNER da empresa ou Admin podem aprovar/rejeitar requisições
+  // O OWNER pode aprovar requisições de sua própria empresa
+  const canApproveRequisition = (isAdmin || (isOwner && isCompanyOwnerForRequest)) && request.status === 'pending_approval';
+  const canApproveReview = (isAdmin || (isOwner && isCompanyOwnerForRequest)) && request.status === 'pending_review';
   
-  // Verifica se está aguardando aprovação do admin (para mostrar mensagem ao owner)
-  const isWaitingAdminApproval = !isAdmin && (
+  // Verifica se está aguardando aprovação (para colaboradores que não podem aprovar)
+  const isWaitingApproval = !isAdmin && !isOwner && (
     request.status === 'pending_approval' || 
     request.status === 'pending_review'
   );
   
-  // Usuário pode excluir se for rascunho ou rejeitado (não pode excluir se estiver pendente)
-  const canDeleteRequest = isAdmin || (
+  // OWNER e Admin podem excluir qualquer requisição
+  // Colaboradores só podem excluir rascunhos ou rejeitados que eles criaram
+  const canDeleteRequest = isAdmin || (isOwner && isCompanyOwnerForRequest) || (
     isCompanyOwnerForRequest && (
       request.status === 'draft' || 
       request.status === 'rejected'
@@ -317,8 +318,8 @@ export default function JobRequestDetails() {
           )}
         </div>
 
-        {/* Mensagem para empresa aguardando aprovação do admin */}
-        {isWaitingAdminApproval && (
+        {/* Mensagem para colaboradores aguardando aprovação */}
+        {isWaitingApproval && (
           <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
             <CardHeader>
               <CardTitle className="text-amber-700 dark:text-amber-400 flex items-center gap-2">
@@ -329,21 +330,21 @@ export default function JobRequestDetails() {
               </CardTitle>
               <CardDescription className="text-amber-600 dark:text-amber-300">
                 {request.status === 'pending_approval' 
-                  ? 'Esta requisição está aguardando aprovação do administrador SRH.'
-                  : 'Esta vaga está aguardando revisão e publicação pelo administrador SRH.'}
+                  ? 'Esta requisição está aguardando aprovação do responsável.'
+                  : 'Esta vaga está aguardando revisão e publicação.'}
               </CardDescription>
             </CardHeader>
           </Card>
         )}
 
-        {/* Ações de Aprovação/Rejeição - APENAS ADMIN */}
+        {/* Ações de Aprovação/Rejeição - OWNER ou ADMIN */}
         {(canApproveRequisition || canApproveReview) && (
           <Card className="border-primary">
             <CardHeader>
               <CardTitle>Ações Necessárias</CardTitle>
               <CardDescription>
-                {canApproveRequisition && 'Como administrador, você precisa aprovar esta requisição'}
-                {canApproveReview && 'Como administrador, você precisa revisar e publicar esta vaga'}
+                {canApproveRequisition && 'Você precisa aprovar ou rejeitar esta requisição de vaga.'}
+                {canApproveReview && 'Você precisa revisar e publicar esta vaga.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-4">
