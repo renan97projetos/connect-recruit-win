@@ -94,13 +94,10 @@ export function StageEditModal({ open, onClose, onSave, stage }: StageEditModalP
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {STAGE_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      <div>
-                        <div className="font-medium">{type.label}</div>
-                        <div className="text-xs text-muted-foreground">{type.description}</div>
-                      </div>
+                      <span className="text-sm">{type.label}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
