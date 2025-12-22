@@ -90,129 +90,142 @@ export function CompanyLayout({ children, title, description }: CompanyLayoutPro
           </div>
           
           {/* Navigation Menu */}
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-            {/* Main Menu Items */}
-            {mainMenuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
-                    active
-                      ? "bg-yellow text-foreground border-foreground shadow-brutal"
-                      : "bg-background text-foreground border-foreground hover:bg-lime hover:-translate-y-0.5 hover:shadow-brutal"
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </Link>
-              );
-            })}
+          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+            {/* Seção: Recrutamento & Seleção */}
+            <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 bg-background/10 rounded-2xl">
+              {mainMenuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
+                      active
+                        ? "bg-yellow text-foreground border-foreground shadow-brutal"
+                        : "bg-background text-foreground border-foreground hover:bg-lime hover:-translate-y-0.5 hover:shadow-brutal"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
 
-            {/* HR Dropdown - Only for Owners */}
+            {/* Separador visual */}
+            <div className="hidden md:block w-px h-8 bg-background/30" />
+
+            {/* Seção: Gestão Interna (RH) - Only for Owners */}
             {!roleLoading && isOwner && (
-              <DropdownMenu open={openDropdown === 'hr'} onOpenChange={(open) => setOpenDropdown(open ? 'hr' : null)}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
-                    isInGroup(hrMenuItems)
-                      ? "bg-cyan text-foreground border-foreground shadow-brutal"
-                      : "bg-background text-foreground border-foreground hover:bg-cyan hover:-translate-y-0.5 hover:shadow-brutal"
-                  )}
-                >
-                  <Users className="h-4 w-4 flex-shrink-0" />
-                  <span className="whitespace-nowrap">Gestão RH</span>
-                  <ChevronDown className="h-3 w-3 flex-shrink-0" />
+              <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 bg-background/10 rounded-2xl">
+                <DropdownMenu open={openDropdown === 'hr'} onOpenChange={(open) => setOpenDropdown(open ? 'hr' : null)}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={cn(
+                        "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
+                        isInGroup(hrMenuItems)
+                          ? "bg-cyan text-foreground border-foreground shadow-brutal"
+                          : "bg-background text-foreground border-foreground hover:bg-cyan hover:-translate-y-0.5 hover:shadow-brutal"
+                      )}
+                    >
+                      <Users className="h-4 w-4 flex-shrink-0" />
+                      <span className="whitespace-nowrap">Gestão RH</span>
+                      <ChevronDown className="h-3 w-3 flex-shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="center" 
+                    className="w-56 border-3 border-foreground bg-background shadow-brutal rounded-xl p-2"
+                  >
+                    {hrMenuItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <DropdownMenuItem
+                          key={item.path}
+                          onClick={() => {
+                            navigate(item.path);
+                            setOpenDropdown(null);
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold cursor-pointer transition-colors",
+                            isActive(item.path)
+                              ? "bg-cyan text-foreground"
+                              : "hover:bg-muted"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
+            {/* Separador visual */}
+            <div className="hidden md:block w-px h-8 bg-background/30" />
+
+            {/* Seção: Configurações & Ações */}
+            <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 bg-background/10 rounded-2xl">
+              {/* Config Dropdown */}
+              <DropdownMenu open={openDropdown === 'config'} onOpenChange={(open) => setOpenDropdown(open ? 'config' : null)}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
+                      isInGroup(configMenuItems)
+                        ? "bg-pink text-foreground border-foreground shadow-brutal"
+                        : "bg-background text-foreground border-foreground hover:bg-pink hover:-translate-y-0.5 hover:shadow-brutal"
+                    )}
+                  >
+                    <Settings className="h-4 w-4 flex-shrink-0" />
+                    <span className="whitespace-nowrap">Configurações</span>
+                    <ChevronDown className="h-3 w-3 flex-shrink-0" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="center" 
-                  className="w-56 border-3 border-foreground bg-background shadow-brutal rounded-xl p-2"
+                  className="w-48 border-3 border-foreground bg-background shadow-brutal rounded-xl p-2"
                 >
-                  {hrMenuItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <DropdownMenuItem
-                        key={item.path}
-                        onClick={() => {
-                          navigate(item.path);
-                          setOpenDropdown(null);
-                        }}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold cursor-pointer transition-colors",
-                          isActive(item.path)
-                            ? "bg-cyan text-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </DropdownMenuItem>
-                    );
-                  })}
+                  {configMenuItems
+                    .filter(item => !item.ownerOnly || isOwner)
+                    .map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <DropdownMenuItem
+                          key={item.path}
+                          onClick={() => {
+                            navigate(item.path);
+                            setOpenDropdown(null);
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold cursor-pointer transition-colors",
+                            isActive(item.path)
+                              ? "bg-pink text-foreground"
+                              : "hover:bg-muted"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
-
-            {/* Config Dropdown */}
-            <DropdownMenu open={openDropdown === 'config'} onOpenChange={(open) => setOpenDropdown(open ? 'config' : null)}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm transition-all",
-                    isInGroup(configMenuItems)
-                      ? "bg-pink text-foreground border-foreground shadow-brutal"
-                      : "bg-background text-foreground border-foreground hover:bg-pink hover:-translate-y-0.5 hover:shadow-brutal"
-                  )}
-                >
-                  <Settings className="h-4 w-4 flex-shrink-0" />
-                  <span className="whitespace-nowrap">Configurações</span>
-                  <ChevronDown className="h-3 w-3 flex-shrink-0" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="center" 
-                className="w-48 border-3 border-foreground bg-background shadow-brutal rounded-xl p-2"
+              
+              {/* Logout */}
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm bg-destructive text-destructive-foreground border-foreground hover:-translate-y-0.5 hover:shadow-brutal transition-all"
               >
-                {configMenuItems
-                  .filter(item => !item.ownerOnly || isOwner)
-                  .map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <DropdownMenuItem
-                        key={item.path}
-                        onClick={() => {
-                          navigate(item.path);
-                          setOpenDropdown(null);
-                        }}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold cursor-pointer transition-colors",
-                          isActive(item.path)
-                            ? "bg-pink text-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {item.label}
-                      </DropdownMenuItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {/* Logout */}
-            <button
-              onClick={() => signOut()}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl border-3 font-bold text-xs md:text-sm bg-destructive text-destructive-foreground border-foreground hover:-translate-y-0.5 hover:shadow-brutal transition-all"
-            >
-              <LogOut className="h-4 w-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Sair</span>
-            </button>
+                <LogOut className="h-4 w-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Sair</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
