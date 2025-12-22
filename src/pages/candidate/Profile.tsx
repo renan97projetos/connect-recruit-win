@@ -515,45 +515,21 @@ export default function CandidateProfile() {
                   }}
                 />
                 <div className="space-y-2">
-                  <Label>Data de Nascimento *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !profile.birth_date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {profile.birth_date ? (
-                          format(parse(profile.birth_date, 'yyyy-MM-dd', new Date()), "dd/MM/yyyy")
-                        ) : (
-                          <span>Selecione a data</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={profile.birth_date ? parse(profile.birth_date, 'yyyy-MM-dd', new Date()) : undefined}
-                        onSelect={(date) => {
-                          queryClient.setQueryData(['candidate-profile', user?.id], {
-                            ...profile,
-                            birth_date: date ? format(date, 'yyyy-MM-dd') : null
-                          });
-                        }}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1940-01-01")
-                        }
-                        captionLayout="dropdown-buttons"
-                        fromYear={1940}
-                        toYear={new Date().getFullYear()}
-                        locale={ptBR}
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="birthDate">Data de Nascimento *</Label>
+                  <div className="relative">
+                    <Input
+                      id="birthDate"
+                      type="date"
+                      value={profile.birth_date || ''}
+                      onChange={(e) => {
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          birth_date: e.target.value
+                        });
+                      }}
+                      className="pr-10"
+                    />
+                  </div>
                 </div>
               </div>
 
