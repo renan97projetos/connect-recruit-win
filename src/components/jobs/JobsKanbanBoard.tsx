@@ -84,6 +84,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { StagePanel } from './StagePanel';
 
 interface JobRequest {
   id: string;
@@ -461,6 +462,16 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [enabledStages, setEnabledStages] = useState<string[]>(DEFAULT_ENABLED_STAGES);
+  
+  // Estado para o painel de etapa
+  const [stagePanelOpen, setStagePanelOpen] = useState(false);
+  const [selectedStageItem, setSelectedStageItem] = useState<{
+    id: string;
+    type: 'request' | 'job';
+    title: string;
+    stageId: string;
+    stageTitle: string;
+  } | null>(null);
 
   // Carregar configuração do localStorage
   useEffect(() => {
@@ -899,7 +910,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     });
   };
 
-  const renderCard = (item: JobRequest | PublishedJob, type: 'request' | 'job', index: number) => {
+  const renderCard = (item: JobRequest | PublishedJob, type: 'request' | 'job', index: number, columnConfig: ColumnConfig) => {
     const isRequest = type === 'request';
     const title = isRequest ? (item as JobRequest).position_title : (item as PublishedJob).title;
     const appCount = !isRequest ? ((item as PublishedJob).applications?.length || 0) : 0;
@@ -918,6 +929,18 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     const allStageActions = STAGE_ACTIONS[currentStage] || [];
     const stageActions = filterActionsByPermission(allStageActions, currentStage);
 
+    // Handler para abrir o painel da etapa
+    const handleCardClick = () => {
+      setSelectedStageItem({
+        id: item.id,
+        type,
+        title,
+        stageId: columnConfig.id,
+        stageTitle: columnConfig.title,
+      });
+      setStagePanelOpen(true);
+    };
+
     return (
       <Draggable key={item.id} draggableId={item.id} index={index}>
         {(provided, snapshot) => (
@@ -931,11 +954,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
           >
             <Card 
               className="border hover:shadow-md transition-all bg-background cursor-pointer group"
-              onClick={() => navigate(
-                isRequest 
-                  ? `/company/job-requests/${item.id}`
-                  : `/company/selection-process/${item.id}`
-              )}
+              onClick={handleCardClick}
             >
               <CardHeader className="p-3 pb-2">
                 <div className="flex items-start justify-between gap-2" onClick={(e) => e.stopPropagation()}>
@@ -961,6 +980,20 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
+                      {/* Ver Detalhes - sempre no topo */}
+                      <DropdownMenuItem 
+                        onClick={() => navigate(
+                          isRequest 
+                            ? `/company/job-requests/${item.id}`
+                            : `/company/selection-process/${item.id}`
+                        )}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver Detalhes
+                      </DropdownMenuItem>
+                      
+                      {stageActions.length > 0 && <DropdownMenuSeparator />}
+                      
                       {/* Ações específicas da etapa */}
                       {stageActions.map((action) => (
                         <DropdownMenuItem 
@@ -973,9 +1006,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                         </DropdownMenuItem>
                       ))}
                       
-                      {stageActions.length > 0 && (canDeleteItem || canArchive) && (
-                        <DropdownMenuSeparator />
-                      )}
+                      {(canDeleteItem || canArchive) && <DropdownMenuSeparator />}
                       
                       {/* Ações destrutivas */}
                       {canDeleteItem && (
@@ -1127,7 +1158,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                     )}
                   >
                     {column.items.map((item, index) => 
-                      renderCard(item, column.type, index)
+                      renderCard(item, column.type, index, column)
                     )}
                     {provided.placeholder}
                   </div>
@@ -1290,6 +1321,20 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Stage Panel */}
+      {selectedStageItem && (
+        <StagePanel
+          open={stagePanelOpen}
+          onOpenChange={setStagePanelOpen}
+          stageId={selectedStageItem.stageId}
+          stageTitle={selectedStageItem.stageTitle}
+          itemId={selectedStageItem.id}
+          itemType={selectedStageItem.type}
+          itemTitle={selectedStageItem.title}
+          onRefresh={onRefresh}
+        />
+      )}
     </div>
   );
 }
