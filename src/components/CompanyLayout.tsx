@@ -132,7 +132,7 @@ export function CompanyLayout({ children, title, description }: CompanyLayoutPro
                       )}
                     >
                       <Users className="h-4 w-4 flex-shrink-0" />
-                      <span className="whitespace-nowrap">Gestão RH</span>
+                      <span className="whitespace-nowrap">Gestão RH Interna</span>
                       <ChevronDown className="h-3 w-3 flex-shrink-0" />
                     </button>
                   </DropdownMenuTrigger>
