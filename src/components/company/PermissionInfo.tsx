@@ -62,77 +62,117 @@ export function PermissionInfo() {
           </CardTitle>
           <CardDescription>Permissões que podem ser atribuídas aos colaboradores</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid gap-3">
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">view_vagas</Badge>
-              <div>
-                <p className="font-medium text-sm">Ver vagas abertas</p>
-                <p className="text-xs text-muted-foreground">Visualizar requisições e vagas publicadas</p>
+        <CardContent className="space-y-6">
+          {/* Permissões de Vagas */}
+          <div>
+            <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Vagas</h4>
+            <div className="grid gap-2">
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">view_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Ver vagas abertas</p>
+                  <p className="text-xs text-muted-foreground">Visualizar requisições e vagas publicadas</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">create_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Criar novas vagas</p>
+                  <p className="text-xs text-muted-foreground">Criar requisições de vaga para aprovação</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">edit_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Editar vagas existentes</p>
+                  <p className="text-xs text-muted-foreground">Modificar detalhes de vagas após aprovação</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">publish_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Publicar ou desativar vagas</p>
+                  <p className="text-xs text-muted-foreground">Controlar o status de publicação das vagas</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/20">
+                <Badge variant="outline" className="mt-0.5 shrink-0 border-amber-500 text-amber-700">approve_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Aprovar requisições de vaga</p>
+                  <p className="text-xs text-muted-foreground">Aprovar ou liberar requisições pendentes</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/20">
+                <Badge variant="outline" className="mt-0.5 shrink-0 border-amber-500 text-amber-700">reject_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Rejeitar requisições de vaga</p>
+                  <p className="text-xs text-muted-foreground">Rejeitar requisições com justificativa</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-red-50 dark:bg-red-950/20">
+                <Badge variant="outline" className="mt-0.5 shrink-0 border-red-500 text-red-700">delete_vagas</Badge>
+                <div>
+                  <p className="font-medium text-sm">Excluir vagas e requisições</p>
+                  <p className="text-xs text-muted-foreground">Remover permanentemente vagas e requisições</p>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">create_vagas</Badge>
-              <div>
-                <p className="font-medium text-sm">Criar novas vagas</p>
-                <p className="text-xs text-muted-foreground">Criar requisições de vaga para aprovação</p>
+          {/* Permissões de Candidatos */}
+          <div>
+            <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Candidatos</h4>
+            <div className="grid gap-2">
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">manage_candidatos</Badge>
+                <div>
+                  <p className="font-medium text-sm">Gerenciar candidatos</p>
+                  <p className="text-xs text-muted-foreground">Visualizar e editar informações de candidatos</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">avaliar_candidatos</Badge>
+                <div>
+                  <p className="font-medium text-sm">Avaliar candidatos</p>
+                  <p className="text-xs text-muted-foreground">Inserir feedbacks e notas nas etapas do processo</p>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">edit_vagas</Badge>
-              <div>
-                <p className="font-medium text-sm">Editar vagas existentes</p>
-                <p className="text-xs text-muted-foreground">Modificar detalhes de vagas após aprovação</p>
+          {/* Permissões Gerais */}
+          <div>
+            <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Geral</h4>
+            <div className="grid gap-2">
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">view_dashboard</Badge>
+                <div>
+                  <p className="font-medium text-sm">Acessar dashboard</p>
+                  <p className="text-xs text-muted-foreground">Visualizar relatórios e indicadores</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">publish_vagas</Badge>
-              <div>
-                <p className="font-medium text-sm">Publicar ou desativar vagas</p>
-                <p className="text-xs text-muted-foreground">Controlar o status de publicação das vagas</p>
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                <Badge variant="outline" className="mt-0.5 shrink-0">manage_configuracoes</Badge>
+                <div>
+                  <p className="font-medium text-sm">Gerenciar configurações</p>
+                  <p className="text-xs text-muted-foreground">Alterar configurações da conta da empresa</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">manage_candidatos</Badge>
-              <div>
-                <p className="font-medium text-sm">Gerenciar candidatos</p>
-                <p className="text-xs text-muted-foreground">Visualizar e editar informações de candidatos</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">avaliar_candidatos</Badge>
-              <div>
-                <p className="font-medium text-sm">Avaliar candidatos</p>
-                <p className="text-xs text-muted-foreground">Inserir feedbacks e notas nas etapas do processo</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">view_dashboard</Badge>
-              <div>
-                <p className="font-medium text-sm">Acessar dashboard</p>
-                <p className="text-xs text-muted-foreground">Visualizar relatórios e indicadores</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Badge variant="outline" className="mt-0.5 shrink-0">manage_configuracoes</Badge>
-              <div>
-                <p className="font-medium text-sm">Gerenciar configurações</p>
-                <p className="text-xs text-muted-foreground">Alterar configurações da conta da empresa</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-card opacity-50">
-              <Badge variant="secondary" className="mt-0.5 shrink-0">manage_usuarios</Badge>
-              <div>
-                <p className="font-medium text-sm">Gerenciar usuários <span className="text-xs text-amber-600">(Apenas OWNER)</span></p>
-                <p className="text-xs text-muted-foreground">Esta permissão é exclusiva do OWNER e não pode ser atribuída a colaboradores</p>
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-card opacity-50">
+                <Badge variant="secondary" className="mt-0.5 shrink-0">manage_usuarios</Badge>
+                <div>
+                  <p className="font-medium text-sm">Gerenciar usuários <span className="text-xs text-amber-600">(Apenas OWNER)</span></p>
+                  <p className="text-xs text-muted-foreground">Esta permissão é exclusiva do OWNER e não pode ser atribuída a colaboradores</p>
+                </div>
               </div>
             </div>
           </div>

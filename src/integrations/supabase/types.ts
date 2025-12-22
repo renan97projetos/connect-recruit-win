@@ -1139,6 +1139,9 @@ export type Database = {
         | "view_dashboard"
         | "manage_configuracoes"
         | "manage_usuarios"
+        | "approve_vagas"
+        | "reject_vagas"
+        | "delete_vagas"
       request_status: "pendente" | "aprovada" | "rejeitada" | "cancelada"
       request_type:
         | "ferias"
@@ -1310,6 +1313,9 @@ export const Constants = {
         "view_dashboard",
         "manage_configuracoes",
         "manage_usuarios",
+        "approve_vagas",
+        "reject_vagas",
+        "delete_vagas",
       ],
       request_status: ["pendente", "aprovada", "rejeitada", "cancelada"],
       request_type: [
