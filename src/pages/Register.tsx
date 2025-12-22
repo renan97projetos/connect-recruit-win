@@ -29,7 +29,7 @@ const registerSchema = z.object({
     .min(1, 'Senha é obrigatória')
     .min(6, 'Senha deve ter no mínimo 6 caracteres')
     .max(100, 'Senha muito longa'),
-  role: z.enum(['admin', 'company', 'candidate']),
+  role: z.enum(['company', 'candidate']),
 });
 
 export default function Register() {
@@ -37,7 +37,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<'admin' | 'company' | 'candidate'>('candidate');
+  const [role, setRole] = useState<'company' | 'candidate'>('candidate');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
   const { signUp } = useSupabaseAuth();
@@ -76,7 +76,6 @@ export default function Register() {
       
       // Redireciona para o dashboard apropriado
       const dashboardRoutes = {
-        admin: '/admin/dashboard',
         company: '/company',
         candidate: '/candidate',
       };
@@ -202,7 +201,7 @@ export default function Register() {
               </div>
               <div className="space-y-2">
                 <Label>Tipo de Conta</Label>
-                <RadioGroup value={role} onValueChange={(value) => setRole(value as 'admin' | 'company' | 'candidate')}>
+                <RadioGroup value={role} onValueChange={(value) => setRole(value as 'company' | 'candidate')}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="candidate" id="candidate" />
                     <Label htmlFor="candidate" className="font-normal cursor-pointer">
@@ -213,12 +212,6 @@ export default function Register() {
                     <RadioGroupItem value="company" id="company" />
                     <Label htmlFor="company" className="font-normal cursor-pointer">
                       Empresa - Anunciar vagas
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admin" id="admin" />
-                    <Label htmlFor="admin" className="font-normal cursor-pointer">
-                      Admin - Gerenciar sistema
                     </Label>
                   </div>
                 </RadioGroup>
