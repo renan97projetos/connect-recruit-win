@@ -113,8 +113,8 @@ export default function BackofficeTenants() {
         super_admin_id: user?.id,
         action: 'CREATE',
         entity_type: 'tenant',
-        new_data: formData,
-      });
+        new_data: formData as any,
+      } as any);
 
       toast({ title: 'Empresa criada com sucesso!' });
       setIsCreateOpen(false);
@@ -153,9 +153,9 @@ export default function BackofficeTenants() {
         action: 'UPDATE',
         entity_type: 'tenant',
         entity_id: selectedTenant.id,
-        old_data: selectedTenant,
-        new_data: formData,
-      });
+        old_data: selectedTenant as any,
+        new_data: formData as any,
+      } as any);
 
       toast({ title: 'Empresa atualizada com sucesso!' });
       setIsEditOpen(false);
@@ -188,7 +188,7 @@ export default function BackofficeTenants() {
         entity_id: tenant.id,
         old_data: { status: tenant.status },
         new_data: { status: newStatus },
-      });
+      } as any);
 
       toast({ title: `Status alterado para ${newStatus}` });
       fetchTenants();
@@ -218,8 +218,8 @@ export default function BackofficeTenants() {
         action: 'DELETE',
         entity_type: 'tenant',
         entity_id: tenant.id,
-        old_data: tenant,
-      });
+        old_data: tenant as any,
+      } as any);
 
       toast({ title: 'Empresa excluída com sucesso!' });
       fetchTenants();

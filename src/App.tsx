@@ -5,7 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
+import { BackofficeAuthProvider } from "@/contexts/BackofficeAuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { BackofficeProtectedRoute } from "@/components/backoffice/BackofficeProtectedRoute";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import { initializeDemoData } from "./lib/storage";
 import Home from "./pages/Home";
@@ -54,6 +56,16 @@ import NotFound from "./pages/NotFound";
 import ProspectFunnel from "./pages/ProspectFunnel";
 import RegisterInvitation from "./pages/RegisterInvitation";
 
+// Backoffice pages
+import BackofficeLogin from "./pages/backoffice/Login";
+import BackofficeDashboard from "./pages/backoffice/Dashboard";
+import BackofficeTenants from "./pages/backoffice/Tenants";
+import BackofficePlans from "./pages/backoffice/Plans";
+import BackofficeUsers from "./pages/backoffice/Users";
+import BackofficeMetrics from "./pages/backoffice/Metrics";
+import BackofficeAuditLogs from "./pages/backoffice/AuditLogs";
+import BackofficeSettings from "./pages/backoffice/Settings";
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -64,12 +76,13 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <SupabaseAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <FloatingWhatsAppButton />
-          <BrowserRouter>
-            <Routes>
+        <BackofficeAuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <FloatingWhatsAppButton />
+            <BrowserRouter>
+              <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -117,13 +130,25 @@ const App = () => {
               <Route path="/terms-of-use" element={<TermsOfUse />} />
               <Route path="/api-docs" element={<ApiDocumentation />} />
               <Route path="/prospect-funnel" element={<ProspectFunnel />} />
+              
+              {/* Backoffice Routes */}
+              <Route path="/backoffice/login" element={<BackofficeLogin />} />
+              <Route path="/backoffice/dashboard" element={<BackofficeProtectedRoute><BackofficeDashboard /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/tenants" element={<BackofficeProtectedRoute><BackofficeTenants /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/plans" element={<BackofficeProtectedRoute><BackofficePlans /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/users" element={<BackofficeProtectedRoute><BackofficeUsers /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/metrics" element={<BackofficeProtectedRoute><BackofficeMetrics /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/audit-logs" element={<BackofficeProtectedRoute><BackofficeAuditLogs /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/settings" element={<BackofficeProtectedRoute><BackofficeSettings /></BackofficeProtectedRoute>} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </SupabaseAuthProvider>
-    </QueryClientProvider>
+      </BackofficeAuthProvider>
+    </SupabaseAuthProvider>
+  </QueryClientProvider>
   );
 };
 
