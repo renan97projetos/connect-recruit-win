@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,60 +88,99 @@ const BR_AREA_CODES = [
   { code: '99', region: 'MA - Imperatriz' },
 ];
 
+// Parse phone only once on initial load
+const parsePhoneInitial = (phone: string) => {
+  if (!phone) return { countryCode: '55', areaCode: '', number: '' };
+  
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // Brazil: starts with 55, then 2-digit area code, then 8-9 digit number
+  if (cleaned.startsWith('55') && cleaned.length >= 10) {
+    const rest = cleaned.substring(2);
+    const areaCode = rest.substring(0, 2);
+    const number = rest.substring(2);
+    return { countryCode: '55', areaCode, number };
+  }
+  
+  // Other countries
+  for (const country of COUNTRY_CODES) {
+    if (country.code !== '55' && cleaned.startsWith(country.code)) {
+      return { 
+        countryCode: country.code, 
+        areaCode: '', 
+        number: cleaned.substring(country.code.length) 
+      };
+    }
+  }
+  
+  // Default: assume Brazil without country code
+  if (cleaned.length >= 10) {
+    return { 
+      countryCode: '55', 
+      areaCode: cleaned.substring(0, 2), 
+      number: cleaned.substring(2) 
+    };
+  }
+  
+  return { countryCode: '55', areaCode: '', number: cleaned };
+};
+
 export function PhoneInput({ value, onChange, label = 'Telefone', required = false }: PhoneInputProps) {
-  // Parse existing value
-  const parsePhone = (phone: string) => {
-    if (!phone) return { countryCode: '55', areaCode: '', number: '' };
-    
-    const cleaned = phone.replace(/\D/g, '');
-    
-    // Try to identify country code
-    let countryCode = '55';
-    let rest = cleaned;
-    
-    if (cleaned.startsWith('55') && cleaned.length >= 12) {
-      countryCode = '55';
-      rest = cleaned.substring(2);
-    } else if (cleaned.startsWith('1') && cleaned.length === 11) {
-      countryCode = '1';
-      rest = cleaned.substring(1);
-    } else if (cleaned.startsWith('351') && cleaned.length >= 12) {
-      countryCode = '351';
-      rest = cleaned.substring(3);
-    } else if (cleaned.startsWith('34') && cleaned.length >= 11) {
-      countryCode = '34';
-      rest = cleaned.substring(2);
-    } else if (cleaned.startsWith('54') && cleaned.length >= 12) {
-      countryCode = '54';
-      rest = cleaned.substring(2);
-    }
-    
-    // Extract area code (for Brazil)
-    let areaCode = '';
-    let number = rest;
-    if (countryCode === '55' && rest.length >= 10) {
-      areaCode = rest.substring(0, 2);
-      number = rest.substring(2);
-    }
-    
-    return { countryCode, areaCode, number };
-  };
+  const [initialized, setInitialized] = useState(false);
+  const [countryCode, setCountryCode] = useState('55');
+  const [areaCode, setAreaCode] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
-  const { countryCode, areaCode, number } = parsePhone(value);
+  // Parse initial value only once
+  useEffect(() => {
+    if (!initialized && value) {
+      const parsed = parsePhoneInitial(value);
+      setCountryCode(parsed.countryCode);
+      setAreaCode(parsed.areaCode);
+      setPhoneNumber(parsed.number);
+      setInitialized(true);
+    } else if (!initialized && !value) {
+      setInitialized(true);
+    }
+  }, [value, initialized]);
 
-  const updatePhone = (newCountryCode?: string, newAreaCode?: string, newNumber?: string) => {
-    const cc = newCountryCode ?? countryCode;
-    const ac = newAreaCode ?? areaCode;
-    const num = newNumber ?? number;
-    
-    // Build complete phone number
+  // Build and emit the complete phone number
+  const emitChange = (cc: string, ac: string, num: string) => {
     let fullPhone = cc;
     if (cc === '55' && ac) {
       fullPhone += ac;
     }
     fullPhone += num;
-    
     onChange(fullPhone);
+  };
+
+  const handleCountryChange = (newCountryCode: string) => {
+    setCountryCode(newCountryCode);
+    if (newCountryCode !== '55') {
+      setAreaCode('');
+      emitChange(newCountryCode, '', phoneNumber);
+    } else {
+      emitChange(newCountryCode, areaCode, phoneNumber);
+    }
+  };
+
+  const handleAreaCodeChange = (newAreaCode: string) => {
+    setAreaCode(newAreaCode);
+    emitChange(countryCode, newAreaCode, phoneNumber);
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/\D/g, '');
+    setPhoneNumber(cleaned);
+    emitChange(countryCode, areaCode, cleaned);
+  };
+
+  // Format phone number for display (add hyphen for BR numbers)
+  const formatDisplayNumber = (num: string) => {
+    if (countryCode === '55' && num.length > 5) {
+      return num.slice(0, 5) + '-' + num.slice(5);
+    }
+    return num;
   };
 
   return (
@@ -153,7 +193,7 @@ export function PhoneInput({ value, onChange, label = 'Telefone', required = fal
       <div className="grid grid-cols-12 gap-2">
         {/* Country Code */}
         <div className="col-span-4">
-          <Select value={countryCode} onValueChange={(val) => updatePhone(val, '', '')}>
+          <Select value={countryCode} onValueChange={handleCountryChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -170,14 +210,14 @@ export function PhoneInput({ value, onChange, label = 'Telefone', required = fal
         {/* Area Code (Brazil only) */}
         {countryCode === '55' && (
           <div className="col-span-3">
-            <Select value={areaCode} onValueChange={(val) => updatePhone(undefined, val, undefined)}>
+            <Select value={areaCode} onValueChange={handleAreaCodeChange}>
               <SelectTrigger>
                 <SelectValue placeholder="DDD" />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 {BR_AREA_CODES.map((area) => (
                   <SelectItem key={area.code} value={area.code}>
-                    {area.code} - {area.region}
+                    {area.code}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -190,11 +230,8 @@ export function PhoneInput({ value, onChange, label = 'Telefone', required = fal
           <Input
             type="tel"
             placeholder={countryCode === '55' ? '98765-4321' : 'Número'}
-            value={number}
-            onChange={(e) => {
-              const cleaned = e.target.value.replace(/\D/g, '');
-              updatePhone(undefined, undefined, cleaned);
-            }}
+            value={phoneNumber}
+            onChange={handlePhoneNumberChange}
             maxLength={countryCode === '55' ? 9 : 15}
           />
         </div>
