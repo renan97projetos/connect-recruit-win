@@ -16,9 +16,13 @@ export default function JobDetails() {
   const [hasApplied, setHasApplied] = useState(false);
   const [applying, setApplying] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Verifica se o usuário pode se candidatar (apenas candidatos)
+  const canApply = userRole === 'candidate';
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,16 +44,28 @@ export default function JobDetails() {
 
       setJob(jobData);
       
-      // Check if user has applied
+      // Check user role and if has applied
       if (user) {
-        const { data: applicationData } = await supabase
-          .from('applications')
-          .select('id')
-          .eq('job_id', id)
-          .eq('candidate_id', user.id)
+        // Buscar role do usuário
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
           .maybeSingle();
         
-        setHasApplied(!!applicationData);
+        setUserRole(roleData?.role || null);
+
+        // Verificar se já se candidatou (apenas se for candidato)
+        if (roleData?.role === 'candidate') {
+          const { data: applicationData } = await supabase
+            .from('applications')
+            .select('id')
+            .eq('job_id', id)
+            .eq('candidate_id', user.id)
+            .maybeSingle();
+          
+          setHasApplied(!!applicationData);
+        }
       }
       
       setLoading(false);
@@ -66,6 +82,15 @@ export default function JobDetails() {
         variant: 'destructive',
       });
       navigate('/login');
+      return;
+    }
+
+    if (!canApply) {
+      toast({
+        title: 'Ação não permitida',
+        description: 'Apenas candidatos podem se candidatar a vagas.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -255,34 +280,50 @@ export default function JobDetails() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Button
-                  onClick={handleApply}
-                  disabled={hasApplied || applying || !user || job.is_archived}
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  {hasApplied ? (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Já Candidatado
-                    </>
-                  ) : job.is_archived ? (
-                    'Vaga Arquivada'
-                  ) : applying ? (
-                    'Enviando...'
-                  ) : (
-                    'Candidatar-se'
-                  )}
-                </Button>
-                {job.is_archived && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Esta vaga não está mais aceitando candidaturas
+                {canApply ? (
+                  <>
+                    <Button
+                      onClick={handleApply}
+                      disabled={hasApplied || applying || job.is_archived}
+                      size="lg"
+                      className="w-full sm:w-auto"
+                    >
+                      {hasApplied ? (
+                        <>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Já Candidatado
+                        </>
+                      ) : job.is_archived ? (
+                        'Vaga Arquivada'
+                      ) : applying ? (
+                        'Enviando...'
+                      ) : (
+                        'Candidatar-se'
+                      )}
+                    </Button>
+                    {job.is_archived && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Esta vaga não está mais aceitando candidaturas
+                      </p>
+                    )}
+                  </>
+                ) : user ? (
+                  <p className="text-sm text-muted-foreground">
+                    Apenas candidatos podem se candidatar a vagas.
                   </p>
-                )}
-                {!user && !job.is_archived && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Faça login para se candidatar
-                  </p>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => navigate('/login')}
+                      size="lg"
+                      className="w-full sm:w-auto"
+                    >
+                      Candidatar-se
+                    </Button>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Faça login como candidato para se candidatar
+                    </p>
+                  </>
                 )}
               </div>
 
