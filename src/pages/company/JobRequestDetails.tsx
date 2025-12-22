@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
+import { usePermissions } from '@/hooks/usePermissions';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ export default function JobRequestDetails() {
   const navigate = useNavigate();
   const { user, userRole } = useSupabaseAuth();
   const { isOwner } = useCompanyRole();
+  const { hasPermission } = usePermissions();
   const [request, setRequest] = useState<JobRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -259,20 +261,32 @@ export default function JobRequestDetails() {
   const isAdmin = userRole === 'admin';
   const isCompanyOwnerForRequest = user?.id === request.company_id;
   
-  // OWNER da empresa ou Admin podem aprovar/rejeitar requisições
-  // O OWNER pode aprovar requisições de sua própria empresa
-  const canApproveRequisition = (isAdmin || (isOwner && isCompanyOwnerForRequest)) && request.status === 'pending_approval';
-  const canApproveReview = (isAdmin || (isOwner && isCompanyOwnerForRequest)) && request.status === 'pending_review';
+  // Verificar permissões específicas para ações decisivas
+  const canApprove = hasPermission('approve_vagas');
+  const canReject = hasPermission('reject_vagas');
+  const canDelete = hasPermission('delete_vagas');
+  
+  // OWNER, Admin ou quem tem permissão de aprovar pode aprovar requisições
+  const canApproveRequisition = (isAdmin || isOwner || canApprove) && 
+    isCompanyOwnerForRequest && request.status === 'pending_approval';
+  const canApproveReview = (isAdmin || isOwner || canApprove) && 
+    isCompanyOwnerForRequest && request.status === 'pending_review';
+  
+  // OWNER, Admin ou quem tem permissão de rejeitar pode rejeitar
+  const canRejectRequest = (isAdmin || isOwner || canReject) && 
+    isCompanyOwnerForRequest && 
+    (request.status === 'pending_approval' || request.status === 'pending_review');
   
   // Verifica se está aguardando aprovação (para colaboradores que não podem aprovar)
-  const isWaitingApproval = !isAdmin && !isOwner && (
+  const isWaitingApproval = !canApproveRequisition && !canApproveReview && (
     request.status === 'pending_approval' || 
     request.status === 'pending_review'
   );
   
-  // OWNER e Admin podem excluir qualquer requisição
-  // Colaboradores só podem excluir rascunhos ou rejeitados que eles criaram
-  const canDeleteRequest = isAdmin || (isOwner && isCompanyOwnerForRequest) || (
+  // OWNER, Admin ou quem tem permissão de excluir pode excluir
+  // Colaboradores sem permissão só podem excluir rascunhos ou rejeitados que eles criaram
+  const canDeleteRequest = isAdmin || (isOwner && isCompanyOwnerForRequest) || 
+    (canDelete && isCompanyOwnerForRequest) || (
     isCompanyOwnerForRequest && (
       request.status === 'draft' || 
       request.status === 'rejected'
@@ -337,67 +351,71 @@ export default function JobRequestDetails() {
           </Card>
         )}
 
-        {/* Ações de Aprovação/Rejeição - OWNER ou ADMIN */}
-        {(canApproveRequisition || canApproveReview) && (
+        {/* Ações de Aprovação/Rejeição - OWNER, ADMIN ou colaborador com permissão */}
+        {(canApproveRequisition || canApproveReview || canRejectRequest) && (
           <Card className="border-primary">
             <CardHeader>
               <CardTitle>Ações Necessárias</CardTitle>
               <CardDescription>
-                {canApproveRequisition && 'Você precisa aprovar ou rejeitar esta requisição de vaga.'}
-                {canApproveReview && 'Você precisa revisar e publicar esta vaga.'}
+                {(canApproveRequisition || canApproveReview) && 'Você pode aprovar ou rejeitar esta requisição de vaga.'}
+                {!canApproveRequisition && !canApproveReview && canRejectRequest && 'Você pode rejeitar esta requisição de vaga.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-4">
-              <Button
-                onClick={canApproveRequisition ? handleApproveRequisition : handleApproveReview}
-                disabled={actionLoading}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                {canApproveRequisition ? 'Aprovar Requisição' : 'Aprovar e Publicar Vaga'}
-              </Button>
+              {(canApproveRequisition || canApproveReview) && (
+                <Button
+                  onClick={canApproveRequisition ? handleApproveRequisition : handleApproveReview}
+                  disabled={actionLoading}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  {request.status === 'pending_approval' ? 'Aprovar Requisição' : 'Aprovar e Publicar Vaga'}
+                </Button>
+              )}
               
-              <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setRejectAction(canApproveRequisition ? 'requisition' : 'review')}
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Rejeitar
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Rejeitar {rejectAction === 'requisition' ? 'Requisição' : 'Revisão'}</DialogTitle>
-                    <DialogDescription>
-                      Informe o motivo da rejeição
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Justificativa</Label>
-                      <Textarea
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        placeholder="Descreva o motivo da rejeição..."
-                        rows={4}
-                      />
+              {canRejectRequest && (
+                <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setRejectAction(request.status === 'pending_approval' ? 'requisition' : 'review')}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Rejeitar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Rejeitar {rejectAction === 'requisition' ? 'Requisição' : 'Revisão'}</DialogTitle>
+                      <DialogDescription>
+                        Informe o motivo da rejeição
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Justificativa</Label>
+                        <Textarea
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder="Descreva o motivo da rejeição..."
+                          rows={4}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-4">
+                        <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={rejectAction === 'requisition' ? handleRejectRequisition : handleRejectReview}
+                          disabled={actionLoading}
+                        >
+                          Confirmar Rejeição
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex justify-end gap-4">
-                      <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
-                        Cancelar
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={rejectAction === 'requisition' ? handleRejectRequisition : handleRejectReview}
-                        disabled={actionLoading}
-                      >
-                        Confirmar Rejeição
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
+              )}
             </CardContent>
           </Card>
         )}

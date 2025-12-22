@@ -32,14 +32,20 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const PERMISSIONS = [
-  { key: 'view_vagas', label: 'Ver vagas abertas' },
-  { key: 'create_vagas', label: 'Criar novas vagas' },
-  { key: 'edit_vagas', label: 'Editar vagas existentes' },
-  { key: 'publish_vagas', label: 'Publicar ou desativar vagas' },
-  { key: 'manage_candidatos', label: 'Visualizar e editar candidatos' },
-  { key: 'avaliar_candidatos', label: 'Inserir feedbacks ou notas' },
-  { key: 'view_dashboard', label: 'Acessar relatórios e indicadores' },
-  { key: 'manage_configuracoes', label: 'Alterar configurações da conta' },
+  // Permissões de Vagas
+  { key: 'view_vagas', label: 'Ver vagas abertas', category: 'Vagas' },
+  { key: 'create_vagas', label: 'Criar novas vagas', category: 'Vagas' },
+  { key: 'edit_vagas', label: 'Editar vagas existentes', category: 'Vagas' },
+  { key: 'publish_vagas', label: 'Publicar ou desativar vagas', category: 'Vagas' },
+  { key: 'approve_vagas', label: 'Aprovar requisições de vagas', category: 'Vagas' },
+  { key: 'reject_vagas', label: 'Rejeitar requisições de vagas', category: 'Vagas' },
+  { key: 'delete_vagas', label: 'Excluir vagas e requisições', category: 'Vagas' },
+  // Permissões de Candidatos
+  { key: 'manage_candidatos', label: 'Visualizar e editar candidatos', category: 'Candidatos' },
+  { key: 'avaliar_candidatos', label: 'Inserir feedbacks ou notas', category: 'Candidatos' },
+  // Permissões Gerais
+  { key: 'view_dashboard', label: 'Acessar relatórios e indicadores', category: 'Geral' },
+  { key: 'manage_configuracoes', label: 'Alterar configurações da conta', category: 'Geral' },
   // NOTA: manage_usuarios não está disponível para colaboradores
   // Apenas o Owner (gestor da empresa) pode gerenciar usuários
 ];
@@ -261,39 +267,55 @@ export function EditPermissionsModal({
                     <div className="mb-4">
                       <FormLabel>Permissões</FormLabel>
                     </div>
-                    <div className="space-y-2">
-                      {PERMISSIONS.map((permission) => (
-                        <FormField
-                          key={permission.key}
-                          control={form.control}
-                          name="permissions"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
+                    <div className="space-y-4">
+                      {/* Agrupar por categoria */}
+                      {['Vagas', 'Candidatos', 'Geral'].map((category) => (
+                        <div key={category} className="space-y-2">
+                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide border-b pb-1">
+                            {category}
+                          </h4>
+                          <div className="space-y-2 pl-2">
+                            {PERMISSIONS.filter(p => p.category === category).map((permission) => (
+                              <FormField
                                 key={permission.key}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(permission.key)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, permission.key])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== permission.key
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {permission.label}
-                                </FormLabel>
-                              </FormItem>
-                            );
-                          }}
-                        />
+                                control={form.control}
+                                name="permissions"
+                                render={({ field }) => {
+                                  const isDecisive = ['approve_vagas', 'reject_vagas', 'delete_vagas'].includes(permission.key);
+                                  return (
+                                    <FormItem
+                                      key={permission.key}
+                                      className={`flex flex-row items-start space-x-3 space-y-0 p-2 rounded ${
+                                        isDecisive ? 'bg-amber-50 dark:bg-amber-950/20' : ''
+                                      }`}
+                                    >
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(permission.key)}
+                                          onCheckedChange={(checked) => {
+                                            return checked
+                                              ? field.onChange([...field.value, permission.key])
+                                              : field.onChange(
+                                                  field.value?.filter(
+                                                    (value) => value !== permission.key
+                                                  )
+                                                );
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        {permission.label}
+                                        {isDecisive && (
+                                          <span className="ml-2 text-xs text-amber-600">(decisivo)</span>
+                                        )}
+                                      </FormLabel>
+                                    </FormItem>
+                                  );
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                     <FormMessage />

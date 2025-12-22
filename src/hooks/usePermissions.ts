@@ -7,6 +7,9 @@ type PermissionKey =
   | 'create_vagas'
   | 'edit_vagas'
   | 'publish_vagas'
+  | 'approve_vagas'
+  | 'reject_vagas'
+  | 'delete_vagas'
   | 'manage_candidatos'
   | 'avaliar_candidatos'
   | 'view_dashboard'
@@ -19,6 +22,9 @@ const ALL_PERMISSIONS: PermissionKey[] = [
   'create_vagas',
   'edit_vagas',
   'publish_vagas',
+  'approve_vagas',
+  'reject_vagas',
+  'delete_vagas',
   'manage_candidatos',
   'avaliar_candidatos',
   'view_dashboard',
