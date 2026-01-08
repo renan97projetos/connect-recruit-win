@@ -657,7 +657,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
         });
       } else {
         items = publishedJobs.filter(job => {
-          if (!job.is_active) return false;
+          // Não filtrar vagas pausadas - elas devem aparecer com badge
           const phase = getJobPhase(job);
           const matchesPhase = phase === col.id;
           const matchesSearch = !searchTerm || 
@@ -1055,6 +1055,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     const title = isRequest ? (item as JobRequest).position_title : (item as PublishedJob).title;
     const appCount = !isRequest ? ((item as PublishedJob).applications?.length || 0) : 0;
     const requestStatus = isRequest ? (item as JobRequest).status : '';
+    const isPaused = !isRequest && !(item as PublishedJob).is_active;
     
     // Permitir excluir com permissão delete_vagas
     const canDeleteItem = isRequest && (permissions.canDelete || isOwner) && (
@@ -1182,12 +1183,20 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                     <Calendar className="h-3 w-3" />
                     {new Date(item.created_at).toLocaleDateString('pt-BR')}
                   </div>
-                  {!isRequest && appCount > 0 && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                      <Users className="h-3 w-3 mr-1" />
-                      {appCount}
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {isPaused && (
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        <Pause className="h-3 w-3 mr-1" />
+                        Pausada
+                      </Badge>
+                    )}
+                    {!isRequest && appCount > 0 && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        <Users className="h-3 w-3 mr-1" />
+                        {appCount}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
