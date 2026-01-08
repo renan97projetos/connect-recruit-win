@@ -1,27 +1,19 @@
 import { useState, useEffect } from 'react';
 import { 
-  Sheet, 
-  SheetContent, 
-  SheetDescription, 
-  SheetHeader, 
-  SheetTitle 
-} from '@/components/ui/sheet';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import {
   Tooltip,
   TooltipContent,
@@ -30,42 +22,33 @@ import {
 import { 
   Users, 
   Star, 
-  Phone, 
   Mail, 
   Calendar,
   Clock,
   FileText,
   CheckCircle,
   XCircle,
-  ArrowUp,
-  ArrowDown,
-  Filter,
-  MessageSquare,
-  Video,
-  Award,
-  Target,
   ThumbsUp,
   ThumbsDown,
   Send,
   Eye,
-  HelpCircle,
-  Info
+  Info,
+  History,
+  Edit,
+  Play,
+  AlertCircle,
+  Briefcase,
+  MapPin,
+  DollarSign,
+  User,
+  MessageSquare
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface Application {
-  id: string;
-  candidate_id: string;
-  candidate_name: string;
-  candidate_email: string;
-  score: number | null;
-  status: string;
-  current_stage: string | null;
-  applied_at: string;
-  is_favorite: boolean | null;
-  notes: any;
-}
+import { useNavigate } from 'react-router-dom';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompanyRole } from '@/hooks/useCompanyRole';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface StagePanelProps {
   open: boolean;
@@ -78,99 +61,651 @@ interface StagePanelProps {
   onRefresh: () => void;
 }
 
+// Configuração de status e badges
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; color: string }> = {
+  draft: { label: 'Rascunho', variant: 'secondary', color: 'bg-slate-500' },
+  pending_approval: { label: 'Aguardando Aprovação', variant: 'default', color: 'bg-amber-500' },
+  approved: { label: 'Aprovada', variant: 'default', color: 'bg-lime-500' },
+  rejected: { label: 'Rejeitada', variant: 'destructive', color: 'bg-red-500' },
+  in_creation: { label: 'Em Criação', variant: 'secondary', color: 'bg-cyan-500' },
+  pending_review: { label: 'Revisão Final', variant: 'default', color: 'bg-pink-500' },
+  published: { label: 'Publicada', variant: 'default', color: 'bg-violet-500' },
+};
+
+// Mapeamento de motivos de abertura
+const OPENING_REASONS: Record<string, string> = {
+  replacement: 'Substituição',
+  expansion: 'Aumento de Quadro',
+  new_project: 'Novo Projeto',
+  seasonal: 'Demanda Sazonal',
+  other: 'Outro',
+};
+
 // Helper para obter iniciais
 const getInitials = (name: string) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
 
-// Componente para painel de Triagem (Screening)
-function ScreeningPanel({ jobId, onRefresh }: { jobId: string; onRefresh: () => void }) {
-  const [applications, setApplications] = useState<Application[]>([]);
+interface JobRequestData {
+  id: string;
+  position_title: string;
+  department: string | null;
+  opening_reason: string;
+  opening_reason_detail: string | null;
+  job_type: string;
+  location: string;
+  city: string | null;
+  state: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  status: string;
+  current_stage: number;
+  created_at: string;
+  created_by: string;
+  company_id: string;
+  requisition_approved_by: string | null;
+  requisition_approved_at: string | null;
+  requisition_rejection_reason: string | null;
+  review_approved_by: string | null;
+  review_approved_at: string | null;
+  review_rejection_reason: string | null;
+  desired_profile: string | null;
+}
+
+interface HistoryEntry {
+  id: string;
+  action: string;
+  timestamp: string;
+  user: string;
+  details?: string;
+}
+
+// Painel para etapas de requisição
+function RequestStageDialog({ 
+  stageId, 
+  itemId, 
+  onClose,
+  onRefresh 
+}: { 
+  stageId: string; 
+  itemId: string; 
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
+  const { isOwner } = useCompanyRole();
+  const { hasPermission } = usePermissions();
+  
+  const [request, setRequest] = useState<JobRequestData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'score' | 'date'>('score');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [comments, setComments] = useState('');
+  const [creatorProfile, setCreatorProfile] = useState<{ name: string } | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
-    loadApplications();
-  }, [jobId]);
+    loadRequestData();
+  }, [itemId]);
 
-  const loadApplications = async () => {
+  const loadRequestData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('applications')
+      // Carregar dados da requisição
+      const { data: requestData, error: requestError } = await supabase
+        .from('job_requests')
         .select('*')
-        .eq('job_id', jobId)
-        .in('status', ['pending', 'screening']);
+        .eq('id', itemId)
+        .single();
 
-      if (error) throw error;
-      setApplications(data || []);
+      if (requestError) throw requestError;
+      setRequest(requestData);
+
+      // Carregar perfil do criador
+      if (requestData?.created_by) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', requestData.created_by)
+          .single();
+        
+        setCreatorProfile(profileData);
+      }
+
+      // Montar histórico baseado nos timestamps da requisição
+      const historyEntries: HistoryEntry[] = [];
+      
+      if (requestData?.created_at) {
+        historyEntries.push({
+          id: '1',
+          action: 'Criou e enviou para aprovação',
+          timestamp: requestData.created_at,
+          user: creatorProfile?.name || 'Usuário'
+        });
+      }
+      
+      if (requestData?.requisition_approved_at) {
+        historyEntries.push({
+          id: '2',
+          action: requestData.status === 'rejected' ? 'Rejeitou a requisição' : 'Aprovou a requisição',
+          timestamp: requestData.requisition_approved_at,
+          user: 'Aprovador',
+          details: requestData.requisition_rejection_reason || undefined
+        });
+      }
+      
+      if (requestData?.review_approved_at) {
+        historyEntries.push({
+          id: '3',
+          action: 'Aprovou e publicou a vaga',
+          timestamp: requestData.review_approved_at,
+          user: 'Aprovador'
+        });
+      }
+
+      setHistory(historyEntries.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ));
     } catch (error) {
-      console.error('Error loading applications:', error);
-      toast.error('Erro ao carregar candidatos');
+      console.error('Error loading request:', error);
+      toast.error('Erro ao carregar requisição');
     } finally {
       setLoading(false);
     }
   };
 
-  const sortedApplications = [...applications].sort((a, b) => {
-    if (sortBy === 'score') {
-      const scoreA = a.score || 0;
-      const scoreB = b.score || 0;
-      return sortOrder === 'desc' ? scoreB - scoreA : scoreA - scoreB;
-    } else {
-      const dateA = new Date(a.applied_at).getTime();
-      const dateB = new Date(b.applied_at).getTime();
-      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-    }
-  });
+  // Permissões
+  const canApprove = isOwner || hasPermission('approve_vagas');
+  const canReject = isOwner || hasPermission('reject_vagas');
+  const canEdit = isOwner || hasPermission('edit_vagas');
 
-  const toggleSort = (field: 'score' | 'date') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
+  // Ações
+  const handleApprove = async () => {
+    if (!request) return;
+    setActionLoading(true);
+    
+    try {
+      if (request.status === 'pending_approval') {
+        await supabase
+          .from('job_requests')
+          .update({
+            status: 'approved',
+            current_stage: 3,
+            requisition_approved_by: user?.id,
+            requisition_approved_at: new Date().toISOString()
+          })
+          .eq('id', itemId);
+        
+        toast.success('Requisição aprovada com sucesso!');
+      } else if (request.status === 'pending_review') {
+        // Buscar nome da empresa
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('company_name')
+          .eq('id', request.company_id)
+          .single();
+
+        // Criar a vaga
+        const { data: jobData, error: jobError } = await supabase
+          .from('jobs')
+          .insert({
+            company_id: request.company_id,
+            company_name: profileData?.company_name || 'Empresa',
+            title: request.position_title,
+            description: request.desired_profile || '',
+            job_type: request.job_type,
+            location: request.location,
+            city: request.city,
+            state: request.state,
+            salary_min: request.salary_min,
+            salary_max: request.salary_max,
+            is_active: true,
+            job_request_id: itemId
+          })
+          .select()
+          .single();
+
+        if (jobError) throw jobError;
+
+        // Atualizar requisição
+        await supabase
+          .from('job_requests')
+          .update({
+            status: 'published',
+            current_stage: 5,
+            published_job_id: jobData.id,
+            published_at: new Date().toISOString(),
+            review_approved_by: user?.id,
+            review_approved_at: new Date().toISOString()
+          })
+          .eq('id', itemId);
+
+        toast.success('Vaga aprovada e publicada!');
+      }
+      
+      onRefresh();
+      onClose();
+    } catch (error) {
+      console.error('Error approving:', error);
+      toast.error('Erro ao aprovar');
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const selectAll = () => {
-    if (selectedIds.length === applications.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(applications.map(a => a.id));
-    }
-  };
-
-  const handleBulkAction = async (action: 'approve' | 'reject') => {
-    if (selectedIds.length === 0) {
-      toast.error('Selecione pelo menos um candidato');
+  const handleReject = async () => {
+    if (!request) return;
+    if (!comments.trim()) {
+      toast.error('Adicione um comentário explicando a rejeição');
       return;
     }
-
+    
+    setActionLoading(true);
+    
     try {
-      const newStatus = action === 'approve' ? 'interview' : 'rejected';
-      const { error } = await supabase
-        .from('applications')
-        .update({ status: newStatus, current_stage: action === 'approve' ? 'interview' : null })
-        .in('id', selectedIds);
-
-      if (error) throw error;
-
-      toast.success(`${selectedIds.length} candidato(s) ${action === 'approve' ? 'aprovado(s)' : 'reprovado(s)'}`);
-      setSelectedIds([]);
-      loadApplications();
+      if (request.status === 'pending_approval') {
+        await supabase
+          .from('job_requests')
+          .update({
+            status: 'rejected',
+            requisition_rejection_reason: comments
+          })
+          .eq('id', itemId);
+      } else if (request.status === 'pending_review') {
+        await supabase
+          .from('job_requests')
+          .update({
+            status: 'in_creation',
+            current_stage: 3,
+            review_rejection_reason: comments
+          })
+          .eq('id', itemId);
+      }
+      
+      toast.success('Requisição rejeitada');
       onRefresh();
+      onClose();
     } catch (error) {
-      console.error('Error updating applications:', error);
-      toast.error('Erro ao atualizar candidatos');
+      console.error('Error rejecting:', error);
+      toast.error('Erro ao rejeitar');
+    } finally {
+      setActionLoading(false);
     }
+  };
+
+  const handleRequestAdjustments = async () => {
+    if (!request) return;
+    
+    setActionLoading(true);
+    
+    try {
+      const newStatus = request.status === 'pending_approval' ? 'draft' : 'in_creation';
+      await supabase
+        .from('job_requests')
+        .update({
+          status: newStatus,
+          current_stage: newStatus === 'draft' ? 1 : 3
+        })
+        .eq('id', itemId);
+      
+      toast.success('Requisição devolvida para ajustes');
+      onRefresh();
+      onClose();
+    } catch (error) {
+      console.error('Error requesting adjustments:', error);
+      toast.error('Erro ao solicitar ajustes');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    navigate(`/company/job-requests/${itemId}`);
+    onClose();
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!request) return;
+    
+    setActionLoading(true);
+    
+    try {
+      const newStatus = request.status === 'draft' ? 'pending_approval' : 'pending_review';
+      await supabase
+        .from('job_requests')
+        .update({
+          status: newStatus,
+          current_stage: newStatus === 'pending_approval' ? 2 : 4
+        })
+        .eq('id', itemId);
+      
+      toast.success(newStatus === 'pending_approval' ? 'Enviado para aprovação!' : 'Enviado para revisão final!');
+      onRefresh();
+      onClose();
+    } catch (error) {
+      console.error('Error submitting:', error);
+      toast.error('Erro ao enviar');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStartCreation = async () => {
+    if (!request) return;
+    
+    setActionLoading(true);
+    
+    try {
+      await supabase
+        .from('job_requests')
+        .update({
+          status: 'in_creation',
+          current_stage: 3
+        })
+        .eq('id', itemId);
+      
+      toast.success('Iniciando criação da vaga');
+      onRefresh();
+      onClose();
+    } catch (error) {
+      console.error('Error starting creation:', error);
+      toast.error('Erro ao iniciar');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!request) return null;
+
+  const statusConfig = STATUS_CONFIG[request.status] || STATUS_CONFIG.draft;
+  const showApprovalActions = (request.status === 'pending_approval' || request.status === 'pending_review') && canApprove;
+  const showEditActions = (request.status === 'draft' || request.status === 'in_creation') && canEdit;
+  const showStartCreation = request.status === 'approved' && canEdit;
+
+  return (
+    <div className="space-y-6">
+      {/* Header com título e status */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">{request.position_title}</h2>
+        </div>
+        <Badge className={`${statusConfig.color} text-white`}>
+          {statusConfig.label}
+        </Badge>
+      </div>
+
+      {/* Informações principais em grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Gestor Solicitante</p>
+          <p className="font-medium">{creatorProfile?.name || 'Carregando...'}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Quantidade de Vagas</p>
+          <p className="font-medium">1</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Motivo</p>
+          <p className="font-medium">{OPENING_REASONS[request.opening_reason] || request.opening_reason}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Tipo de Vaga</p>
+          <p className="font-medium">{request.job_type === 'full-time' ? 'CLT' : request.job_type}</p>
+        </div>
+      </div>
+
+      {/* Departamento */}
+      {request.department && (
+        <div className="p-3 bg-muted rounded-lg">
+          <p className="text-sm text-muted-foreground">Departamento</p>
+          <p className="font-medium">{request.department}</p>
+        </div>
+      )}
+
+      {/* Localização e Salário */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">{request.city ? `${request.city}, ${request.state}` : request.location}</span>
+        </div>
+        {(request.salary_min || request.salary_max) && (
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">
+              {request.salary_min && request.salary_max 
+                ? `R$ ${request.salary_min.toLocaleString()} - R$ ${request.salary_max.toLocaleString()}`
+                : request.salary_min 
+                  ? `A partir de R$ ${request.salary_min.toLocaleString()}`
+                  : `Até R$ ${request.salary_max?.toLocaleString()}`
+              }
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Seção de comentários para ações */}
+      {showApprovalActions && (
+        <div className="space-y-2">
+          <Label htmlFor="comments">Comentários (opcional)</Label>
+          <Textarea
+            id="comments"
+            placeholder="Adicione comentários sobre a decisão..."
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            rows={3}
+          />
+        </div>
+      )}
+
+      {/* Motivo de rejeição (se houver) */}
+      {request.requisition_rejection_reason && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <p className="text-sm font-medium text-destructive flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Motivo da Rejeição
+          </p>
+          <p className="text-sm mt-1">{request.requisition_rejection_reason}</p>
+        </div>
+      )}
+
+      {request.review_rejection_reason && (
+        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <p className="text-sm font-medium text-amber-600 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Ajustes Solicitados
+          </p>
+          <p className="text-sm mt-1">{request.review_rejection_reason}</p>
+        </div>
+      )}
+
+      {/* Botões de ação */}
+      <div className="flex flex-wrap gap-3">
+        {showApprovalActions && (
+          <>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={actionLoading}
+              className="flex-1"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Reprovar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleRequestAdjustments}
+              disabled={actionLoading}
+              className="flex-1"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Solicitar Ajustes
+            </Button>
+            <Button
+              onClick={handleApprove}
+              disabled={actionLoading}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              {request.status === 'pending_review' ? 'Aprovar e Publicar' : 'Aprovar'}
+            </Button>
+          </>
+        )}
+
+        {showEditActions && (
+          <>
+            <Button
+              variant="outline"
+              onClick={handleEdit}
+              disabled={actionLoading}
+              className="flex-1"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Editar Requisição
+            </Button>
+            <Button
+              onClick={handleSubmitForApproval}
+              disabled={actionLoading}
+              className="flex-1"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {request.status === 'draft' ? 'Enviar para Aprovação' : 'Enviar para Revisão'}
+            </Button>
+          </>
+        )}
+
+        {showStartCreation && (
+          <>
+            <Button
+              variant="outline"
+              onClick={handleEdit}
+              disabled={actionLoading}
+              className="flex-1"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Ver Detalhes
+            </Button>
+            <Button
+              onClick={handleStartCreation}
+              disabled={actionLoading}
+              className="flex-1"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Iniciar Criação da Vaga
+            </Button>
+          </>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* Histórico de Aprovações */}
+      <div>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <History className="h-4 w-4" />
+          Histórico de Aprovações
+        </h3>
+        
+        <div className="space-y-3">
+          {history.length > 0 ? (
+            history.map((entry) => (
+              <div key={entry.id} className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{entry.action}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {entry.user} • {new Date(entry.timestamp).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                  {entry.details && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">"{entry.details}"</p>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhum histórico disponível</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Painel para vagas publicadas (candidatos)
+function PublishedJobDialog({ 
+  stageId, 
+  jobId,
+  stageTitle,
+  onClose,
+  onRefresh 
+}: { 
+  stageId: string; 
+  jobId: string;
+  stageTitle: string;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const navigate = useNavigate();
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState<any>(null);
+
+  useEffect(() => {
+    loadData();
+  }, [jobId, stageId]);
+
+  const loadData = async () => {
+    try {
+      // Carregar job
+      const { data: jobData } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single();
+      
+      setJob(jobData);
+
+      // Carregar candidatos da etapa
+      let query = supabase
+        .from('applications')
+        .select('*')
+        .eq('job_id', jobId);
+
+      // Filtrar por etapa
+      if (stageId === 'screening' || stageId === 'published') {
+        query = query.in('status', ['pending', 'screening']);
+      } else if (stageId === 'hiring') {
+        query = query.eq('status', 'approved');
+      } else {
+        query = query.eq('current_stage', stageId);
+      }
+
+      const { data: appData, error } = await query;
+      if (error) throw error;
+      
+      setApplications(appData || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewProcess = () => {
+    navigate(`/company/selection-process/${jobId}`);
+    onClose();
   };
 
   const getScoreColor = (score: number | null) => {
@@ -189,290 +724,103 @@ function ScreeningPanel({ jobId, onRefresh }: { jobId: string; onRefresh: () => 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">{job?.title || 'Vaga'}</h2>
+          <p className="text-sm text-muted-foreground mt-1">Etapa: {stageTitle}</p>
+        </div>
+        <Badge className="bg-violet-500 text-white">
+          {applications.length} candidato(s)
+        </Badge>
+      </div>
+
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{applications.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">{applications.length}</p>
+              <p className="text-xs text-muted-foreground">Total na etapa</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Score Médio</p>
-                <p className="text-2xl font-bold">
-                  {applications.length > 0 
-                    ? Math.round(applications.reduce((acc, a) => acc + (a.score || 0), 0) / applications.length)
-                    : 0}
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-yellow-500" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">
+                {applications.length > 0 
+                  ? Math.round(applications.reduce((acc, a) => acc + (a.score || 0), 0) / applications.length)
+                  : 0}
+              </p>
+              <p className="text-xs text-muted-foreground">Score médio</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Selecionados</p>
-                <p className="text-2xl font-bold">{selectedIds.length}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">{applications.filter(a => a.is_favorite).length}</p>
+              <p className="text-xs text-muted-foreground">Favoritos</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Ações em Massa */}
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-          <span className="text-sm font-medium">{selectedIds.length} selecionado(s)</span>
-          <div className="flex-1" />
-          <Button size="sm" variant="outline" onClick={() => handleBulkAction('approve')}>
-            <ThumbsUp className="h-4 w-4 mr-2" />
-            Aprovar
-          </Button>
-          <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleBulkAction('reject')}>
-            <ThumbsDown className="h-4 w-4 mr-2" />
-            Reprovar
-          </Button>
-        </div>
-      )}
-
-      {/* Tabela de Candidatos */}
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <Checkbox 
-                  checked={selectedIds.length === applications.length && applications.length > 0}
-                  onCheckedChange={selectAll}
-                />
-              </TableHead>
-              <TableHead className="w-10">#</TableHead>
-              <TableHead>Candidato</TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleSort('score')}
-              >
-                <div className="flex items-center gap-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1 cursor-help">
-                        Score
-                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p className="text-xs">Compatibilidade com os requisitos da vaga</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  {sortBy === 'score' && (
-                    sortOrder === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />
-                  )}
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleSort('date')}
-              >
-                <div className="flex items-center gap-1">
-                  Data
-                  {sortBy === 'date' && (
-                    sortOrder === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />
-                  )}
-                </div>
-              </TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedApplications.map((app, index) => (
-              <TableRow key={app.id} className={selectedIds.includes(app.id) ? 'bg-muted/50' : ''}>
-                <TableCell>
-                  <Checkbox 
-                    checked={selectedIds.includes(app.id)}
-                    onCheckedChange={() => toggleSelect(app.id)}
-                  />
-                </TableCell>
-                <TableCell className="font-medium text-muted-foreground">
-                  {index + 1}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
+      {/* Lista de candidatos */}
+      <div>
+        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          Candidatos nesta etapa
+        </h3>
+        
+        <ScrollArea className="h-[200px]">
+          <div className="space-y-2">
+            {applications.length > 0 ? (
+              applications
+                .sort((a, b) => (b.score || 0) - (a.score || 0))
+                .map((app) => (
+                  <div key={app.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>{getInitials(app.candidate_name)}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium">{app.candidate_name}</p>
-                      <p className="text-xs text-muted-foreground">{app.candidate_email}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{app.candidate_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{app.candidate_email}</p>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 cursor-help">
-                          <span className={`font-bold ${getScoreColor(app.score)}`}>
+                      <TooltipTrigger>
+                        <div className="flex items-center gap-1">
+                          <span className={`font-bold text-sm ${getScoreColor(app.score)}`}>
                             {app.score || 0}
                           </span>
                           <Info className="h-3 w-3 text-muted-foreground" />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs">
-                        <div className="space-y-1">
-                          <p className="font-medium">Score de Compatibilidade</p>
-                          <p className="text-xs text-muted-foreground">
-                            Calculado via análise automática de requisitos, experiências e habilidades do currículo em relação à vaga.
-                          </p>
-                          <div className="text-xs mt-1">
-                            <span className="text-green-600">≥80: Excelente</span>{' '}
-                            <span className="text-yellow-600">60-79: Bom</span>{' '}
-                            <span className="text-red-600">&lt;60: Revisar</span>
-                          </div>
-                        </div>
+                      <TooltipContent>
+                        <p className="text-xs">Score de compatibilidade</p>
                       </TooltipContent>
                     </Tooltip>
-                    <Progress value={app.score || 0} className="w-16 h-2" />
                   </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {new Date(app.applied_at).toLocaleDateString('pt-BR')}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {applications.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Nenhum candidato nesta etapa
-                </TableCell>
-              </TableRow>
+                ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhum candidato nesta etapa</p>
+              </div>
             )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
-// Componente genérico para outras etapas
-function GenericStagePanel({ stageId, stageTitle, jobId }: { stageId: string; stageTitle: string; jobId: string }) {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadApplications();
-  }, [jobId, stageId]);
-
-  const loadApplications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('job_id', jobId)
-        .eq('current_stage', stageId);
-
-      if (error) throw error;
-      setApplications(data || []);
-    } catch (error) {
-      console.error('Error loading applications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Candidatos em {stageTitle}</CardTitle>
-          <CardDescription>{applications.length} candidato(s) nesta etapa</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {applications.length > 0 ? (
-            <div className="space-y-3">
-              {applications.map((app) => (
-                <div key={app.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback>{getInitials(app.candidate_name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-medium">{app.candidate_name}</p>
-                    <p className="text-sm text-muted-foreground">{app.candidate_email}</p>
-                  </div>
-                  <Badge variant="outline">Score: {app.score || 0}</Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Nenhum candidato nesta etapa</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// Painel para etapas de requisição
-function RequestStagePanel({ stageId, itemId, itemTitle }: { stageId: string; itemId: string; itemTitle: string }) {
-  const stageLabels: Record<string, { title: string; description: string }> = {
-    draft: { title: 'Rascunho', description: 'A requisição está em elaboração. Preencha todos os campos necessários antes de enviar para aprovação.' },
-    pending_approval: { title: 'Aguardando Aprovação', description: 'A requisição foi enviada e aguarda aprovação do gestor responsável.' },
-    approved: { title: 'Aprovada', description: 'A requisição foi aprovada. Agora você pode iniciar a criação da descrição da vaga.' },
-    in_creation: { title: 'Em Criação', description: 'A descrição da vaga está sendo elaborada. Complete todos os detalhes antes de enviar para revisão.' },
-    pending_review: { title: 'Revisão Final', description: 'A vaga está pronta para revisão. Após aprovação, será publicada automaticamente.' },
-  };
-
-  const stageInfo = stageLabels[stageId] || { title: stageId, description: '' };
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{stageInfo.title}</CardTitle>
-          <CardDescription>{stageInfo.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 bg-muted rounded-lg text-center">
-            <FileText className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-            <p className="font-medium">{itemTitle}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Use o menu de ações para gerenciar esta requisição
-            </p>
           </div>
-        </CardContent>
-      </Card>
+        </ScrollArea>
+      </div>
+
+      <Separator />
+
+      {/* Botão de ação principal */}
+      <Button onClick={handleViewProcess} className="w-full">
+        <Eye className="h-4 w-4 mr-2" />
+        Ver Processo Seletivo Completo
+      </Button>
     </div>
   );
 }
@@ -487,37 +835,34 @@ export function StagePanel({
   itemTitle,
   onRefresh 
 }: StagePanelProps) {
-  const renderPanelContent = () => {
-    // Painéis de requisição
-    if (itemType === 'request') {
-      return <RequestStagePanel stageId={stageId} itemId={itemId} itemTitle={itemTitle} />;
-    }
-
-    // Painéis de vagas publicadas
-    switch (stageId) {
-      case 'screening':
-      case 'published':
-        return <ScreeningPanel jobId={itemId} onRefresh={onRefresh} />;
-      default:
-        return <GenericStagePanel stageId={stageId} stageTitle={stageTitle} jobId={itemId} />;
-    }
+  const handleClose = () => {
+    onOpenChange(false);
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            {stageTitle}
-          </SheetTitle>
-          <SheetDescription>
-            {itemTitle}
-          </SheetDescription>
-        </SheetHeader>
-        <div className="mt-6">
-          {renderPanelContent()}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{itemTitle}</DialogTitle>
+        </DialogHeader>
+        
+        {itemType === 'request' ? (
+          <RequestStageDialog 
+            stageId={stageId} 
+            itemId={itemId} 
+            onClose={handleClose}
+            onRefresh={onRefresh}
+          />
+        ) : (
+          <PublishedJobDialog 
+            stageId={stageId} 
+            jobId={itemId}
+            stageTitle={stageTitle}
+            onClose={handleClose}
+            onRefresh={onRefresh}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
