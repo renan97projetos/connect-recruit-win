@@ -151,6 +151,59 @@ interface JobsKanbanBoardProps {
   permissions: PermissionsProps;
 }
 
+// Tipos para workflow dinâmico
+interface DynamicWorkflowStage {
+  id: string;
+  name: string;
+  stage_type: string;
+  order_position: number;
+  is_active: boolean;
+}
+
+interface WorkflowWithStages {
+  id: string;
+  job_id: string;
+  stages: DynamicWorkflowStage[];
+}
+
+// Mapeamento de status para garantir consistência
+const STATUS_STAGE_MAPPING: Record<string, string[]> = {
+  pending: ['screening', 'pending', 'published', 'triagem'],
+  screening: ['screening', 'triagem'],
+  interview: ['interview', 'phone_screening', 'video_interview', 'entrevista'],
+  assessment: ['assessment', 'practical_test', 'behavioral', 'avaliacao'],
+  offer: ['offer', 'negotiation', 'proposta'],
+  approved: ['hiring', 'approved', 'contratacao'],
+  rejected: ['rejected'],
+};
+
+// Função para sincronizar status com etapa
+const getStatusForStage = (stageId: string): string => {
+  for (const [status, stages] of Object.entries(STATUS_STAGE_MAPPING)) {
+    if (stages.includes(stageId)) {
+      return status;
+    }
+  }
+  return 'pending';
+};
+
+// Verificar se um movimento é válido no Kanban
+const isValidDragTarget = (sourceStage: string, targetStage: string, itemType: 'request' | 'job'): boolean => {
+  if (itemType === 'request') {
+    // Requisições podem fluir em qualquer direção dentro da fase de requisição
+    const requestStages = ['draft', 'pending_approval', 'approved', 'in_creation', 'pending_review'];
+    return requestStages.includes(targetStage);
+  }
+  
+  // Jobs publicados não podem voltar para requisição
+  const requestStages = ['draft', 'pending_approval', 'approved', 'in_creation', 'pending_review'];
+  if (requestStages.includes(targetStage)) {
+    return false;
+  }
+  
+  return true;
+};
+
 // Todas as etapas disponíveis
 const ALL_AVAILABLE_STAGES: ColumnConfig[] = [
   // Requisição (obrigatórias)
@@ -472,6 +525,59 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     stageId: string;
     stageTitle: string;
   } | null>(null);
+  
+  // Estado para workflows dinâmicos e drag feedback
+  const [jobWorkflows, setJobWorkflows] = useState<Record<string, WorkflowWithStages>>({});
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggingItem, setDraggingItem] = useState<{ id: string; type: 'request' | 'job'; sourceStage: string } | null>(null);
+  
+  // Carregar workflows dinâmicos para os jobs
+  useEffect(() => {
+    const loadWorkflows = async () => {
+      if (publishedJobs.length === 0) return;
+      
+      const jobIds = publishedJobs.map(j => j.id);
+      
+      try {
+        const { data: workflows, error } = await supabase
+          .from('workflows')
+          .select(`
+            id,
+            job_id,
+            workflow_stages (
+              id,
+              name,
+              stage_type,
+              order_position,
+              is_active
+            )
+          `)
+          .in('job_id', jobIds)
+          .eq('status', 'active');
+        
+        if (error) throw error;
+        
+        const workflowMap: Record<string, WorkflowWithStages> = {};
+        workflows?.forEach((w: any) => {
+          if (w.job_id) {
+            workflowMap[w.job_id] = {
+              id: w.id,
+              job_id: w.job_id,
+              stages: (w.workflow_stages || [])
+                .filter((s: any) => s.is_active)
+                .sort((a: any, b: any) => a.order_position - b.order_position)
+            };
+          }
+        });
+        
+        setJobWorkflows(workflowMap);
+      } catch (error) {
+        console.error('Error loading workflows:', error);
+      }
+    };
+    
+    loadWorkflows();
+  }, [publishedJobs]);
 
   // Carregar configuração do localStorage
   useEffect(() => {
@@ -583,7 +689,26 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
 
   const columns = getFilteredColumns();
 
+  const handleDragStart = (start: any) => {
+    const allCols = getColumns(getEnabledColumns());
+    const sourceCol = allCols.find(c => c.id === start.source.droppableId);
+    if (sourceCol) {
+      const item = sourceCol.items[start.source.index];
+      if (item) {
+        setIsDragging(true);
+        setDraggingItem({
+          id: item.id,
+          type: sourceCol.type,
+          sourceStage: start.source.droppableId
+        });
+      }
+    }
+  };
+
   const handleDragEnd = async (result: DropResult) => {
+    setIsDragging(false);
+    setDraggingItem(null);
+    
     if (!result.destination) return;
 
     const sourceColId = result.source.droppableId;
@@ -599,6 +724,12 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
 
     const item = sourceCol.items[result.source.index];
     if (!item) return;
+
+    // Validar se o movimento é permitido
+    if (!isValidDragTarget(sourceColId, destColId, sourceCol.type)) {
+      toast.error('Movimento não permitido. Vagas publicadas não podem voltar para requisição.');
+      return;
+    }
 
     // Verificar permissões para mover entre colunas
     if (sourceCol.type === 'request' && destCol.type === 'request') {
@@ -627,7 +758,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
         type JobRequestStatus = typeof validStatuses[number];
         
         if (validStatuses.includes(destColId as JobRequestStatus)) {
-          await supabase
+          const { error } = await supabase
             .from('job_requests')
             .update({ 
               status: destColId as JobRequestStatus,
@@ -635,12 +766,15 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
             })
             .eq('id', item.id);
           
+          if (error) throw error;
           toast.success(`Requisição movida para ${destCol.title}`);
         }
       } else if (sourceCol.type === 'request' && destColId === 'published') {
         toast.info('Use o botão "Aprovar e Publicar" na página de detalhes');
         return;
       } else if (sourceCol.type === 'job' && destCol.type === 'job') {
+        // Atualizar candidatos para a nova etapa - sincronizar status
+        const newStatus = getStatusForStage(destColId);
         toast.info('Gerencie candidatos na página de processo seletivo');
         navigate(`/company/selection-process/${item.id}`);
         return;
@@ -653,6 +787,12 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
     } finally {
       setActionLoading(false);
     }
+  };
+
+  // Verificar se uma coluna é um alvo válido para drop
+  const isDroppableTarget = (columnId: string, columnType: 'request' | 'job'): boolean => {
+    if (!draggingItem) return true;
+    return isValidDragTarget(draggingItem.sourceStage, columnId, draggingItem.type);
   };
 
   const handleDelete = async () => {
@@ -1127,45 +1267,60 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
       </div>
 
       {/* Kanban Board */}
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {columns.map(column => (
-            <div key={column.id} className="flex-shrink-0 w-64">
-              <div className={cn(
-                "rounded-lg p-3 mb-3",
-                column.color
-              )}>
-                <div className="flex items-center gap-2">
-                  <column.icon className="h-4 w-4" />
-                  <h3 className="font-semibold text-sm flex-1 truncate">{column.title}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    {column.items.length}
-                  </Badge>
-                </div>
-                {column.description && (
-                  <p className="text-xs text-muted-foreground mt-1 truncate">{column.description}</p>
-                )}
-              </div>
-              
-              <Droppable droppableId={column.id}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={cn(
-                      "min-h-[200px] rounded-lg p-1 transition-colors",
-                      snapshot.isDraggingOver && "bg-muted/50"
+          {columns.map(column => {
+            const isValidTarget = isDroppableTarget(column.id, column.type);
+            const isBlocked = isDragging && !isValidTarget;
+            
+            return (
+              <div key={column.id} className="flex-shrink-0 w-64">
+                <div className={cn(
+                  "rounded-lg p-3 mb-3 transition-all",
+                  column.color,
+                  isBlocked && "opacity-50"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <column.icon className="h-4 w-4" />
+                    <h3 className="font-semibold text-sm flex-1 truncate">{column.title}</h3>
+                    {isBlocked && (
+                      <Badge variant="destructive" className="text-xs">
+                        Bloqueado
+                      </Badge>
                     )}
-                  >
-                    {column.items.map((item, index) => 
-                      renderCard(item, column.type, index, column)
+                    {!isBlocked && (
+                      <Badge variant="outline" className="text-xs">
+                        {column.items.length}
+                      </Badge>
                     )}
-                    {provided.placeholder}
                   </div>
-                )}
-              </Droppable>
-            </div>
-          ))}
+                  {column.description && (
+                    <p className="text-xs text-muted-foreground mt-1 truncate">{column.description}</p>
+                  )}
+                </div>
+                
+                <Droppable droppableId={column.id} isDropDisabled={isBlocked}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                        "min-h-[200px] rounded-lg p-1 transition-all",
+                        snapshot.isDraggingOver && isValidTarget && "bg-primary/10 ring-2 ring-primary/30",
+                        snapshot.isDraggingOver && !isValidTarget && "bg-destructive/10",
+                        isBlocked && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {column.items.map((item, index) => 
+                        renderCard(item, column.type, index, column)
+                      )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            );
+          })}
         </div>
       </DragDropContext>
 

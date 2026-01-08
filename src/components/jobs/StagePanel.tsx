@@ -22,6 +22,11 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   Users, 
   Star, 
@@ -42,7 +47,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Send,
-  Eye
+  Eye,
+  HelpCircle,
+  Info
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -258,7 +265,17 @@ function ScreeningPanel({ jobId, onRefresh }: { jobId: string; onRefresh: () => 
                 onClick={() => toggleSort('score')}
               >
                 <div className="flex items-center gap-1">
-                  Score
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        Score
+                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">Compatibilidade com os requisitos da vaga</p>
+                    </TooltipContent>
+                  </Tooltip>
                   {sortBy === 'score' && (
                     sortOrder === 'desc' ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />
                   )}
@@ -303,9 +320,29 @@ function ScreeningPanel({ jobId, onRefresh }: { jobId: string; onRefresh: () => 
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span className={`font-bold ${getScoreColor(app.score)}`}>
-                      {app.score || 0}
-                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 cursor-help">
+                          <span className={`font-bold ${getScoreColor(app.score)}`}>
+                            {app.score || 0}
+                          </span>
+                          <Info className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <div className="space-y-1">
+                          <p className="font-medium">Score de Compatibilidade</p>
+                          <p className="text-xs text-muted-foreground">
+                            Calculado via análise automática de requisitos, experiências e habilidades do currículo em relação à vaga.
+                          </p>
+                          <div className="text-xs mt-1">
+                            <span className="text-green-600">≥80: Excelente</span>{' '}
+                            <span className="text-yellow-600">60-79: Bom</span>{' '}
+                            <span className="text-red-600">&lt;60: Revisar</span>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                     <Progress value={app.score || 0} className="w-16 h-2" />
                   </div>
                 </TableCell>
