@@ -185,7 +185,7 @@ export default function JobRequestDetails() {
       if (updateError) throw updateError;
 
       toast.success('Vaga aprovada e publicada com sucesso!');
-      navigate('/company/jobs');
+      navigate('/company');
     } catch (error: any) {
       console.error('Error publishing job:', error);
       toast.error('Erro ao publicar vaga');
