@@ -191,12 +191,12 @@ const getStatusForStage = (stageId: string): string => {
 const isValidDragTarget = (sourceStage: string, targetStage: string, itemType: 'request' | 'job'): boolean => {
   if (itemType === 'request') {
     // Requisições podem fluir em qualquer direção dentro da fase de requisição
-    const requestStages = ['draft', 'pending_approval', 'approved', 'in_creation', 'pending_review'];
+    const requestStages = ['draft', 'pending_approval', 'approved'];
     return requestStages.includes(targetStage);
   }
   
   // Jobs publicados não podem voltar para requisição
-  const requestStages = ['draft', 'pending_approval', 'approved', 'in_creation', 'pending_review'];
+  const requestStages = ['draft', 'pending_approval', 'approved'];
   if (requestStages.includes(targetStage)) {
     return false;
   }
@@ -234,27 +234,7 @@ const ALL_AVAILABLE_STAGES: ColumnConfig[] = [
     icon: CheckCircle, 
     type: 'request',
     phase: 'requisition',
-    description: 'Aprovada, pronta para criação',
-    isRequired: true
-  },
-  { 
-    id: 'in_creation', 
-    title: 'Em Criação', 
-    color: 'bg-cyan-100 dark:bg-cyan-900/30', 
-    icon: Edit, 
-    type: 'request',
-    phase: 'requisition',
-    description: 'Descrição sendo elaborada',
-    isRequired: true
-  },
-  { 
-    id: 'pending_review', 
-    title: 'Revisão Final', 
-    color: 'bg-pink-100 dark:bg-pink-900/30', 
-    icon: Eye, 
-    type: 'request',
-    phase: 'requisition',
-    description: 'Pronta para revisão e publicação',
+    description: 'Aprovada, pronta para publicação',
     isRequired: true
   },
   // Recrutamento
@@ -414,17 +394,7 @@ const STAGE_ACTIONS: Record<string, StageAction[]> = {
   ],
   approved: [
     { id: 'view', label: 'Ver Detalhes', icon: Eye, action: 'view_request' },
-    { id: 'start_creation', label: 'Iniciar Criação da Vaga', icon: Play, action: 'start_creation' },
-  ],
-  in_creation: [
-    { id: 'edit_job', label: 'Editar Descrição', icon: Edit, action: 'edit_job_description' },
-    { id: 'preview', label: 'Pré-visualizar', icon: Eye, action: 'preview_job' },
-    { id: 'submit_review', label: 'Enviar para Revisão', icon: FileCheck, action: 'submit_review' },
-  ],
-  pending_review: [
-    { id: 'view', label: 'Revisar Vaga', icon: FileSearch, action: 'review_job' },
-    { id: 'approve', label: 'Aprovar e Publicar', icon: Send, action: 'publish_job' },
-    { id: 'request_changes', label: 'Solicitar Alterações', icon: MessageSquare, action: 'request_changes' },
+    { id: 'publish', label: 'Publicar Vaga', icon: Send, action: 'publish_job' },
   ],
   // Fase de Recrutamento
   published: [
