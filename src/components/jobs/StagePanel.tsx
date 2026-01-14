@@ -657,7 +657,6 @@ function PublishedJobDialog({
   onClose: () => void;
   onRefresh: () => void;
 }) {
-  const navigate = useNavigate();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState<any>(null);
@@ -703,10 +702,6 @@ function PublishedJobDialog({
     }
   };
 
-  const handleViewProcess = () => {
-    navigate(`/company/selection-process/${jobId}`);
-    onClose();
-  };
 
   const getScoreColor = (score: number | null) => {
     if (!score) return 'text-muted-foreground';
@@ -814,13 +809,6 @@ function PublishedJobDialog({
         </ScrollArea>
       </div>
 
-      <Separator />
-
-      {/* Botão de ação principal */}
-      <Button onClick={handleViewProcess} className="w-full">
-        <Eye className="h-4 w-4 mr-2" />
-        Ver Processo Seletivo Completo
-      </Button>
     </div>
   );
 }
