@@ -398,7 +398,6 @@ const STAGE_ACTIONS: Record<string, StageAction[]> = {
   ],
   // Fase de Recrutamento
   published: [
-    { id: 'view_candidates', label: 'Ver Candidaturas', icon: Users, action: 'view_candidates' },
     { id: 'share', label: 'Compartilhar Vaga', icon: ExternalLink, action: 'share_job' },
     { id: 'edit', label: 'Editar Vaga', icon: Edit, action: 'edit_job' },
     { id: 'pause', label: 'Pausar Vaga', icon: Pause, action: 'pause_job' },
