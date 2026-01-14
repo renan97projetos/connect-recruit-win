@@ -23,7 +23,6 @@ import CompanyDashboard from "./pages/company/Dashboard";
 import JobForm from "./pages/company/JobForm";
 import JobCandidates from "./pages/company/JobCandidates";
 import SelectionProcess from "./pages/company/SelectionProcess";
-import SelectionProcessDetails from "./pages/company/SelectionProcessDetails";
 import WorkflowConfiguration from "./pages/company/WorkflowConfiguration";
 import JobHistory from "./pages/company/JobHistory";
 import Assessments from "./pages/company/Assessments";
@@ -101,7 +100,6 @@ const App = () => {
               <Route path="/company/jobs/:id/edit" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id" element={<ProtectedRoute requiredRole="company"><JobCandidates /></ProtectedRoute>} />
               <Route path="/company/selection-process" element={<ProtectedRoute requiredRole="company"><SelectionProcess /></ProtectedRoute>} />
-              <Route path="/company/selection-process/:id" element={<ProtectedRoute requiredRole="company"><SelectionProcessDetails /></ProtectedRoute>} />
               <Route path="/company/workflow/:id" element={<ProtectedRoute requiredRole="company"><WorkflowConfiguration /></ProtectedRoute>} />
               <Route path="/company/assessments" element={<ProtectedRoute requiredRole="company"><Assessments /></ProtectedRoute>} />
               <Route path="/company/job-history" element={<ProtectedRoute requiredRole="company"><JobHistory /></ProtectedRoute>} />
