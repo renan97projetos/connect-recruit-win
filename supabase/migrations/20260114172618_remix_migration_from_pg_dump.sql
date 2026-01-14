@@ -1,9 +1,11 @@
-CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
+CREATE EXTENSION IF NOT EXISTS "pg_graphql";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
-CREATE EXTENSION IF NOT EXISTS "plpgsql" WITH SCHEMA "pg_catalog";
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
+CREATE EXTENSION IF NOT EXISTS "plpgsql";
+CREATE EXTENSION IF NOT EXISTS "supabase_vault";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+BEGIN;
+
 --
 -- PostgreSQL database dump
 --
@@ -37,7 +39,8 @@ SET row_security = off;
 CREATE TYPE public.app_role AS ENUM (
     'admin',
     'company',
-    'candidate'
+    'candidate',
+    'super_admin'
 );
 
 
@@ -119,7 +122,10 @@ CREATE TYPE public.permission_key AS ENUM (
     'avaliar_candidatos',
     'view_dashboard',
     'manage_configuracoes',
-    'manage_usuarios'
+    'manage_usuarios',
+    'approve_vagas',
+    'reject_vagas',
+    'delete_vagas'
 );
 
 
@@ -158,6 +164,18 @@ CREATE TYPE public.shift_type AS ENUM (
     'terceiro',
     'administrativo'
 );
+
+
+--
+-- Name: can_manage_company_users(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.can_manage_company_users(_user_id uuid, _company_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT public.is_company_owner(_user_id, _company_id)
+$$;
 
 
 --
@@ -200,6 +218,36 @@ CREATE FUNCTION public.has_role(_user_id uuid, _role public.app_role) RETURNS bo
     FROM public.user_roles
     WHERE user_id = _user_id
       AND role = _role
+  )
+$$;
+
+
+--
+-- Name: is_company_owner(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.is_company_owner(_user_id uuid, _company_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  -- O OWNER é o usuário cujo ID é igual ao company_id (criador da empresa)
+  SELECT _user_id = _company_id
+$$;
+
+
+--
+-- Name: is_super_admin(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.is_super_admin(_user_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = 'super_admin'::app_role
   )
 $$;
 
@@ -314,6 +362,24 @@ CREATE TABLE public.audit_logs (
 
 
 --
+-- Name: backoffice_audit_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.backoffice_audit_logs (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    super_admin_id uuid NOT NULL,
+    action text NOT NULL,
+    entity_type text NOT NULL,
+    entity_id uuid,
+    old_data jsonb,
+    new_data jsonb,
+    ip_address text,
+    user_agent text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: candidate_stages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -333,6 +399,26 @@ CREATE TABLE public.candidate_stages (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT candidate_stages_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'approved'::text, 'rejected'::text, 'skipped'::text])))
+);
+
+
+--
+-- Name: company_invitations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.company_invitations (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    company_id uuid NOT NULL,
+    email text NOT NULL,
+    name text NOT NULL,
+    permissions text[] DEFAULT '{}'::text[] NOT NULL,
+    token uuid DEFAULT gen_random_uuid() NOT NULL,
+    status text DEFAULT 'pending'::text NOT NULL,
+    invited_by uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone DEFAULT (now() + '7 days'::interval) NOT NULL,
+    accepted_at timestamp with time zone,
+    CONSTRAINT company_invitations_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'expired'::text, 'cancelled'::text])))
 );
 
 
@@ -552,6 +638,46 @@ CREATE TABLE public.jobs (
 
 
 --
+-- Name: platform_metrics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.platform_metrics (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    date date NOT NULL,
+    total_tenants integer DEFAULT 0,
+    active_tenants integer DEFAULT 0,
+    total_users integer DEFAULT 0,
+    total_jobs integer DEFAULT 0,
+    total_applications integer DEFAULT 0,
+    total_employees integer DEFAULT 0,
+    new_tenants integer DEFAULT 0,
+    churned_tenants integer DEFAULT 0,
+    revenue_monthly numeric DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: platform_plans; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.platform_plans (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    description text,
+    max_users integer DEFAULT 10,
+    max_jobs integer DEFAULT 50,
+    max_employees integer DEFAULT 100,
+    price_monthly numeric DEFAULT 0,
+    price_yearly numeric DEFAULT 0,
+    features jsonb DEFAULT '[]'::jsonb,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -599,6 +725,52 @@ CREATE TABLE public.system_settings (
     terms_of_use_content text DEFAULT ''::text,
     instagram_url text DEFAULT ''::text,
     linkedin_url text DEFAULT ''::text
+);
+
+
+--
+-- Name: team_members; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.team_members (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    role text NOT NULL,
+    photo_url text,
+    bio text,
+    linkedin_url text,
+    order_position integer DEFAULT 0,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: tenants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenants (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    company_id uuid NOT NULL,
+    plan_id uuid,
+    company_name text NOT NULL,
+    company_email text NOT NULL,
+    company_phone text,
+    cnpj text,
+    status text DEFAULT 'active'::text NOT NULL,
+    trial_ends_at timestamp with time zone,
+    subscription_starts_at timestamp with time zone,
+    subscription_ends_at timestamp with time zone,
+    billing_email text,
+    current_users_count integer DEFAULT 0,
+    current_jobs_count integer DEFAULT 0,
+    current_employees_count integer DEFAULT 0,
+    settings jsonb DEFAULT '{}'::jsonb,
+    notes text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['active'::text, 'suspended'::text, 'blocked'::text, 'trial'::text, 'cancelled'::text])))
 );
 
 
@@ -697,11 +869,27 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
+-- Name: backoffice_audit_logs backoffice_audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.backoffice_audit_logs
+    ADD CONSTRAINT backoffice_audit_logs_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: candidate_stages candidate_stages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.candidate_stages
     ADD CONSTRAINT candidate_stages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_invitations company_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_invitations
+    ADD CONSTRAINT company_invitations_pkey PRIMARY KEY (id);
 
 
 --
@@ -801,6 +989,30 @@ ALTER TABLE ONLY public.jobs
 
 
 --
+-- Name: platform_metrics platform_metrics_date_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_metrics
+    ADD CONSTRAINT platform_metrics_date_key UNIQUE (date);
+
+
+--
+-- Name: platform_metrics platform_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_metrics
+    ADD CONSTRAINT platform_metrics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: platform_plans platform_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_plans
+    ADD CONSTRAINT platform_plans_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -814,6 +1026,30 @@ ALTER TABLE ONLY public.profiles
 
 ALTER TABLE ONLY public.system_settings
     ADD CONSTRAINT system_settings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: team_members team_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_members
+    ADD CONSTRAINT team_members_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tenants tenants_company_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_company_id_key UNIQUE (company_id);
+
+
+--
+-- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_pkey PRIMARY KEY (id);
 
 
 --
@@ -928,6 +1164,27 @@ CREATE INDEX idx_candidate_stages_stage_id ON public.candidate_stages USING btre
 --
 
 CREATE INDEX idx_candidate_stages_workflow_id ON public.candidate_stages USING btree (workflow_id);
+
+
+--
+-- Name: idx_company_invitations_company; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_company_invitations_company ON public.company_invitations USING btree (company_id);
+
+
+--
+-- Name: idx_company_invitations_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_company_invitations_email ON public.company_invitations USING btree (email);
+
+
+--
+-- Name: idx_company_invitations_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_company_invitations_token ON public.company_invitations USING btree (token);
 
 
 --
@@ -1183,10 +1440,31 @@ CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON public.jobs FOR EACH ROW 
 
 
 --
+-- Name: platform_plans update_platform_plans_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_platform_plans_updated_at BEFORE UPDATE ON public.platform_plans FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: profiles update_profiles_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: team_members update_team_members_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_team_members_updated_at BEFORE UPDATE ON public.team_members FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: tenants update_tenants_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_tenants_updated_at BEFORE UPDATE ON public.tenants FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
@@ -1403,6 +1681,14 @@ ALTER TABLE ONLY public.system_settings
 
 
 --
+-- Name: tenants tenants_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.platform_plans(id);
+
+
+--
 -- Name: user_permissions user_permissions_company_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1511,6 +1797,13 @@ CREATE POLICY "Admins podem atualizar histórico" ON public.employee_history FOR
 
 
 --
+-- Name: team_members Admins podem atualizar membros; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins podem atualizar membros" ON public.team_members FOR UPDATE USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: employee_occurrences Admins podem atualizar ocorrências; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1574,6 +1867,13 @@ CREATE POLICY "Admins podem deletar histórico" ON public.employee_history FOR D
 
 
 --
+-- Name: team_members Admins podem deletar membros; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins podem deletar membros" ON public.team_members FOR DELETE USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: employee_occurrences Admins podem deletar ocorrências; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1634,6 +1934,13 @@ CREATE POLICY "Admins podem inserir colaboradores" ON public.employees FOR INSER
 --
 
 CREATE POLICY "Admins podem inserir configurações" ON public.system_settings FOR INSERT WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: team_members Admins podem inserir membros; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins podem inserir membros" ON public.team_members FOR INSERT WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -1784,6 +2091,68 @@ CREATE POLICY "Anyone can view active jobs" ON public.jobs FOR SELECT USING ((is
 
 
 --
+-- Name: company_invitations Anyone can view invitation by token; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view invitation by token" ON public.company_invitations FOR SELECT USING (true);
+
+
+--
+-- Name: user_permissions Apenas OWNER pode atualizar permissões; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode atualizar permissões" ON public.user_permissions FOR UPDATE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
+   FROM public.company_users cu
+  WHERE ((cu.id = user_permissions.company_user_id) AND public.is_company_owner(auth.uid(), cu.company_id))))));
+
+
+--
+-- Name: company_users Apenas OWNER pode atualizar usuários; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode atualizar usuários" ON public.company_users FOR UPDATE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND public.is_company_owner(auth.uid(), company_id)));
+
+
+--
+-- Name: user_permissions Apenas OWNER pode criar permissões; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode criar permissões" ON public.user_permissions FOR INSERT WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
+   FROM public.company_users cu
+  WHERE ((cu.id = user_permissions.company_user_id) AND public.is_company_owner(auth.uid(), cu.company_id))))));
+
+
+--
+-- Name: company_users Apenas OWNER pode criar usuários; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode criar usuários" ON public.company_users FOR INSERT WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND public.is_company_owner(auth.uid(), company_id)));
+
+
+--
+-- Name: user_permissions Apenas OWNER pode deletar permissões; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode deletar permissões" ON public.user_permissions FOR DELETE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
+   FROM public.company_users cu
+  WHERE ((cu.id = user_permissions.company_user_id) AND public.is_company_owner(auth.uid(), cu.company_id))))));
+
+
+--
+-- Name: company_users Apenas OWNER pode deletar usuários; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode deletar usuários" ON public.company_users FOR DELETE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND public.is_company_owner(auth.uid(), company_id)));
+
+
+--
+-- Name: audit_logs Apenas OWNER pode ver logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Apenas OWNER pode ver logs" ON public.audit_logs FOR SELECT USING ((public.has_role(auth.uid(), 'admin'::public.app_role) OR (public.has_role(auth.uid(), 'company'::public.app_role) AND public.is_company_owner(auth.uid(), company_id))));
+
+
+--
 -- Name: applications Candidatos podem criar suas próprias candidaturas; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1808,7 +2177,7 @@ CREATE POLICY "Candidatos podem ver suas próprias candidaturas" ON public.appli
 -- Name: jobs Company users can create jobs; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Company users can create jobs" ON public.jobs FOR INSERT WITH CHECK (((company_id = auth.uid()) AND public.has_role(auth.uid(), 'company'::public.app_role) AND public.user_has_permission(auth.uid(), company_id, 'create_vagas'::public.permission_key)));
+CREATE POLICY "Company users can create jobs" ON public.jobs FOR INSERT TO authenticated WITH CHECK ((((company_id = auth.uid()) AND public.has_role(auth.uid(), 'company'::public.app_role)) OR (public.has_role(auth.uid(), 'company'::public.app_role) AND public.user_has_permission(auth.uid(), company_id, 'create_vagas'::public.permission_key))));
 
 
 --
@@ -1851,15 +2220,6 @@ CREATE POLICY "Empresas podem atualizar etapas" ON public.workflow_stages FOR UP
 
 
 --
--- Name: user_permissions Empresas podem atualizar permissões; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem atualizar permissões" ON public.user_permissions FOR UPDATE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
-   FROM public.company_users
-  WHERE ((company_users.id = user_permissions.company_user_id) AND (company_users.company_id = auth.uid()))))));
-
-
---
 -- Name: candidate_stages Empresas podem atualizar registros de candidatos; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1880,13 +2240,6 @@ CREATE POLICY "Empresas podem atualizar seus colaboradores" ON public.employees 
 --
 
 CREATE POLICY "Empresas podem atualizar seus templates" ON public.workflow_templates FOR UPDATE TO authenticated USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
-
-
---
--- Name: company_users Empresas podem atualizar seus usuários; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem atualizar seus usuários" ON public.company_users FOR UPDATE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
 
 
 --
@@ -1949,28 +2302,12 @@ CREATE POLICY "Empresas podem criar histórico" ON public.employee_history FOR I
 
 
 --
--- Name: audit_logs Empresas podem criar logs; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem criar logs" ON public.audit_logs FOR INSERT WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
-
-
---
 -- Name: employee_occurrences Empresas podem criar ocorrências; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Empresas podem criar ocorrências" ON public.employee_occurrences FOR INSERT TO authenticated WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
    FROM public.employees
   WHERE ((employees.id = employee_occurrences.employee_id) AND (employees.company_id = auth.uid()))))));
-
-
---
--- Name: user_permissions Empresas podem criar permissões; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem criar permissões" ON public.user_permissions FOR INSERT WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
-   FROM public.company_users
-  WHERE ((company_users.id = user_permissions.company_user_id) AND (company_users.company_id = auth.uid()))))));
 
 
 --
@@ -2006,13 +2343,6 @@ CREATE POLICY "Empresas podem criar treinamentos" ON public.employee_trainings F
 
 
 --
--- Name: company_users Empresas podem criar usuários; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem criar usuários" ON public.company_users FOR INSERT WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
-
-
---
 -- Name: workflows Empresas podem criar workflows; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2029,15 +2359,6 @@ CREATE POLICY "Empresas podem deletar etapas" ON public.workflow_stages FOR DELE
 
 
 --
--- Name: user_permissions Empresas podem deletar permissões; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem deletar permissões" ON public.user_permissions FOR DELETE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
-   FROM public.company_users
-  WHERE ((company_users.id = user_permissions.company_user_id) AND (company_users.company_id = auth.uid()))))));
-
-
---
 -- Name: employees Empresas podem deletar seus colaboradores; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2049,13 +2370,6 @@ CREATE POLICY "Empresas podem deletar seus colaboradores" ON public.employees FO
 --
 
 CREATE POLICY "Empresas podem deletar seus templates" ON public.workflow_templates FOR DELETE TO authenticated USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
-
-
---
--- Name: company_users Empresas podem deletar seus usuários; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem deletar seus usuários" ON public.company_users FOR DELETE USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
 
 
 --
@@ -2127,33 +2441,10 @@ CREATE POLICY "Empresas podem ver perfis de candidatos" ON public.profiles FOR S
 
 
 --
--- Name: user_permissions Empresas podem ver permissões de seus usuários; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem ver permissões de seus usuários" ON public.user_permissions FOR SELECT USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
-   FROM public.company_users
-  WHERE ((company_users.id = user_permissions.company_user_id) AND (company_users.company_id = auth.uid()))))));
-
-
---
 -- Name: employees Empresas podem ver seus colaboradores; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Empresas podem ver seus colaboradores" ON public.employees FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
-
-
---
--- Name: audit_logs Empresas podem ver seus logs; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem ver seus logs" ON public.audit_logs FOR SELECT USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
-
-
---
--- Name: company_users Empresas podem ver seus usuários; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Empresas podem ver seus usuários" ON public.company_users FOR SELECT USING ((public.has_role(auth.uid(), 'company'::public.app_role) AND (company_id = auth.uid())));
 
 
 --
@@ -2196,6 +2487,29 @@ CREATE POLICY "Empresas podem ver treinamentos de seus colaboradores" ON public.
 
 
 --
+-- Name: company_users OWNER e colaboradores podem ver usuários da empresa; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "OWNER e colaboradores podem ver usuários da empresa" ON public.company_users FOR SELECT USING ((public.has_role(auth.uid(), 'admin'::public.app_role) OR (public.has_role(auth.uid(), 'company'::public.app_role) AND public.is_company_owner(auth.uid(), company_id)) OR (public.has_role(auth.uid(), 'company'::public.app_role) AND (user_id = auth.uid()))));
+
+
+--
+-- Name: user_permissions OWNER e próprio usuário podem ver permissões; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "OWNER e próprio usuário podem ver permissões" ON public.user_permissions FOR SELECT USING ((public.has_role(auth.uid(), 'admin'::public.app_role) OR (public.has_role(auth.uid(), 'company'::public.app_role) AND (EXISTS ( SELECT 1
+   FROM public.company_users cu
+  WHERE ((cu.id = user_permissions.company_user_id) AND (public.is_company_owner(auth.uid(), cu.company_id) OR (cu.user_id = auth.uid()))))))));
+
+
+--
+-- Name: audit_logs OWNER e sistema podem criar logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "OWNER e sistema podem criar logs" ON public.audit_logs FOR INSERT WITH CHECK ((public.has_role(auth.uid(), 'company'::public.app_role) AND public.is_company_owner(auth.uid(), company_id)));
+
+
+--
 -- Name: job_requests Owner pode atualizar requisições; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2203,10 +2517,115 @@ CREATE POLICY "Owner pode atualizar requisições" ON public.job_requests FOR UP
 
 
 --
+-- Name: company_invitations Owners can create invitations; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Owners can create invitations" ON public.company_invitations FOR INSERT WITH CHECK (((company_id = auth.uid()) AND (invited_by = auth.uid())));
+
+
+--
+-- Name: company_invitations Owners can update their company invitations; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Owners can update their company invitations" ON public.company_invitations FOR UPDATE USING ((company_id = auth.uid()));
+
+
+--
+-- Name: company_invitations Owners can view their company invitations; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Owners can view their company invitations" ON public.company_invitations FOR SELECT USING ((company_id = auth.uid()));
+
+
+--
+-- Name: team_members Qualquer pessoa pode ver membros da equipe; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Qualquer pessoa pode ver membros da equipe" ON public.team_members FOR SELECT USING ((is_active = true));
+
+
+--
 -- Name: system_settings Qualquer pessoa pode ver número do WhatsApp; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Qualquer pessoa pode ver número do WhatsApp" ON public.system_settings FOR SELECT USING (true);
+
+
+--
+-- Name: platform_plans Qualquer um pode ver planos ativos; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Qualquer um pode ver planos ativos" ON public.platform_plans FOR SELECT USING ((is_active = true));
+
+
+--
+-- Name: jobs Super admins podem atualizar vagas; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem atualizar vagas" ON public.jobs FOR UPDATE USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: backoffice_audit_logs Super admins podem criar logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem criar logs" ON public.backoffice_audit_logs FOR INSERT WITH CHECK (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: jobs Super admins podem criar vagas; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem criar vagas" ON public.jobs FOR INSERT WITH CHECK (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: jobs Super admins podem deletar vagas; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem deletar vagas" ON public.jobs FOR DELETE USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: platform_metrics Super admins podem gerenciar métricas; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem gerenciar métricas" ON public.platform_metrics USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: platform_plans Super admins podem gerenciar planos; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem gerenciar planos" ON public.platform_plans USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: tenants Super admins podem gerenciar tenants; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem gerenciar tenants" ON public.tenants USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: backoffice_audit_logs Super admins podem ver logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem ver logs" ON public.backoffice_audit_logs FOR SELECT USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: platform_metrics Super admins podem ver métricas; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem ver métricas" ON public.platform_metrics FOR SELECT USING (public.is_super_admin(auth.uid()));
+
+
+--
+-- Name: jobs Super admins podem ver todas as vagas; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Super admins podem ver todas as vagas" ON public.jobs FOR SELECT USING (public.is_super_admin(auth.uid()));
 
 
 --
@@ -2273,10 +2692,22 @@ ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: backoffice_audit_logs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.backoffice_audit_logs ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: candidate_stages; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.candidate_stages ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: company_invitations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.company_invitations ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: company_users; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2333,6 +2764,18 @@ ALTER TABLE public.job_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: platform_metrics; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.platform_metrics ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_plans; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.platform_plans ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2343,6 +2786,18 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: team_members; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: user_permissions; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2379,3 +2834,6 @@ ALTER TABLE public.workflows ENABLE ROW LEVEL SECURITY;
 --
 
 
+
+
+COMMIT;
