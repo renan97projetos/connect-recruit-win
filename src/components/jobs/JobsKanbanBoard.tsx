@@ -1091,19 +1091,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
-                      {/* Ver Detalhes - sempre no topo */}
-                      <DropdownMenuItem 
-                        onClick={() => navigate(
-                          isRequest 
-                            ? `/company/job-requests/${item.id}`
-                            : `/company/selection-process/${item.id}`
-                        )}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Ver Detalhes
-                      </DropdownMenuItem>
-                      
-                      {stageActions.length > 0 && <DropdownMenuSeparator />}
+                      {/* Ações específicas da etapa */}
                       
                       {/* Ações específicas da etapa */}
                       {stageActions.map((action) => (
