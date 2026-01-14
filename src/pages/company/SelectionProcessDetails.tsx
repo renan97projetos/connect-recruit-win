@@ -924,28 +924,6 @@ export default function SelectionProcessDetails() {
             </Card>
           </div>
 
-          {/* Indicador de Workflow */}
-          {!workflowId && (
-            <Card className="border-warning/50 bg-warning/5">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-warning" />
-                    <p className="text-sm">
-                      <span className="font-medium">Workflow padrão:</span> Configure um workflow personalizado para esta vaga
-                    </p>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => navigate(`/company/workflow/${id}`)}
-                  >
-                    Configurar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Pipeline de Etapas */}
           <div className="grid gap-4" style={{ 
