@@ -132,17 +132,18 @@ const App = () => {
               <Route path="/prospect-funnel" element={<ProspectFunnel />} />
               
               {/* Backoffice Routes */}
-              <Route path="/backoffice/login" element={<BackofficeLogin />} />
-              <Route path="/backoffice/dashboard" element={<BackofficeProtectedRoute><BackofficeDashboard /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/jobs" element={<BackofficeProtectedRoute><BackofficeJobs /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/jobs/new" element={<BackofficeProtectedRoute><BackofficeJobForm /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/jobs/:id/edit" element={<BackofficeProtectedRoute><BackofficeJobForm /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/tenants" element={<BackofficeProtectedRoute><BackofficeTenants /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/plans" element={<BackofficeProtectedRoute><BackofficePlans /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/users" element={<BackofficeProtectedRoute><BackofficeUsers /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/metrics" element={<BackofficeProtectedRoute><BackofficeMetrics /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/audit-logs" element={<BackofficeProtectedRoute><BackofficeAuditLogs /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/settings" element={<BackofficeProtectedRoute><BackofficeSettings /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice" element={<BackofficeDashboard />} />
+              <Route path="/backoffice/login" element={<BackofficeDashboard />} />
+              <Route path="/backoffice/dashboard" element={<BackofficeDashboard />} />
+              <Route path="/backoffice/jobs" element={<BackofficeJobs />} />
+              <Route path="/backoffice/jobs/new" element={<BackofficeJobForm />} />
+              <Route path="/backoffice/jobs/:id/edit" element={<BackofficeJobForm />} />
+              <Route path="/backoffice/tenants" element={<BackofficeTenants />} />
+              <Route path="/backoffice/plans" element={<BackofficePlans />} />
+              <Route path="/backoffice/users" element={<BackofficeUsers />} />
+              <Route path="/backoffice/metrics" element={<BackofficeMetrics />} />
+              <Route path="/backoffice/audit-logs" element={<BackofficeAuditLogs />} />
+              <Route path="/backoffice/settings" element={<BackofficeSettings />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
