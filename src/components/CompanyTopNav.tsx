@@ -59,6 +59,15 @@ export function CompanyTopNav() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Detecta área ativa pela rota: 'hr' para gestão interna, 'recruitment' para o restante
+  const area: 'hr' | 'recruitment' = useMemo(() => {
+    return HR_PATHS.some((p) => location.pathname.startsWith(p)) ? 'hr' : 'recruitment';
+  }, [location.pathname]);
+
+  const isHubRoute = location.pathname === '/company' || location.pathname === '/company/hub';
+  const activeItems = area === 'hr' ? hrItems : recruitmentItems;
+  const areaLabel = area === 'hr' ? 'Gestão RH Interna' : 'Recrutamento e Seleção';
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
