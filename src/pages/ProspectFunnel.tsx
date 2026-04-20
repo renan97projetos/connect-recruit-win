@@ -32,7 +32,7 @@ interface FunnelData {
 
 export default function ProspectFunnel() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<FunnelData>({
     vacancyVolume: 10,
@@ -134,34 +134,7 @@ export default function ProspectFunnel() {
   const renderStep = () => {
     switch (step) {
       case 0:
-        return (
-          <Card className="max-w-3xl mx-auto border-2 border-primary/20 shadow-xl">
-            <CardHeader className="text-center space-y-4 pb-8">
-              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary via-primary/80 to-primary/60 rounded-full flex items-center justify-center shadow-lg">
-                <Sparkles className="h-10 w-10 text-primary-foreground" />
-              </div>
-              <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Otimize seu processo de Recrutamento e Seleção
-              </CardTitle>
-              <CardDescription className="text-lg">
-                Descubra se nosso SaaS é ideal para sua empresa
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pb-8">
-              <p className="text-center text-muted-foreground">
-                Responda algumas perguntas rápidas para receber uma análise personalizada.
-              </p>
-              <Button 
-                onClick={() => setStep(1)} 
-                size="lg" 
-                className="w-full h-14 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-              >
-                Começar
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </CardContent>
-          </Card>
-        );
+        return null;
 
       case 1:
         return (
