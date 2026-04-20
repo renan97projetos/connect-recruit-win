@@ -146,11 +146,11 @@ export function JobFiltersComponent({
         </CollapsibleContent>
       </Collapsible>
 
-      <div className="flex gap-2 pt-4">
-        <Button onClick={onReset} variant="outline" className="flex-1">
+      <div className="flex flex-col sm:flex-row gap-2 pt-4">
+        <Button onClick={onReset} variant="outline" className="w-full sm:flex-1 min-w-0 px-2 text-sm">
           Limpar Filtros
         </Button>
-        <Button onClick={() => setIsOpen(false)} className="flex-1 bg-blue-900 hover:bg-blue-800">
+        <Button onClick={() => setIsOpen(false)} className="w-full sm:flex-1 min-w-0 px-2 text-sm bg-blue-900 hover:bg-blue-800">
           Aplicar
         </Button>
       </div>
