@@ -324,6 +324,19 @@ export default function BackofficeTenants() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Senha de acesso *</Label>
+                  <Input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esta será a senha inicial que a empresa usará para entrar.
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <Label>Telefone</Label>
                   <Input
                     value={formData.company_phone}
