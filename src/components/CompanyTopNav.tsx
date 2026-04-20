@@ -270,23 +270,26 @@ export function CompanyTopNav() {
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
             <nav className="p-3 space-y-4 overflow-y-auto">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-2">
-                  Recrutamento
-                </p>
-                <div className="flex flex-col gap-1">
-                  {recruitmentItems.map((item) => (
-                    <NavLinkItem key={item.path} item={item} />
-                  ))}
-                </div>
-              </div>
-              {!roleLoading && isOwner && (
+              {!isHubRoute && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    navigate('/company');
+                  }}
+                  className="w-full gap-2 justify-start"
+                >
+                  <LayoutGrid className="h-4 w-4" /> Trocar de área
+                </Button>
+              )}
+              {!isHubRoute && (area !== 'hr' || isOwner) && (
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-2">
-                    Gestão RH
+                    {areaLabel}
                   </p>
                   <div className="flex flex-col gap-1">
-                    {hrItems.map((item) => (
+                    {activeItems.map((item) => (
                       <NavLinkItem key={item.path} item={item} />
                     ))}
                   </div>
