@@ -149,10 +149,10 @@ export function Navbar() {
             {!isAuthenticated ? (
               <>
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Área de Candidato</Link>
+                  <Link to="/login?as=candidate">Área de Candidato</Link>
                 </Button>
                 <Button variant="default" asChild>
-                  <Link to="/login">Área de Empresa</Link>
+                  <Link to="/login?as=company">Área de Empresa</Link>
                 </Button>
               </>
             ) : (
