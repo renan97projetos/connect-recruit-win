@@ -207,7 +207,7 @@ export default function Login() {
             <p className="text-center text-sm">
               Não tem uma conta?{' '}
               <Link 
-                to="/register" 
+                to="/#cadastro" 
                 className="font-bold text-primary hover:underline underline-offset-4"
               >
                 Cadastre-se
