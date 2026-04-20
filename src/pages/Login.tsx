@@ -204,15 +204,6 @@ export default function Login() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
 
-            <p className="text-center text-sm">
-              Não tem uma conta?{' '}
-              <Link 
-                to="/#cadastro" 
-                className="font-bold text-primary hover:underline underline-offset-4"
-              >
-                Cadastre-se
-              </Link>
-            </p>
           </form>
 
           <div className="text-center">
