@@ -150,7 +150,9 @@ export default function Login() {
           <div>
             <h2 className="text-4xl font-black mb-2">Entrar</h2>
             <p className="text-muted-foreground">
-              Entre com sua conta para continuar
+              {areaLabel
+                ? `${areaLabel} — entre apenas com uma conta de ${intendedRole === 'candidate' ? 'candidato' : 'empresa'}.`
+                : 'Entre com sua conta para continuar'}
             </p>
           </div>
 
