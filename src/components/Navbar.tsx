@@ -226,9 +226,14 @@ export function Navbar() {
               ))}
               <div className="border-t-3 border-foreground mt-2 pt-4 flex flex-col gap-2">
                 {!isAuthenticated ? (
-                  <Button variant="ghost" asChild className="justify-start">
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Área de Candidato</Link>
-                  </Button>
+                  <>
+                    <Button variant="ghost" asChild className="justify-start">
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Área de Candidato</Link>
+                    </Button>
+                    <Button variant="default" asChild className="justify-start">
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Área de Empresa</Link>
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Link 
