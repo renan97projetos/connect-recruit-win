@@ -6,8 +6,9 @@ import { CompanyLayout } from '@/components/CompanyLayout';
 import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, LayoutGrid, List, Loader2 } from 'lucide-react';
+import { Plus, LayoutGrid, Loader2, Briefcase, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { JobsKanbanBoard } from '@/components/jobs/JobsKanbanBoard';
 import { Card, CardContent } from '@/components/ui/card';
@@ -59,36 +60,26 @@ export default function JobRequests() {
 
   const fetchData = async () => {
     setLoading(true);
-    
     try {
-      // Buscar requisições de vagas (não publicadas ainda)
       const { data: requestsData, error: requestsError } = await supabase
         .from('job_requests')
         .select('*')
         .eq('company_id', companyId)
-        .neq('status', 'rejected') // Excluir rejeitadas do kanban (vão pro histórico)
+        .neq('status', 'rejected')
         .order('created_at', { ascending: false });
 
       if (requestsError) throw requestsError;
       setJobRequests(requestsData || []);
 
-      // Buscar vagas publicadas (ativas, não arquivadas)
       const { data: jobsData, error: jobsError } = await supabase
         .from('jobs')
-        .select(`
-          *,
-          applications (
-            id,
-            status
-          )
-        `)
+        .select(`*, applications(id, status)`)
         .eq('company_id', companyId)
         .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (jobsError) throw jobsError;
       setPublishedJobs(jobsData || []);
-
     } catch (error: any) {
       console.error('Error fetching data:', error);
       toast.error('Erro ao carregar dados');
@@ -97,12 +88,18 @@ export default function JobRequests() {
     }
   };
 
+  const headerActions = (
+    <PermissionGuard permission="create_vagas" showAlert={false}>
+      <Button onClick={() => navigate('/company/job-requests/new')} size="sm" className="gap-2">
+        <Plus className="h-4 w-4" />
+        <span className="hidden sm:inline">Nova Requisição</span>
+      </Button>
+    </PermissionGuard>
+  );
+
   if (roleLoading || loading) {
     return (
-      <CompanyLayout
-        title="Gestão de Vagas"
-        description="Acompanhe todo o ciclo de vida das suas vagas em um único lugar"
-      >
+      <CompanyLayout title="Gestão de Vagas" description="Vagas ativas e requisições" headerActions={headerActions}>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -110,92 +107,90 @@ export default function JobRequests() {
     );
   }
 
-  const totalRequests = jobRequests.filter(r => r.status !== 'published').length;
-  const totalJobs = publishedJobs.length;
-  const totalApplications = publishedJobs.reduce((acc, job) => acc + (job.applications?.length || 0), 0);
+  const activeJobs = publishedJobs.filter(j => j.is_active);
+  const pendingRequests = jobRequests.filter(r => r.status !== 'published');
 
   return (
-    <CompanyLayout
-      title="Gestão de Vagas"
-      description="Acompanhe todo o ciclo de vida das suas vagas em um único lugar"
-    >
-      <div className="space-y-6">
-        {/* Header com stats e ações */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex flex-wrap gap-4">
-            <Card className="border-2 border-foreground bg-yellow px-4 py-2">
-              <div className="text-center">
-                <p className="text-2xl font-black">{totalRequests}</p>
-                <p className="text-xs font-medium">Em Criação</p>
-              </div>
-            </Card>
-            <Card className="border-2 border-foreground bg-violet text-background px-4 py-2">
-              <div className="text-center">
-                <p className="text-2xl font-black">{totalJobs}</p>
-                <p className="text-xs font-medium">Publicadas</p>
-              </div>
-            </Card>
-            <Card className="border-2 border-foreground bg-cyan px-4 py-2">
-              <div className="text-center">
-                <p className="text-2xl font-black">{totalApplications}</p>
-                <p className="text-xs font-medium">Candidatos</p>
-              </div>
-            </Card>
-          </div>
-          
-          <PermissionGuard permission="create_vagas" showAlert={false}>
-            <Button 
-              onClick={() => navigate('/company/job-requests/new')}
-              className="border-3 border-foreground shadow-brutal hover:shadow-brutal-lg hover:-translate-y-0.5 transition-all"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Requisição
-            </Button>
-          </PermissionGuard>
-        </div>
+    <CompanyLayout title="Gestão de Vagas" description="Vagas ativas e requisições" headerActions={headerActions}>
+      <Tabs defaultValue="active" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="active" className="gap-2">
+            <Briefcase className="h-4 w-4" />
+            Ativas ({activeJobs.length})
+          </TabsTrigger>
+          <TabsTrigger value="requests" className="gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Requisições ({pendingRequests.length})
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Kanban Board */}
-        {jobRequests.length === 0 && publishedJobs.length === 0 ? (
-          <Card className="border-3 border-foreground">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <LayoutGrid className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Nenhuma vaga encontrada</h3>
-              <p className="text-muted-foreground text-center max-w-md mb-6">
-                Comece criando uma nova requisição de vaga. O processo será guiado por etapas até a publicação.
-              </p>
-              <PermissionGuard permission="create_vagas" showAlert={false}>
-                <Button 
-                  onClick={() => navigate('/company/job-requests/new')}
-                  className="border-3 border-foreground shadow-brutal"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Criar Primeira Requisição
-                </Button>
-              </PermissionGuard>
-            </CardContent>
-          </Card>
-        ) : (
-          <JobsKanbanBoard
-            jobRequests={jobRequests}
-            publishedJobs={publishedJobs}
-            isOwner={isOwner}
-            onRefresh={fetchData}
-            permissions={{
-              canCreate: hasPermission('create_vagas'),
-              canEdit: hasPermission('edit_vagas'),
-              canPublish: hasPermission('publish_vagas'),
-              canApprove: hasPermission('approve_vagas'),
-              canReject: hasPermission('reject_vagas'),
-              canDelete: hasPermission('delete_vagas'),
-              canManageCandidates: hasPermission('manage_candidatos'),
-              canEvaluate: hasPermission('avaliar_candidatos'),
-            }}
-          />
-        )}
+        <TabsContent value="active">
+          {activeJobs.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center">
+                <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma vaga ativa</h3>
+                <p className="text-sm text-muted-foreground">
+                  Publique uma requisição aprovada para ativar uma vaga.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <JobsKanbanBoard
+              jobRequests={[]}
+              publishedJobs={activeJobs}
+              isOwner={isOwner}
+              onRefresh={fetchData}
+              permissions={{
+                canCreate: hasPermission('create_vagas'),
+                canEdit: hasPermission('edit_vagas'),
+                canPublish: hasPermission('publish_vagas'),
+                canApprove: hasPermission('approve_vagas'),
+                canReject: hasPermission('reject_vagas'),
+                canDelete: hasPermission('delete_vagas'),
+                canManageCandidates: hasPermission('manage_candidatos'),
+                canEvaluate: hasPermission('avaliar_candidatos'),
+              }}
+            />
+          )}
+        </TabsContent>
 
-      </div>
+        <TabsContent value="requests">
+          {pendingRequests.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center">
+                <LayoutGrid className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma requisição em andamento</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Crie uma nova requisição para iniciar um processo seletivo.
+                </p>
+                <PermissionGuard permission="create_vagas" showAlert={false}>
+                  <Button onClick={() => navigate('/company/job-requests/new')} className="gap-2">
+                    <Plus className="h-4 w-4" /> Criar Requisição
+                  </Button>
+                </PermissionGuard>
+              </CardContent>
+            </Card>
+          ) : (
+            <JobsKanbanBoard
+              jobRequests={pendingRequests}
+              publishedJobs={[]}
+              isOwner={isOwner}
+              onRefresh={fetchData}
+              permissions={{
+                canCreate: hasPermission('create_vagas'),
+                canEdit: hasPermission('edit_vagas'),
+                canPublish: hasPermission('publish_vagas'),
+                canApprove: hasPermission('approve_vagas'),
+                canReject: hasPermission('reject_vagas'),
+                canDelete: hasPermission('delete_vagas'),
+                canManageCandidates: hasPermission('manage_candidatos'),
+                canEvaluate: hasPermission('avaliar_candidatos'),
+              }}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </CompanyLayout>
   );
 }
