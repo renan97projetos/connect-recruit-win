@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
-import { LayoutDashboard, ClipboardList, Archive, TrendingUp, Users, BarChart3, FileText, Clock, Settings, Shield, LogOut, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Archive, TrendingUp, Users, BarChart3, FileText, Clock, Settings, Shield, LogOut, ChevronDown, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
