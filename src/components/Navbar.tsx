@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function Navbar() {
-  const { user, userRole, signOut, isAuthenticated } = useSupabaseAuth();
+  const { user, userRole, signOut, isAuthenticated, loading } = useSupabaseAuth();
   const navigate = useNavigate();
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
@@ -180,11 +180,21 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-foreground" />
-                  <DropdownMenuItem asChild>
-                    <Link to={getDashboardRoute()} className="cursor-pointer flex items-center font-semibold">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Minha Área
-                    </Link>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const route = getDashboardRoute();
+                      if (route === '/' || loading) {
+                        // userRole ainda não carregou — evita redirect para home
+                        return;
+                      }
+                      navigate(route);
+                    }}
+                    className="cursor-pointer flex items-center font-semibold"
+                    disabled={loading || !userRole}
+                  >
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    {loading || !userRole ? 'Carregando...' : 'Minha Área'}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-foreground" />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive font-semibold">
