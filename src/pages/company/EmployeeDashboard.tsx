@@ -117,7 +117,7 @@ export default function EmployeeDashboard() {
 
   if (isLoading || roleLoading) {
     return (
-      <CompanyLayout title="Dashboard RH">
+      <CompanyLayout area="hr" title="Dashboard RH">
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -127,7 +127,7 @@ export default function EmployeeDashboard() {
 
   if (!isOwner) {
     return (
-      <CompanyLayout
+      <CompanyLayout area="hr"
         title="Dashboard RH"
         description="Acesso restrito"
       >
@@ -142,7 +142,7 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <CompanyLayout
+    <CompanyLayout area="hr"
       title="Dashboard RH"
       description="Indicadores e métricas de gestão de pessoas"
     >

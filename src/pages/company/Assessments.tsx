@@ -11,7 +11,7 @@ export default function Assessments() {
 
   if (roleLoading) {
     return (
-      <CompanyLayout>
+      <CompanyLayout area="hr">
         <div className="text-center py-4">Verificando permissões...</div>
       </CompanyLayout>
     );
@@ -19,7 +19,7 @@ export default function Assessments() {
 
   if (!isOwner) {
     return (
-      <CompanyLayout>
+      <CompanyLayout area="hr">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -31,7 +31,7 @@ export default function Assessments() {
   }
 
   return (
-    <CompanyLayout>
+    <CompanyLayout area="hr">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
