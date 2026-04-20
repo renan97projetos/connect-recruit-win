@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 
 export function VideoPresentationModal() {
   const [open, setOpen] = useState(false);
@@ -16,20 +14,7 @@ export function VideoPresentationModal() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className="max-w-4xl w-[95vw] p-0 border-4 border-foreground shadow-brutal-lg bg-background overflow-hidden"
-        showCloseButton={false}
       >
-        {/* Botão fechar custom */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setOpen(false)}
-          aria-label="Fechar vídeo"
-          className="absolute top-3 right-3 z-50 h-10 w-10 rounded-full bg-background border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all"
-        >
-          <X className="h-5 w-5" />
-        </Button>
-
         <div className="flex flex-col">
           {/* Video Container - 16:9 */}
           <div className="relative w-full bg-foreground">
