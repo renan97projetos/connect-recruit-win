@@ -91,8 +91,7 @@ export function VideoPresentationModal() {
                 }}
               />
               <h2 className="impact-shine relative text-3xl md:text-5xl font-black tracking-tight leading-tight">
-                Veja como transformar seu RH em{' '}
-                <span>X passos</span>
+                Veja como transformar seu <span>RH</span>
               </h2>
             </div>
 
