@@ -164,21 +164,23 @@ export default function Home() {
       
       {/* Hero Section - NEUBRUTALIST */}
       <section className="border-b-3 border-foreground">
-        <div className="container px-4 py-4 md:py-8 mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="container py-6 md:py-10 lg:py-14">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
             {/* Left content */}
-            <div className="space-y-8">
-              <div className="inline-block">
-                
-              </div>
-
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[0.9] tracking-tight">
+            <div className="space-y-6 lg:space-y-8 min-w-0">
+              <h1
+                className="font-black leading-[0.95] tracking-tight"
+                style={{ fontSize: 'clamp(2.25rem, 5.5vw, 5rem)' }}
+              >
                 Encontre o{' '}
                 <span className="bg-primary text-primary-foreground px-2 -rotate-1 inline-block">talento</span>{' '}
                 certo, na hora certa
               </h1>
 
-              <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
+              <p
+                className="text-muted-foreground max-w-xl leading-relaxed"
+                style={{ fontSize: 'clamp(1rem, 1.4vw, 1.25rem)' }}
+              >
                 Automatize seu RH e economize{' '}
                 <span className="bg-yellow px-1 font-bold">90% do tempo</span>{' '}
                 gasto em recrutamento. Sem complicação.
@@ -201,12 +203,10 @@ export default function Home() {
                   <MessageCircle className="ml-2 h-5 w-5" />
                 </Button>
               </div>
-
-
             </div>
 
             {/* Right - Quick Candidate Register Form */}
-            <div>
+            <div className="min-w-0">
               <QuickCandidateRegister />
             </div>
           </div>
@@ -214,9 +214,9 @@ export default function Home() {
       </section>
 
       {/* Jobs Section */}
-      <section id="vagas" className="container mx-auto px-4 py-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-[300px,1fr] gap-8">
+      <section id="vagas" className="container py-12 md:py-16">
+        <div>
+          <div className="grid lg:grid-cols-[280px,1fr] xl:grid-cols-[300px,1fr] gap-6 lg:gap-8">
             <JobFiltersComponent filters={filters} onFilterChange={setFilters} onReset={resetFilters} />
 
             <div>
