@@ -9,7 +9,6 @@ import { BackofficeAuthProvider } from "@/contexts/BackofficeAuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BackofficeProtectedRoute } from "@/components/backoffice/BackofficeProtectedRoute";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
-import { VideoPresentationModal } from "@/components/VideoPresentationModal";
 import { initializeDemoData } from "./lib/storage";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
