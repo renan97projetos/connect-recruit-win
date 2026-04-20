@@ -83,7 +83,31 @@ export function CompanyTopNav() {
       }
     };
     fetchProfile();
-  }, [user?.id, user?.email]);
+
+    if (!user?.id) return;
+    // Atualiza em tempo real quando o avatar/nome do perfil for alterado
+    const channel = supabase
+      .channel(`profile-nav-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+        (payload: any) => {
+          const row = payload.new || {};
+          setCompanyName(row.company_name || row.name || 'Empresa');
+          setUserName(row.name || user.email || '');
+          setAvatarUrl(row.avatar_url ?? null);
+        }
+      )
+      .subscribe();
+
+    const onFocus = () => fetchProfile();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [user?.id, user?.email, location.pathname]);
 
   const isActive = (path: string, end = false) =>
     end ? location.pathname === path : location.pathname.startsWith(path) && path !== '/company';
