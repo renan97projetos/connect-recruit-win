@@ -184,21 +184,36 @@ export function CompanyTopNav() {
           </div>
         </Link>
 
-        {/* Centro: navegação desktop */}
+        {/* Centro: navegação desktop — apenas a área ativa */}
         <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
-          <DropdownGroup label="Recrutamento" items={recruitmentItems} icon={Briefcase} />
-          {!roleLoading && isOwner && (
-            <DropdownGroup label="Gestão RH" items={hrItems} icon={Users} />
+          {!isHubRoute && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/company')}
+                className="gap-1.5 mr-2"
+                title="Trocar de área"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span>Áreas</span>
+              </Button>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-2">
+                {areaLabel}
+              </span>
+              {(area !== 'hr' || isOwner) &&
+                activeItems.map((item) => <NavLinkItem key={item.path} item={item} />)}
+            </>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted transition-colors">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted transition-colors ml-auto">
                 <Settings className="h-4 w-4" />
                 <span>Configurações</span>
                 <ChevronDown className="h-3.5 w-3.5 opacity-70" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem
                 onClick={() => navigate('/company/profile')}
                 className="cursor-pointer"
