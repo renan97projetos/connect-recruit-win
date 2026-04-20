@@ -147,9 +147,14 @@ export function Navbar() {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             {!isAuthenticated ? (
-              <Button variant="ghost" asChild>
-                <Link to="/login">Área de Candidato</Link>
-              </Button>
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Área de Candidato</Link>
+                </Button>
+                <Button variant="default" asChild>
+                  <Link to="/login">Área de Empresa</Link>
+                </Button>
+              </>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
