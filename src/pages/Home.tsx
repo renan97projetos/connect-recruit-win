@@ -202,25 +202,7 @@ export default function Home() {
                 </Button>
               </div>
 
-              {/* Stats Grid - Compact */}
-              <div className="grid grid-cols-4 gap-3 pt-4">
-                <div className="card-yellow p-3 text-center">
-                  <p className="text-2xl font-black">+120</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Empresas</p>
-                </div>
-                <div className="card-cyan p-3 text-center">
-                  <p className="text-2xl font-black">+10k</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Candidatos</p>
-                </div>
-                <div className="card-pink p-3 text-center">
-                  <p className="text-2xl font-black">90%</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Tempo salvo</p>
-                </div>
-                <div className="card-lime p-3 text-center">
-                  <p className="text-2xl font-black">24h</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Suporte</p>
-                </div>
-              </div>
+
             </div>
 
             {/* Right - Quick Candidate Register Form */}
