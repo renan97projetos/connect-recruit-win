@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function BackofficeLogin() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,12 @@ export default function BackofficeLogin() {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      // Converte usuário para o email interno usado no auth
+      const normalized = username.trim().toLowerCase();
+      const loginEmail = normalized.includes('@')
+        ? normalized
+        : `${normalized}@sinapserh.local`;
+      const { error } = await signIn(loginEmail, password);
 
       if (error) {
         toast({
@@ -80,13 +85,14 @@ export default function BackofficeLogin() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
+              <Label htmlFor="username" className="text-slate-300">Usuário</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="ADMIN"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
                 required
                 className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary"
               />
