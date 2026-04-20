@@ -61,9 +61,6 @@ export function QuickCandidateRegister() {
   return (
     <div id="cadastro" className="bg-background border-3 border-foreground rounded-2xl shadow-brutal-lg p-6 md:p-8">
       <div className="mb-5">
-        <span className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded-lg border-2 border-foreground font-bold uppercase tracking-wide text-xs mb-3">
-          Cadastro Rápido
-        </span>
         <h2 className="text-2xl md:text-3xl font-black leading-tight">
           Crie seu perfil de candidato
         </h2>
