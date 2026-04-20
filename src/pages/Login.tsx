@@ -105,7 +105,7 @@ export default function Login() {
             Bom te ver de novo!
           </h1>
           <p className="text-xl opacity-90">
-            Entre na sua conta e continue construindo o futuro do seu RH.
+            Entre na sua conta e continue construindo o seu futuro.
           </p>
         </div>
       </div>
