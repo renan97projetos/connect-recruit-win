@@ -33,6 +33,15 @@ export default function Login() {
   const { signIn, userRole } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const intendedRole = searchParams.get('as') as 'candidate' | 'company' | null;
+
+  const areaLabel =
+    intendedRole === 'candidate'
+      ? 'Área do Candidato'
+      : intendedRole === 'company'
+      ? 'Área da Empresa'
+      : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +67,20 @@ export default function Login() {
     const { error, role } = await signIn(email, password);
     
     if (!error) {
+      // Bloqueia acesso cruzado entre áreas
+      if (intendedRole && role && role !== intendedRole && role !== 'admin') {
+        await supabase.auth.signOut();
+        const expected = intendedRole === 'candidate' ? 'candidato' : 'empresa';
+        const actual = role === 'candidate' ? 'candidato' : role === 'company' ? 'empresa' : role;
+        toast({
+          title: 'Acesso não permitido',
+          description: `Esta é a área de ${expected}. Sua conta é de ${actual}. Use a área correta para entrar.`,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       toast({
         title: 'Login realizado com sucesso!',
         description: 'Redirecionando...',
