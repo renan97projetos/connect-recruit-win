@@ -52,8 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     const companyName = profile?.company_name || profile?.name || 'Sinapse RH';
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/$/, '') || '';
-    const loginUrl = `${origin}/login`;
+    const loginUrl = `https://www.sinapserh.com.br/login`;
 
     // Format permissions list
     const permissionsList = permissions

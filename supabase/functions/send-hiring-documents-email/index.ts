@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Sending hiring documents email to:', candidateEmail);
 
     // Generate upload link
-    const uploadUrl = `${req.headers.get('origin') || 'https://your-domain.com'}/upload-documents/${applicationId}`;
+    const uploadUrl = `https://www.sinapserh.com.br/upload-documents/${applicationId}`;
 
     // Configure SMTP client for Gmail
     const client = new SMTPClient({

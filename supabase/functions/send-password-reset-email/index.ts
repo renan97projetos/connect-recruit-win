@@ -57,8 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
     const userName = profile?.name || 'Usuário';
     
     // Generate password reset link using Supabase Auth
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/$/, '') || '';
-    const redirectTo = `${origin}/reset-password`;
+    const redirectTo = `https://www.sinapserh.com.br/reset-password`;
 
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
