@@ -33,7 +33,7 @@ export default function CompanyHub() {
                 </div>
                 <ArrowRight className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black mb-2">Gestão de Vagas</h2>
+              <h2 className="text-2xl md:text-3xl font-black mb-2">Recrutamento e Seleção</h2>
               <p className="text-foreground/80 font-semibold mb-6">
                 Solicitações, processo seletivo, banco de talentos e dashboard de recrutamento.
               </p>

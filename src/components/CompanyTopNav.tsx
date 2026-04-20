@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   ChevronDown,
+  LayoutGrid,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -33,7 +34,7 @@ import { cn } from '@/lib/utils';
 type NavItem = { path: string; label: string; icon: any; end?: boolean };
 
 const recruitmentItems: NavItem[] = [
-  { path: '/company', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { path: '/company/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { path: '/company/job-requests', label: 'Gestão de Vagas', icon: Briefcase },
   { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp },
   { path: '/company/job-history', label: 'Histórico', icon: Archive },
@@ -46,6 +47,8 @@ const hrItems: NavItem[] = [
   { path: '/company/employee-requests', label: 'Solicitações', icon: Clock },
 ];
 
+const HR_PATHS = ['/company/employee-dashboard', '/company/employees', '/company/assessments', '/company/employee-requests'];
+
 export function CompanyTopNav() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,6 +58,15 @@ export function CompanyTopNav() {
   const [userName, setUserName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Detecta área ativa pela rota: 'hr' para gestão interna, 'recruitment' para o restante
+  const area: 'hr' | 'recruitment' = useMemo(() => {
+    return HR_PATHS.some((p) => location.pathname.startsWith(p)) ? 'hr' : 'recruitment';
+  }, [location.pathname]);
+
+  const isHubRoute = location.pathname === '/company' || location.pathname === '/company/hub';
+  const activeItems = area === 'hr' ? hrItems : recruitmentItems;
+  const areaLabel = area === 'hr' ? 'Gestão RH Interna' : 'Recrutamento e Seleção';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -172,21 +184,36 @@ export function CompanyTopNav() {
           </div>
         </Link>
 
-        {/* Centro: navegação desktop */}
+        {/* Centro: navegação desktop — apenas a área ativa */}
         <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
-          <DropdownGroup label="Recrutamento" items={recruitmentItems} icon={Briefcase} />
-          {!roleLoading && isOwner && (
-            <DropdownGroup label="Gestão RH" items={hrItems} icon={Users} />
+          {!isHubRoute && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/company')}
+                className="gap-1.5 mr-2"
+                title="Trocar de área"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span>Áreas</span>
+              </Button>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-2">
+                {areaLabel}
+              </span>
+              {(area !== 'hr' || isOwner) &&
+                activeItems.map((item) => <NavLinkItem key={item.path} item={item} />)}
+            </>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted transition-colors">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted transition-colors ml-auto">
                 <Settings className="h-4 w-4" />
                 <span>Configurações</span>
                 <ChevronDown className="h-3.5 w-3.5 opacity-70" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem
                 onClick={() => navigate('/company/profile')}
                 className="cursor-pointer"
@@ -243,23 +270,26 @@ export function CompanyTopNav() {
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
             <nav className="p-3 space-y-4 overflow-y-auto">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-2">
-                  Recrutamento
-                </p>
-                <div className="flex flex-col gap-1">
-                  {recruitmentItems.map((item) => (
-                    <NavLinkItem key={item.path} item={item} />
-                  ))}
-                </div>
-              </div>
-              {!roleLoading && isOwner && (
+              {!isHubRoute && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    navigate('/company');
+                  }}
+                  className="w-full gap-2 justify-start"
+                >
+                  <LayoutGrid className="h-4 w-4" /> Trocar de área
+                </Button>
+              )}
+              {!isHubRoute && (area !== 'hr' || isOwner) && (
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-2">
-                    Gestão RH
+                    {areaLabel}
                   </p>
                   <div className="flex flex-col gap-1">
-                    {hrItems.map((item) => (
+                    {activeItems.map((item) => (
                       <NavLinkItem key={item.path} item={item} />
                     ))}
                   </div>
