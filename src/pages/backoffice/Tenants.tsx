@@ -383,7 +383,7 @@ export default function BackofficeTenants() {
                 <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleCreateTenant} disabled={!formData.company_name || !formData.company_email}>
+                <Button onClick={handleCreateTenant} disabled={!formData.company_name || !formData.company_email || formData.password.length < 6}>
                   Criar Empresa
                 </Button>
               </DialogFooter>
