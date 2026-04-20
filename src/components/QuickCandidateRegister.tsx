@@ -147,12 +147,6 @@ export function QuickCandidateRegister() {
           )}
         </Button>
 
-        <p className="text-xs text-muted-foreground text-center">
-          Já tem conta?{' '}
-          <a href="/login" className="text-primary hover:underline font-semibold">
-            Entrar
-          </a>
-        </p>
       </form>
     </div>
   );
