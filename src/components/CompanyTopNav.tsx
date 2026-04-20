@@ -191,7 +191,7 @@ export function CompanyTopNav() {
             <img
               src={avatarUrl}
               alt={companyName}
-              className="h-9 w-9 rounded-md object-cover border border-border"
+              className="h-12 w-12 rounded-md object-contain"
             />
           ) : (
             <div className="h-9 w-9 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
