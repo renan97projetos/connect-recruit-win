@@ -48,6 +48,7 @@ export default function BackofficeTenants() {
   const [formData, setFormData] = useState({
     company_name: '',
     company_email: '',
+    password: '',
     company_phone: '',
     cnpj: '',
     plan_id: '',
@@ -95,35 +96,31 @@ export default function BackofficeTenants() {
 
   const handleCreateTenant = async () => {
     try {
-      const { error } = await supabase.from('tenants').insert({
-        company_id: crypto.randomUUID(),
-        company_name: formData.company_name,
-        company_email: formData.company_email,
-        company_phone: formData.company_phone || null,
-        cnpj: formData.cnpj || null,
-        plan_id: formData.plan_id || null,
-        notes: formData.notes || null,
-        status: 'active',
+      const { data, error } = await supabase.functions.invoke('create-tenant-user', {
+        body: {
+          company_name: formData.company_name,
+          company_email: formData.company_email,
+          password: formData.password,
+          company_phone: formData.company_phone || null,
+          cnpj: formData.cnpj || null,
+          plan_id: formData.plan_id || null,
+          notes: formData.notes || null,
+          super_admin_id: user?.id,
+        },
       });
 
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
 
-      // Log de auditoria
-      await supabase.from('backoffice_audit_logs').insert({
-        super_admin_id: user?.id,
-        action: 'CREATE',
-        entity_type: 'tenant',
-        new_data: formData as any,
-      } as any);
-
-      toast({ title: 'Empresa criada com sucesso!' });
+      toast({ title: 'Empresa criada com sucesso!', description: 'O acesso foi gerado e a empresa já pode entrar com email e senha.' });
       setIsCreateOpen(false);
       resetForm();
       fetchTenants();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating tenant:', error);
       toast({
         title: 'Erro ao criar empresa',
+        description: error?.message || 'Tente novamente.',
         variant: 'destructive',
       });
     }
@@ -236,6 +233,7 @@ export default function BackofficeTenants() {
     setFormData({
       company_name: '',
       company_email: '',
+      password: '',
       company_phone: '',
       cnpj: '',
       plan_id: '',
@@ -248,6 +246,7 @@ export default function BackofficeTenants() {
     setFormData({
       company_name: tenant.company_name,
       company_email: tenant.company_email,
+      password: '',
       company_phone: tenant.company_phone || '',
       cnpj: tenant.cnpj || '',
       plan_id: tenant.plan_id || '',
@@ -325,6 +324,19 @@ export default function BackofficeTenants() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Senha de acesso *</Label>
+                  <Input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esta será a senha inicial que a empresa usará para entrar.
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <Label>Telefone</Label>
                   <Input
                     value={formData.company_phone}
@@ -371,7 +383,7 @@ export default function BackofficeTenants() {
                 <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleCreateTenant} disabled={!formData.company_name || !formData.company_email}>
+                <Button onClick={handleCreateTenant} disabled={!formData.company_name || !formData.company_email || formData.password.length < 6}>
                   Criar Empresa
                 </Button>
               </DialogFooter>
