@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { JobFiltersComponent, JobFilters } from '@/components/JobFilters';
 import { QuickCandidateRegister } from '@/components/QuickCandidateRegister';
+import { VideoPresentationModal } from '@/components/VideoPresentationModal';
 export default function Home() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,6 +145,7 @@ export default function Home() {
     }).format(value);
   };
   return <div className="min-h-screen bg-background">
+      <VideoPresentationModal />
       <Navbar />
       
       {/* Marquee Banner - Neubrutalist */}
