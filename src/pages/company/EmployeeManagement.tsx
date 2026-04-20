@@ -48,7 +48,7 @@ export default function CompanyEmployeeManagement() {
 
   if (roleLoading) {
     return (
-      <CompanyLayout
+      <CompanyLayout area="hr"
         title="Gestão de Colaboradores"
         description="Gerencie todos os colaboradores da sua empresa"
       >
@@ -59,7 +59,7 @@ export default function CompanyEmployeeManagement() {
 
   if (!isOwner) {
     return (
-      <CompanyLayout
+      <CompanyLayout area="hr"
         title="Gestão de Colaboradores"
         description="Gerencie todos os colaboradores da sua empresa"
       >
@@ -74,7 +74,7 @@ export default function CompanyEmployeeManagement() {
   }
 
   return (
-    <CompanyLayout
+    <CompanyLayout area="hr"
       title="Gestão de Colaboradores"
       description="Gerencie todos os colaboradores da sua empresa"
     >

@@ -108,7 +108,7 @@ export default function EmployeeRequests() {
 
   if (isLoading || roleLoading) {
     return (
-      <CompanyLayout title="Solicitações">
+      <CompanyLayout area="hr" title="Solicitações">
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -118,7 +118,7 @@ export default function EmployeeRequests() {
 
   if (!isOwner) {
     return (
-      <CompanyLayout
+      <CompanyLayout area="hr"
         title="Solicitações"
         description="Acesso restrito"
       >
@@ -133,7 +133,7 @@ export default function EmployeeRequests() {
   }
 
   return (
-    <CompanyLayout
+    <CompanyLayout area="hr"
       title="Solicitações"
       description="Gerencie solicitações de férias, licenças e alterações"
     >
