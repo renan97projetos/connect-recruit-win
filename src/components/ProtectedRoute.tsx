@@ -10,7 +10,8 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, userRole, loading } = useSupabaseAuth();
 
-  if (loading) {
+  // Aguarda o carregamento inicial OU o role ser resolvido (se houver user logado)
+  if (loading || (user && userRole === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -29,7 +30,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       company: '/company',
       candidate: '/candidate',
     };
-    
+
     return <Navigate to={userRole ? dashboardRoutes[userRole] : '/'} replace />;
   }
 
