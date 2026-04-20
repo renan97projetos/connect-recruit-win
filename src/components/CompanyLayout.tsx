@@ -17,16 +17,21 @@ const mainMenuItems = [{
   label: 'Dashboard',
   icon: LayoutDashboard
 }, {
+  path: '/company/talent-pool',
+  label: 'Banco de Talentos',
+  icon: TrendingUp
+}];
+const jobMenuItems = [{
   path: '/company/job-requests',
-  label: 'Gestão de Vagas',
+  label: 'Solicitações de Vagas',
   icon: ClipboardList
 }, {
   path: '/company/job-history',
-  label: 'Histórico',
+  label: 'Histórico de Vagas',
   icon: Archive
 }, {
-  path: '/company/talent-pool',
-  label: 'Banco de Talentos',
+  path: '/company/workflow-configuration',
+  label: 'Fluxo Seletivo',
   icon: TrendingUp
 }];
 const hrMenuItems = [{
