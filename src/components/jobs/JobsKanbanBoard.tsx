@@ -851,7 +851,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
         navigate(`/company/selection-process/${itemId}`);
         break;
       case 'share_job':
-        navigator.clipboard.writeText(`${window.location.origin}/jobs/${itemId}`);
+        navigator.clipboard.writeText(`https://www.sinapserh.com.br/jobs/${itemId}`);
         toast.success('Link da vaga copiado!');
         break;
       case 'edit_job':

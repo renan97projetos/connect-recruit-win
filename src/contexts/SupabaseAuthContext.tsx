@@ -74,7 +74,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const signUp = async (email: string, password: string, name: string, role: 'admin' | 'company' | 'candidate') => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `https://www.sinapserh.com.br/`;
       
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -134,7 +134,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const resetPassword = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `https://www.sinapserh.com.br/reset-password`,
     });
 
     return { error };

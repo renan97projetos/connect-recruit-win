@@ -64,8 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
     const companyName = profile?.company_name || profile?.name || 'Sinapse RH';
     
     // Build the registration URL with token
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/$/, '') || 'https://sinapserh.com.br';
-    const registerUrl = `${origin}/register-invitation?token=${invitation.token}`;
+    const registerUrl = `https://www.sinapserh.com.br/register-invitation?token=${invitation.token}`;
 
     // Format permissions list
     const permissionsList = (invitation.permissions || [])
