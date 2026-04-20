@@ -14,6 +14,7 @@ export default function Home() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('date');
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
   const {
     user
   } = useSupabaseAuth();
@@ -27,6 +28,22 @@ export default function Home() {
     experienceLevel: 'all',
     datePosted: 'all'
   });
+  useEffect(() => {
+    supabase
+      .from('system_settings')
+      .select('whatsapp_number')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.whatsapp_number) setWhatsappNumber(data.whatsapp_number);
+      });
+  }, []);
+  const handleCompanyWhatsApp = () => {
+    if (!whatsappNumber) return;
+    const msg = encodeURIComponent('Olá! Sou de uma empresa e gostaria de saber mais sobre o Sinapse RH.');
+    window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, '_blank');
+  };
   useEffect(() => {
     const loadJobs = async () => {
       const {
@@ -237,33 +254,41 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </a>
                 </Button>
-                <Button size="lg" variant="yellow" asChild>
-                  <Link to="/prospect-funnel">
-                    Sou empresa
-                    <Rocket className="ml-2 h-5 w-5" />
-                  </Link>
+                <Button
+                  size="lg"
+                  variant="yellow"
+                  onClick={handleCompanyWhatsApp}
+                  disabled={!whatsappNumber}
+                >
+                  Se você é empresa, fale com a gente
+                  <MessageCircle className="ml-2 h-5 w-5" />
                 </Button>
+              </div>
+
+              {/* Stats Grid - Compact */}
+              <div className="grid grid-cols-4 gap-3 pt-4">
+                <div className="card-yellow p-3 text-center">
+                  <p className="text-2xl font-black">+120</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Empresas</p>
+                </div>
+                <div className="card-cyan p-3 text-center">
+                  <p className="text-2xl font-black">+10k</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Candidatos</p>
+                </div>
+                <div className="card-pink p-3 text-center">
+                  <p className="text-2xl font-black">90%</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Tempo salvo</p>
+                </div>
+                <div className="card-lime p-3 text-center">
+                  <p className="text-2xl font-black">24h</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide mt-1">Suporte</p>
+                </div>
               </div>
             </div>
 
-            {/* Right - Stats Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="card-yellow p-6 tilt-left">
-                <p className="text-5xl font-black">+120</p>
-                <p className="text-sm font-bold uppercase tracking-wide mt-2">Empresas</p>
-              </div>
-              <div className="card-cyan p-6 tilt-right">
-                <p className="text-5xl font-black">+10k</p>
-                <p className="text-sm font-bold uppercase tracking-wide mt-2">Candidatos</p>
-              </div>
-              <div className="card-pink p-6 tilt-right">
-                <p className="text-5xl font-black">90%</p>
-                <p className="text-sm font-bold uppercase tracking-wide mt-2">Tempo salvo</p>
-              </div>
-              <div className="card-lime p-6 tilt-left">
-                <p className="text-5xl font-black">24h</p>
-                <p className="text-sm font-bold uppercase tracking-wide mt-2">Suporte</p>
-              </div>
+            {/* Right - Quick Candidate Register Form */}
+            <div>
+              <QuickCandidateRegister />
             </div>
           </div>
         </div>
@@ -306,7 +331,7 @@ export default function Home() {
                     <p className="text-muted-foreground mb-6">Em breve novas oportunidades!</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button asChild>
-                        <Link to="/register">Cadastrar currículo</Link>
+                        <a href="#cadastro">Cadastrar currículo</a>
                       </Button>
                       <Button variant="outline" asChild>
                         <Link to="/prospect-funnel">Falar conosco</Link>
@@ -516,17 +541,19 @@ export default function Home() {
               Conta gratuita. Começa em 2 minutos. Sem cartão.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
-                <Link to="/prospect-funnel">
-                  Sou empresa
-                  <Sparkles className="ml-2 h-5 w-5" />
-                </Link>
+              <Button
+                size="lg"
+                onClick={handleCompanyWhatsApp}
+                disabled={!whatsappNumber}
+              >
+                Se você é empresa, fale com a gente
+                <MessageCircle className="ml-2 h-5 w-5" />
               </Button>
               <Button size="lg" variant="cyan" asChild>
-                <Link to="/register">
+                <a href="#cadastro">
                   Sou candidato
                   <Target className="ml-2 h-5 w-5" />
-                </Link>
+                </a>
               </Button>
             </div>
           </div>

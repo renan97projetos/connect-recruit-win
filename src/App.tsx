@@ -12,7 +12,7 @@ import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import { initializeDemoData } from "./lib/storage";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
+
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import JobDetails from "./pages/JobDetails";
@@ -86,7 +86,7 @@ const App = () => {
               <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              
               <Route path="/register-invitation" element={<RegisterInvitation />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
