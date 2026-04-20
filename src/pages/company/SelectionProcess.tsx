@@ -1,267 +1,151 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { Briefcase, Users, MapPin, Calendar, MoreVertical, Archive, Settings } from 'lucide-react';
+import { useCompanyRole } from '@/hooks/useCompanyRole';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Briefcase, Loader2, Settings } from 'lucide-react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { JobsKanbanBoard } from '@/components/jobs/JobsKanbanBoard';
+import { cn } from '@/lib/utils';
 
 export default function SelectionProcess() {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { companyId, isOwner, loading: roleLoading } = useCompanyRole();
+  const { hasPermission } = usePermissions();
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [jobToArchive, setJobToArchive] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string>('');
 
   useEffect(() => {
-    if (user) {
-      loadJobs();
-    }
-  }, [user]);
+    if (user && companyId && !roleLoading) loadJobs();
+  }, [user, companyId, roleLoading]);
 
   const loadJobs = async () => {
-    if (!user) return;
-
     setLoading(true);
 
-    const { data: jobsData, error: jobsError } = await supabase
+    const { data: jobsData } = await supabase
       .from('jobs')
-      .select(`
-        *,
-        applications (
-          id,
-          status
-        )
-      `)
-      .eq('company_id', user.id)
+      .select(`*, applications (id, status, current_stage)`)
+      .eq('company_id', companyId)
       .eq('is_archived', false)
       .order('created_at', { ascending: false });
 
-    if (jobsError) {
-      console.error('Error loading jobs:', jobsError);
-    } else {
-      setJobs(jobsData || []);
+    setJobs(jobsData || []);
+    if (jobsData?.length && !selectedJobId) {
+      setSelectedJobId(jobsData[0].id);
     }
-
     setLoading(false);
   };
 
-  const getJobTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'full-time': 'Tempo Integral',
-      'part-time': 'Meio Período',
-      'contract': 'Contrato',
-      'internship': 'Estágio',
-      'temporary': 'Temporário',
-    };
-    return types[type] || type;
-  };
+  const selectedJob = useMemo(
+    () => jobs.find((j) => j.id === selectedJobId),
+    [jobs, selectedJobId]
+  );
 
-  const getApplicationCount = (job: any) => {
-    return job.applications?.length || 0;
-  };
-
-  const handleArchiveJob = async () => {
-    if (!jobToArchive) return;
-
-    const { error } = await supabase
-      .from('jobs')
-      .update({ is_archived: true })
-      .eq('id', jobToArchive);
-
-    if (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível arquivar a vaga.',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Vaga arquivada',
-        description: 'A vaga foi movida para o histórico de processos.',
-      });
-      loadJobs();
-    }
-
-    setJobToArchive(null);
-  };
-
-  const hasApprovedCandidates = (job: any) => {
-    return job.applications?.some((app: any) => app.status === 'approved');
-  };
-
-  if (loading) {
+  if (loading || roleLoading) {
     return (
-      <CompanyLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">Processo Seletivo</h1>
-            <p className="text-muted-foreground">Carregando vagas...</p>
-          </div>
+      <CompanyLayout title="Processo Seletivo" description="Gestão por kanban completo">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </CompanyLayout>
     );
   }
 
+  const headerActions = selectedJob ? (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => navigate(`/company/workflow/${selectedJob.id}`)}
+      className="gap-2"
+    >
+      <Settings className="h-4 w-4" />
+      <span className="hidden sm:inline">Configurar Workflow</span>
+    </Button>
+  ) : null;
+
   return (
-    <CompanyLayout>
-      <PermissionGuard 
+    <CompanyLayout
+      title="Processo Seletivo"
+      description="Acompanhe o pipeline completo de cada vaga"
+      headerActions={headerActions}
+    >
+      <PermissionGuard
         permission={['manage_candidatos', 'avaliar_candidatos']}
         requireAll={false}
         showAlert={true}
       >
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">Processo Seletivo</h1>
-            <p className="text-muted-foreground">
-              Gerencie o processo seletivo de cada vaga através das etapas de triagem, entrevista, avaliações e admissões
-            </p>
-          </div>
-
         {jobs.length === 0 ? (
           <Card>
-            <CardContent className="py-8">
-              <div className="text-center">
-                <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">Nenhuma vaga publicada</h3>
-                <p className="text-muted-foreground mt-2">
-                  Você ainda não publicou nenhuma vaga. Publique uma vaga para começar o processo seletivo.
-                </p>
-                <Button className="mt-4" onClick={() => navigate('/company/jobs/new')}>
-                  Publicar Vaga
-                </Button>
-              </div>
+            <CardContent className="py-12 text-center">
+              <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Nenhuma vaga publicada</h3>
+              <p className="text-muted-foreground mt-2">
+                Publique uma vaga para começar o processo seletivo.
+              </p>
+              <Button className="mt-4" onClick={() => navigate('/company/jobs/new')}>
+                Publicar Vaga
+              </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{job.title}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {job.company_name}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={job.is_active ? 'default' : 'secondary'}>
-                        {job.is_active ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                      {hasApprovedCandidates(job) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => setJobToArchive(job.id)}
-                              className="text-muted-foreground"
-                            >
-                              <Archive className="mr-2 h-4 w-4" />
-                              Arquivar Vaga
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+          <div className="space-y-4">
+            {/* Tabs horizontais de vagas */}
+            <div className="border-b border-border">
+              <div className="flex items-center gap-1 overflow-x-auto pb-px">
+                {jobs.map((job) => {
+                  const active = job.id === selectedJobId;
+                  return (
+                    <button
+                      key={job.id}
+                      onClick={() => setSelectedJobId(job.id)}
+                      className={cn(
+                        'px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2',
+                        active
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                       )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Briefcase className="h-4 w-4" />
-                      <span>{getJobTypeLabel(job.job_type)}</span>
-                    </div>
-                    {job.city && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{job.city}, {job.state}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        Publicada em {new Date(job.created_at).toLocaleDateString('pt-BR')}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span className="font-semibold">{getApplicationCount(job)}</span>
-                        <span className="text-sm text-muted-foreground">candidatos</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Button 
-                        className="w-full" 
-                        onClick={() => navigate(`/company/selection-process/${job.id}`)}
+                    >
+                      {job.title}
+                      <Badge
+                        variant={active ? 'default' : 'secondary'}
+                        className="text-[10px] px-1.5 py-0 h-4"
                       >
-                        Ver Processo Seletivo
-                      </Button>
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        onClick={() => navigate(`/company/workflow/${job.id}`)}
-                      >
-                        <Settings className="mr-2 h-4 w-4" />
-                        Configurar Workflow
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                        {job.applications?.length || 0}
+                      </Badge>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Kanban completo da vaga selecionada */}
+            {selectedJob && (
+              <JobsKanbanBoard
+                jobRequests={[]}
+                publishedJobs={[selectedJob]}
+                isOwner={isOwner}
+                onRefresh={loadJobs}
+                permissions={{
+                  canCreate: hasPermission('create_vagas'),
+                  canEdit: hasPermission('edit_vagas'),
+                  canPublish: hasPermission('publish_vagas'),
+                  canApprove: hasPermission('approve_vagas'),
+                  canReject: hasPermission('reject_vagas'),
+                  canDelete: hasPermission('delete_vagas'),
+                  canManageCandidates: hasPermission('manage_candidatos'),
+                  canEvaluate: hasPermission('avaliar_candidatos'),
+                }}
+              />
+            )}
           </div>
         )}
-      </div>
-
-      <AlertDialog open={!!jobToArchive} onOpenChange={() => setJobToArchive(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Arquivar vaga?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação irá mover a vaga para o histórico de processos. A vaga não
-              receberá mais candidaturas, mas você poderá visualizar todos os dados do
-              processo seletivo no histórico.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchiveJob}>
-              Arquivar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       </PermissionGuard>
     </CompanyLayout>
   );

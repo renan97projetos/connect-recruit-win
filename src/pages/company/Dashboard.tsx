@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,26 +8,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
-import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Users, TrendingUp, Clock, BarChart3, Plus, Loader2, KanbanSquare } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Bar, BarChart, Line, LineChart, Pie, PieChart, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { JobsKanbanBoard } from '@/components/jobs/JobsKanbanBoard';
+import { CandidatePipeline } from '@/components/company/CandidatePipeline';
 
 export default function CompanyDashboard() {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
-  const { companyId, isOwner, loading: roleLoading } = useCompanyRole();
-  const { hasPermission } = usePermissions();
+  const { companyId, loading: roleLoading } = useCompanyRole();
 
   const [jobs, setJobs] = useState<any[]>([]);
-  const [jobRequests, setJobRequests] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>('all');
+  const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'pipeline' | 'metrics'>('pipeline');
 
   useEffect(() => {
     if (!user || !companyId || roleLoading) return;
@@ -37,49 +35,35 @@ export default function CompanyDashboard() {
   const loadData = async () => {
     setLoading(true);
 
-    const [jobsRes, requestsRes] = await Promise.all([
-      supabase
-        .from('jobs')
-        .select('*, applications(id, status, current_stage)')
-        .eq('company_id', companyId)
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('job_requests')
-        .select('*')
-        .eq('company_id', companyId)
-        .neq('status', 'rejected')
-        .order('created_at', { ascending: false }),
-    ]);
+    const { data: jobsData } = await supabase
+      .from('jobs')
+      .select('*, applications(id, status, current_stage, applied_at)')
+      .eq('company_id', companyId)
+      .eq('is_archived', false)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
-    if (jobsRes.data) {
-      setJobs(jobsRes.data);
-      const allApps = jobsRes.data.flatMap((j: any) => j.applications || []);
+    if (jobsData) {
+      setJobs(jobsData);
+      const allApps = jobsData.flatMap((j: any) => j.applications || []);
       setApplications(allApps);
 
-      // Selecionar a vaga mais recente com candidatos como default
-      const jobWithApps = jobsRes.data.find((j: any) => (j.applications?.length || 0) > 0);
-      if (jobWithApps) {
-        setSelectedJobId(jobWithApps.id);
-      } else if (jobsRes.data.length > 0) {
-        setSelectedJobId(jobsRes.data[0].id);
+      if (!selectedJobId) {
+        // default: vaga mais recente com candidatos
+        const jobWithApps = jobsData.find((j: any) => (j.applications?.length || 0) > 0);
+        setSelectedJobId(jobWithApps?.id || jobsData[0]?.id || '');
       }
     }
-    if (requestsRes.data) setJobRequests(requestsRes.data);
-
     setLoading(false);
   };
 
-  // Filtrar para o kanban: apenas a vaga selecionada (ou todas)
-  const filteredJobs = useMemo(() => {
-    if (selectedJobId === 'all') return jobs;
-    return jobs.filter(j => j.id === selectedJobId);
-  }, [jobs, selectedJobId]);
+  const activeJobs = jobs;
+  const pendingApplications = applications.filter(
+    (a) => a.status === 'pending' || a.status === 'in-review'
+  );
+  const selectedJob = jobs.find((j) => j.id === selectedJobId);
 
-  const activeJobs = jobs.filter(j => j.is_active);
-  const pendingApplications = applications.filter(a => a.status === 'pending' || a.status === 'in-review');
-
-  // Métricas
+  // === Métricas ===
   const stagesData = [
     { name: 'Triagem', value: applications.filter(a => a.current_stage === 'triagem' || a.current_stage === 'screening').length },
     { name: 'Entrevista', value: applications.filter(a => a.current_stage === 'entrevista' || a.current_stage === 'interview').length },
@@ -112,14 +96,27 @@ export default function CompanyDashboard() {
     .slice(0, 5);
 
   const headerActions = (
-    <Button
-      onClick={() => navigate('/company/job-requests/new')}
-      size="sm"
-      className="gap-2"
-    >
-      <Plus className="h-4 w-4" />
-      <span className="hidden sm:inline">Nova Vaga</span>
-    </Button>
+    <>
+      <Button
+        variant={view === 'metrics' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setView(view === 'metrics' ? 'pipeline' : 'metrics')}
+        className="gap-2"
+      >
+        <BarChart3 className="h-4 w-4" />
+        <span className="hidden sm:inline">
+          {view === 'metrics' ? 'Ver Pipeline' : 'Ver Métricas'}
+        </span>
+      </Button>
+      <Button
+        onClick={() => navigate('/company/jobs/new')}
+        size="sm"
+        className="gap-2"
+      >
+        <Plus className="h-4 w-4" />
+        <span className="hidden sm:inline">Nova Vaga</span>
+      </Button>
+    </>
   );
 
   if (loading || roleLoading) {
@@ -134,90 +131,71 @@ export default function CompanyDashboard() {
 
   return (
     <CompanyLayout title="Dashboard" description="Pipeline de recrutamento" headerActions={headerActions}>
-      <Tabs defaultValue="pipeline" className="space-y-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <TabsList>
-            <TabsTrigger value="pipeline" className="gap-2">
-              <KanbanSquare className="h-4 w-4" />
-              Pipeline
-            </TabsTrigger>
-            <TabsTrigger value="metrics" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Métricas
-            </TabsTrigger>
-          </TabsList>
+      {/* Quick stats */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Badge variant="outline" className="gap-1.5">
+          <Briefcase className="h-3 w-3" /> {activeJobs.length} ativas
+        </Badge>
+        <Badge variant="outline" className="gap-1.5">
+          <Users className="h-3 w-3" /> {applications.length} candidatos
+        </Badge>
+        <Badge variant="outline" className="gap-1.5 text-warning border-warning/40">
+          <Clock className="h-3 w-3" /> {pendingApplications.length} pendentes
+        </Badge>
+      </div>
 
-          {/* Quick stats */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="gap-1.5">
-              <Briefcase className="h-3 w-3" /> {activeJobs.length} ativas
-            </Badge>
-            <Badge variant="outline" className="gap-1.5">
-              <Users className="h-3 w-3" /> {applications.length} candidatos
-            </Badge>
-            <Badge variant="outline" className="gap-1.5 text-warning border-warning/40">
-              <Clock className="h-3 w-3" /> {pendingApplications.length} pendentes
-            </Badge>
-          </div>
-        </div>
-
-        <TabsContent value="pipeline" className="space-y-4">
-          {/* Seletor de vaga */}
-          {jobs.length > 0 && (
+      {view === 'pipeline' ? (
+        jobs.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <KanbanSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhuma vaga ativa</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Crie sua primeira vaga para começar a receber candidatos.
+              </p>
+              <Button onClick={() => navigate('/company/jobs/new')} className="gap-2">
+                <Plus className="h-4 w-4" /> Nova Vaga
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {/* Bloco A — Seletor de vaga */}
             <Card>
               <CardContent className="p-3 flex items-center gap-3 flex-wrap">
-                <span className="text-sm font-medium text-muted-foreground">Vaga:</span>
+                <span className="text-sm font-medium text-muted-foreground">Vaga ativa:</span>
                 <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-                  <SelectTrigger className="w-full sm:w-[320px]">
+                  <SelectTrigger className="w-full sm:w-[360px]">
                     <SelectValue placeholder="Selecione uma vaga" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as vagas</SelectItem>
-                    {jobs.map(j => (
+                    {jobs.map((j) => (
                       <SelectItem key={j.id} value={j.id}>
                         {j.title} {j.applications?.length ? `(${j.applications.length})` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedJob && (
+                  <Badge variant="secondary" className="ml-auto">
+                    {selectedJob.applications?.length || 0} candidatos
+                  </Badge>
+                )}
               </CardContent>
             </Card>
-          )}
 
-          {jobs.length === 0 && jobRequests.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center">
-                <KanbanSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Nenhuma vaga ainda</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Crie sua primeira requisição de vaga para começar.
-                </p>
-                <Button onClick={() => navigate('/company/job-requests/new')} className="gap-2">
-                  <Plus className="h-4 w-4" /> Nova Vaga
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <JobsKanbanBoard
-              jobRequests={selectedJobId === 'all' ? jobRequests : []}
-              publishedJobs={filteredJobs}
-              isOwner={isOwner}
-              onRefresh={loadData}
-              permissions={{
-                canCreate: hasPermission('create_vagas'),
-                canEdit: hasPermission('edit_vagas'),
-                canPublish: hasPermission('publish_vagas'),
-                canApprove: hasPermission('approve_vagas'),
-                canReject: hasPermission('reject_vagas'),
-                canDelete: hasPermission('delete_vagas'),
-                canManageCandidates: hasPermission('manage_candidatos'),
-                canEvaluate: hasPermission('avaliar_candidatos'),
-              }}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="metrics" className="space-y-4">
+            {/* Blocos B + C */}
+            {selectedJobId && (
+              <CandidatePipeline
+                jobId={selectedJobId}
+                jobTitle={selectedJob?.title || ''}
+                onChanged={loadData}
+              />
+            )}
+          </div>
+        )
+      ) : (
+        <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -352,8 +330,8 @@ export default function CompanyDashboard() {
               )}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </CompanyLayout>
   );
 }

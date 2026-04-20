@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { CompanySidebar } from '@/components/CompanySidebar';
+import { CompanyTopNav } from '@/components/CompanyTopNav';
 
 interface CompanyLayoutProps {
   children: ReactNode;
@@ -14,34 +13,32 @@ interface CompanyLayoutProps {
 
 export function CompanyLayout({ children, title, description, headerActions }: CompanyLayoutProps) {
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <CompanySidebar />
+    <div className="min-h-screen flex flex-col w-full bg-background">
+      <CompanyTopNav />
 
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Top bar compacta */}
-          <header className="h-14 border-b border-border bg-background flex items-center gap-3 px-4 sticky top-0 z-30">
-            <SidebarTrigger />
-            <div className="flex-1 min-w-0">
+      {(title || headerActions) && (
+        <div className="border-b border-border bg-background">
+          <div className="px-4 md:px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
+            <div className="min-w-0">
               {title && (
-                <h1 className="text-base md:text-lg font-bold truncate leading-tight">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight leading-tight truncate">
                   {title}
                 </h1>
               )}
               {description && (
-                <p className="text-xs text-muted-foreground truncate hidden md:block">
-                  {description}
-                </p>
+                <p className="text-sm text-muted-foreground truncate">{description}</p>
               )}
             </div>
             {headerActions && (
               <div className="flex items-center gap-2 flex-shrink-0">{headerActions}</div>
             )}
-          </header>
-
-          <main className="flex-1 p-4 md:p-6 overflow-x-auto">{children}</main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      )}
+
+      <main className="flex-1 px-4 md:px-6 py-4 md:py-6 overflow-x-auto w-full">
+        {children}
+      </main>
+    </div>
   );
 }
