@@ -48,6 +48,7 @@ export default function BackofficeTenants() {
   const [formData, setFormData] = useState({
     company_name: '',
     company_email: '',
+    password: '',
     company_phone: '',
     cnpj: '',
     plan_id: '',
