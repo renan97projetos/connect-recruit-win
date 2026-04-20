@@ -233,6 +233,7 @@ export default function BackofficeTenants() {
     setFormData({
       company_name: '',
       company_email: '',
+      password: '',
       company_phone: '',
       cnpj: '',
       plan_id: '',
@@ -245,6 +246,7 @@ export default function BackofficeTenants() {
     setFormData({
       company_name: tenant.company_name,
       company_email: tenant.company_email,
+      password: '',
       company_phone: tenant.company_phone || '',
       cnpj: tenant.cnpj || '',
       plan_id: tenant.plan_id || '',
