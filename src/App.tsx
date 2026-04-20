@@ -96,9 +96,9 @@ const App = () => {
               <Route path="/upload-documents/:applicationId" element={<UploadDocuments />} />
               <Route path="/candidate" element={<ProtectedRoute requiredRole="candidate"><CandidateDashboard /></ProtectedRoute>} />
               <Route path="/candidate/profile" element={<ProtectedRoute requiredRole="candidate"><CandidateProfile /></ProtectedRoute>} />
-              <Route path="/company" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
-              <Route path="/company/dashboard" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
+              <Route path="/company" element={<ProtectedRoute requiredRole="company"><CompanyHub /></ProtectedRoute>} />
               <Route path="/company/hub" element={<ProtectedRoute requiredRole="company"><CompanyHub /></ProtectedRoute>} />
+              <Route path="/company/dashboard" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
               <Route path="/company/jobs/new" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id/edit" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id" element={<ProtectedRoute requiredRole="company"><JobCandidates /></ProtectedRoute>} />
