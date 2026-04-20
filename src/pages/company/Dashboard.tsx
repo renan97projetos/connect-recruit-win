@@ -111,7 +111,7 @@ export default function CompanyDashboard() {
       <Button
         onClick={() => navigate('/company/jobs/new')}
         size="sm"
-        className="gap-2 bg-orange-500 hover:bg-orange-600 text-white"
+        className="gap-2"
       >
         <Plus className="h-4 w-4" />
         <span className="hidden sm:inline">Nova Vaga</span>
