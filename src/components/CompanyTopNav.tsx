@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   ChevronDown,
+  LayoutGrid,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -33,7 +34,7 @@ import { cn } from '@/lib/utils';
 type NavItem = { path: string; label: string; icon: any; end?: boolean };
 
 const recruitmentItems: NavItem[] = [
-  { path: '/company', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { path: '/company/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { path: '/company/job-requests', label: 'Gestão de Vagas', icon: Briefcase },
   { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp },
   { path: '/company/job-history', label: 'Histórico', icon: Archive },
@@ -45,6 +46,8 @@ const hrItems: NavItem[] = [
   { path: '/company/assessments', label: 'Avaliações', icon: FileText },
   { path: '/company/employee-requests', label: 'Solicitações', icon: Clock },
 ];
+
+const HR_PATHS = ['/company/employee-dashboard', '/company/employees', '/company/assessments', '/company/employee-requests'];
 
 export function CompanyTopNav() {
   const location = useLocation();
