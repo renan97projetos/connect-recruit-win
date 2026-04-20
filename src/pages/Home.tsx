@@ -252,9 +252,6 @@ export default function Home() {
                       <Button asChild>
                         <a href="#cadastro">Cadastrar currículo</a>
                       </Button>
-                      <Button variant="outline" asChild>
-                        <Link to="/prospect-funnel">Falar conosco</Link>
-                      </Button>
                     </div>
                   </div> : filteredJobs.map(job => <Card key={job.id} className="group">
                       <CardHeader>
