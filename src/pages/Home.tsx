@@ -214,9 +214,9 @@ export default function Home() {
       </section>
 
       {/* Jobs Section */}
-      <section id="vagas" className="container mx-auto px-4 py-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-[300px,1fr] gap-8">
+      <section id="vagas" className="container py-12 md:py-16">
+        <div>
+          <div className="grid lg:grid-cols-[280px,1fr] xl:grid-cols-[300px,1fr] gap-6 lg:gap-8">
             <JobFiltersComponent filters={filters} onFilterChange={setFilters} onReset={resetFilters} />
 
             <div>
