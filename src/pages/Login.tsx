@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +33,15 @@ export default function Login() {
   const { signIn, userRole } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const intendedRole = searchParams.get('as') as 'candidate' | 'company' | null;
+
+  const areaLabel =
+    intendedRole === 'candidate'
+      ? 'Área do Candidato'
+      : intendedRole === 'company'
+      ? 'Área da Empresa'
+      : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +67,20 @@ export default function Login() {
     const { error, role } = await signIn(email, password);
     
     if (!error) {
+      // Bloqueia acesso cruzado entre áreas
+      if (intendedRole && role && role !== intendedRole && role !== 'admin') {
+        await supabase.auth.signOut();
+        const expected = intendedRole === 'candidate' ? 'candidato' : 'empresa';
+        const actual = role === 'candidate' ? 'candidato' : role === 'company' ? 'empresa' : role;
+        toast({
+          title: 'Acesso não permitido',
+          description: `Esta é a área de ${expected}. Sua conta é de ${actual}. Use a área correta para entrar.`,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       toast({
         title: 'Login realizado com sucesso!',
         description: 'Redirecionando...',
@@ -126,7 +150,9 @@ export default function Login() {
           <div>
             <h2 className="text-4xl font-black mb-2">Entrar</h2>
             <p className="text-muted-foreground">
-              Entre com sua conta para continuar
+              {areaLabel
+                ? `${areaLabel} — entre apenas com uma conta de ${intendedRole === 'candidate' ? 'candidato' : 'empresa'}.`
+                : 'Entre com sua conta para continuar'}
             </p>
           </div>
 

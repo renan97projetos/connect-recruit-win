@@ -149,10 +149,10 @@ export function Navbar() {
             {!isAuthenticated ? (
               <>
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Área de Candidato</Link>
+                  <Link to="/login?as=candidate">Área de Candidato</Link>
                 </Button>
                 <Button variant="default" asChild>
-                  <Link to="/login">Área de Empresa</Link>
+                  <Link to="/login?as=company">Área de Empresa</Link>
                 </Button>
               </>
             ) : (
@@ -238,10 +238,10 @@ export function Navbar() {
                 {!isAuthenticated ? (
                   <>
                     <Button variant="ghost" asChild className="justify-start">
-                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Área de Candidato</Link>
+                      <Link to="/login?as=candidate" onClick={() => setMobileMenuOpen(false)}>Área de Candidato</Link>
                     </Button>
                     <Button variant="default" asChild className="justify-start">
-                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Área de Empresa</Link>
+                      <Link to="/login?as=company" onClick={() => setMobileMenuOpen(false)}>Área de Empresa</Link>
                     </Button>
                   </>
                 ) : (
