@@ -245,34 +245,24 @@ export default function JobDetails() {
           },
         });
 
-        // 2) Notificação à empresa (busca email do dono da vaga)
+        // 2) Notificação à empresa (busca email via tenants)
         if (job.company_id) {
-          const { data: companyProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', job.company_id)
-            .single();
-          if (companyProfile?.id) {
-            const { data: companyAuth } = await supabase.auth.admin?.getUserById?.(companyProfile.id) ?? { data: null };
-            // fallback: buscar via tenants.company_email
-            const { data: tenant } = await supabase
-              .from('tenants')
-              .select('company_email')
-              .eq('company_id', job.company_id)
-              .maybeSingle();
-            const companyEmail = tenant?.company_email || companyAuth?.user?.email;
-            if (companyEmail) {
-              supabase.functions.invoke('send-new-application-notification', {
-                body: {
-                  companyEmail,
-                  jobTitle: job.title,
-                  jobId: job.id,
-                  candidateName: profile?.name || user.email,
-                  candidateEmail: user.email,
-                  score: finalScore,
-                },
-              });
-            }
+          const { data: tenant } = await supabase
+            .from('tenants')
+            .select('company_email')
+            .eq('company_id', job.company_id)
+            .maybeSingle();
+          if (tenant?.company_email) {
+            supabase.functions.invoke('send-new-application-notification', {
+              body: {
+                companyEmail: tenant.company_email,
+                jobTitle: job.title,
+                jobId: job.id,
+                candidateName: profile?.name || user.email,
+                candidateEmail: user.email,
+                score: finalScore,
+              },
+            });
           }
         }
       } catch (emailErr) {
