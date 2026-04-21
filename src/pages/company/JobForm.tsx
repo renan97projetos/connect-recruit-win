@@ -176,6 +176,16 @@ export default function JobForm() {
       return;
     }
 
+    // Enforcement de limite por plano (apenas em criação)
+    if (!isEditing && !canCreateByPlan('jobs')) {
+      toast({
+        title: 'Limite do plano atingido',
+        description: 'Você atingiu o limite de vagas do seu plano. Faça upgrade para criar mais.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(mode);
     try {
       const filteredRequirements = requirements.filter(r => r.trim() !== '');
