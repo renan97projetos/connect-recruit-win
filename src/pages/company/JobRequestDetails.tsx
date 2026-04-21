@@ -129,6 +129,18 @@ export default function JobRequestDetails() {
 
       if (error) throw error;
       setRequest(data);
+
+      // Carregar aprovações existentes
+      await loadApprovals();
+
+      // Carregar usuários da empresa para adicionar como aprovadores (só se isOwner)
+      if (isOwner && user?.id) {
+        const { data: users } = await supabase
+          .from('company_users')
+          .select('user_id, profiles:user_id(name, email)')
+          .eq('company_id', user.id);
+        setCompanyUsers((users as any) || []);
+      }
     } catch (error: any) {
       console.error('Error fetching request:', error);
       toast.error('Erro ao carregar requisição');
