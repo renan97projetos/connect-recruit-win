@@ -114,7 +114,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [stages, setStages] = useState<Stage[]>(DEFAULT_STAGES);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [activeStageId, setActiveStageId] = useState<string>('screening');
-  const [profilesById, setProfilesById] = useState<Record<string, { avatar_url?: string | null }>>({});
+  const [profilesById, setProfilesById] = useState<Record<string, { avatar_url?: string | null; phone?: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -164,7 +164,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
       const ids = Array.from(new Set(apps.map((a: any) => a.candidate_id)));
       const { data: profs } = await supabase
         .from('profiles')
-        .select('id, avatar_url')
+        .select('id, avatar_url, phone')
         .in('id', ids);
       const map: Record<string, any> = {};
       (profs || []).forEach((p: any) => (map[p.id] = p));
