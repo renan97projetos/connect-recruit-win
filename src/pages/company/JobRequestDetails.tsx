@@ -53,6 +53,7 @@ interface JobRequest {
   requisition_rejection_reason: string;
   review_rejection_reason: string;
   created_at: string;
+  created_by: string;
   company_id: string;
 }
 
