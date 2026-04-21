@@ -118,6 +118,8 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [profilesById, setProfilesById] = useState<Record<string, { avatar_url?: string | null; phone?: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
