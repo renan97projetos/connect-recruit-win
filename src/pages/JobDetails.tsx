@@ -70,6 +70,14 @@ export default function JobDetails() {
           setCompanyLogo(companyProfile.avatar_url);
         }
       }
+
+      // Fetch screening questions
+      const { data: qs } = await supabase
+        .from('screening_questions')
+        .select('id, question, question_type, required, order_position')
+        .eq('job_id', id)
+        .order('order_position');
+      setQuestions((qs as ScreeningQuestion[]) || []);
       
       // Check user role and if has applied
       if (user) {
