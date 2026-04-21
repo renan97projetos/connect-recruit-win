@@ -238,9 +238,26 @@ export default function RegisterCompany() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
+      // Send welcome email (non-blocking — do not fail registration if email fails)
+      try {
+        const tenantId = (data as any)?.tenant?.id || (data as any)?.user_id;
+        await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'company-welcome',
+            recipientEmail: form.company_email,
+            idempotencyKey: `company-welcome-${tenantId || form.company_email}`,
+            templateData: {
+              name: form.responsible_name || form.company_name,
+            },
+          },
+        });
+      } catch (emailErr) {
+        console.warn('Welcome email failed to enqueue:', emailErr);
+      }
+
       toast({
         title: 'Cadastro realizado!',
-        description: 'Sua empresa foi criada com sucesso. Faça login para começar.',
+        description: 'Sua empresa foi criada com sucesso. Enviamos um email de boas-vindas. Faça login para começar.',
       });
       setTimeout(() => navigate('/login'), 1200);
     } catch (err: any) {

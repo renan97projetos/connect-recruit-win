@@ -69,6 +69,7 @@ import BackofficeAuditLogs from "./pages/backoffice/AuditLogs";
 import BackofficeSettings from "./pages/backoffice/Settings";
 import BackofficeJobs from "./pages/backoffice/Jobs";
 import BackofficeJobForm from "./pages/backoffice/JobForm";
+import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,7 @@ const App = () => {
               <Route path="/terms-of-use" element={<TermsOfUse />} />
               <Route path="/api-docs" element={<ApiDocumentation />} />
               <Route path="/prospect-funnel" element={<ProspectFunnel />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               
               {/* Backoffice Routes */}
               <Route path="/backoffice/login" element={<BackofficeLogin />} />
