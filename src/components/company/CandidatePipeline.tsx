@@ -60,7 +60,14 @@ interface ApplicationRow {
   score: number | null;
   applied_at: string;
   updated_at: string;
+  source?: string | null;
 }
+
+const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
+  board: { label: 'Board', color: 'bg-gray-100 text-gray-500' },
+  career_page: { label: 'Career Page', color: 'bg-violet-50 text-violet-600' },
+  indicacao: { label: 'Indicação', color: 'bg-amber-50 text-amber-600' },
+};
 
 const DEFAULT_STAGES: Stage[] = [
   { id: 'screening', name: 'Triagem', icon: Filter, color: 'border-blue-300', active: 'bg-blue-500 text-white border-blue-500' },
@@ -172,7 +179,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
 
     const { data: apps } = await supabase
       .from('applications')
-      .select('id, candidate_id, candidate_name, candidate_email, status, current_stage, score, applied_at, updated_at')
+      .select('id, candidate_id, candidate_name, candidate_email, status, current_stage, score, applied_at, updated_at, source')
       .eq('job_id', jobId)
       .order('applied_at', { ascending: false });
 
@@ -517,11 +524,23 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                                   locale: ptBR,
                                 })}
                               </div>
-                              {offersByApp[app.id] && offersByApp[app.id].status === 'pending' && (
-                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] h-5 px-2">
-                                  Proposta enviada
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-1">
+                                {app.source && (
+                                  <span
+                                    className={cn(
+                                      'text-[10px] px-1.5 py-0.5 rounded font-medium',
+                                      SOURCE_LABELS[app.source]?.color || 'bg-gray-100 text-gray-500'
+                                    )}
+                                  >
+                                    {SOURCE_LABELS[app.source]?.label || app.source}
+                                  </span>
+                                )}
+                                {offersByApp[app.id] && offersByApp[app.id].status === 'pending' && (
+                                  <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] h-5 px-2">
+                                    Proposta enviada
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-1 pt-1 border-t border-border">

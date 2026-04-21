@@ -194,6 +194,12 @@ export default function JobDetails() {
       // Ensure score is between 0 and 100
       const finalScore = Math.min(Math.max(calculatedScore, 0), 100);
 
+      // Detectar source da URL
+      const searchParams = new URLSearchParams(window.location.search);
+      const source =
+        searchParams.get('ref') ||
+        (window.location.pathname.startsWith('/careers/') ? 'career_page' : 'board');
+
       const { data: appInserted, error } = await supabase
         .from('applications')
         .insert({
@@ -204,6 +210,7 @@ export default function JobDetails() {
           status: 'pending',
           current_stage: 'triagem',
           score: finalScore,
+          source,
         })
         .select('id')
         .single();
