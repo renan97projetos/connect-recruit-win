@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,32 +36,34 @@ export default function CompanyEmployeeDetails() {
 
   if (isLoading || roleLoading) {
     return (
-      <DashboardLayout title="Carregando...">
+      <CompanyLayout>
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
   if (!isOwner) {
     return (
-      <DashboardLayout title="Acesso Negado">
+      <CompanyLayout>
+        <h1 className="text-3xl font-bold mb-6">Acesso Negado</h1>
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             Você não tem permissão para acessar este recurso. Apenas o gestor da empresa pode visualizar detalhes de colaboradores.
           </AlertDescription>
         </Alert>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
   if (!employee) {
     return (
-      <DashboardLayout title="Colaborador não encontrado">
+      <CompanyLayout>
+        <h1 className="text-3xl font-bold mb-4">Colaborador não encontrado</h1>
         <p>Colaborador não encontrado.</p>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
@@ -81,10 +83,13 @@ export default function CompanyEmployeeDetails() {
   };
 
   return (
-    <DashboardLayout
-      title={(employee as any)?.nome || "Colaborador"}
-      description={`${(employee as any)?.cargo || ""} - ${(employee as any)?.setor || ""}`}
-    >
+    <CompanyLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">{(employee as any)?.nome || 'Colaborador'}</h1>
+        <p className="text-muted-foreground">
+          {`${(employee as any)?.cargo || ''} - ${(employee as any)?.setor || ''}`}
+        </p>
+      </div>
       <div className="space-y-6">
         <div className="flex gap-4">
           <Button variant="outline" onClick={() => navigate('/company/employees')}>
@@ -229,6 +234,6 @@ export default function CompanyEmployeeDetails() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 }

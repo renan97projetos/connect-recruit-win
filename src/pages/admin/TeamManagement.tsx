@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -261,16 +261,20 @@ export default function TeamManagement() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Equipe" description="Gerencie os membros da equipe">
+      <CompanyLayout>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Equipe" description="Gerencie os membros da equipe exibidos na página Sobre">
+    <CompanyLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Equipe</h1>
+        <p className="text-muted-foreground">Gerencie os membros da equipe exibidos na página Sobre</p>
+      </div>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button onClick={() => handleOpenModal()} className="gap-2">
@@ -459,6 +463,6 @@ export default function TeamManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -148,30 +148,34 @@ export default function CompanyEmployeeForm() {
   };
 
   if (isLoading || roleLoading) {
-    return <DashboardLayout title="Carregando..."><div>Carregando...</div></DashboardLayout>;
+    return <CompanyLayout><div>Carregando...</div></CompanyLayout>;
   }
 
   if (!isOwner) {
     return (
-      <DashboardLayout
-        title={isEditing ? 'Editar Colaborador' : 'Novo Colaborador'}
-        description="Acesso restrito"
-      >
+      <CompanyLayout>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">{isEditing ? 'Editar Colaborador' : 'Novo Colaborador'}</h1>
+          <p className="text-muted-foreground">Acesso restrito</p>
+        </div>
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             Você não tem permissão para acessar este recurso. Apenas o gestor da empresa pode gerenciar colaboradores.
           </AlertDescription>
         </Alert>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
   return (
-    <DashboardLayout
-      title={isEditing ? 'Editar Colaborador' : 'Novo Colaborador'}
-      description={isEditing ? 'Atualize as informações do colaborador' : 'Adicione um novo colaborador à empresa'}
-    >
+    <CompanyLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">{isEditing ? 'Editar Colaborador' : 'Novo Colaborador'}</h1>
+        <p className="text-muted-foreground">
+          {isEditing ? 'Atualize as informações do colaborador' : 'Adicione um novo colaborador à empresa'}
+        </p>
+      </div>
       <Button variant="outline" onClick={() => navigate('/company/employees')} className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar
@@ -269,6 +273,6 @@ export default function CompanyEmployeeForm() {
           </div>
         </form>
       </Form>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 }

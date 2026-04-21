@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,16 +103,16 @@ export default function SystemSettings() {
 
   if (fetching) {
     return (
-      <DashboardLayout title="Configurações do Sistema">
+      <CompanyLayout>
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Carregando configurações...</p>
         </div>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Configurações do Sistema">
+    <CompanyLayout>
       <div className="container mx-auto py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
@@ -186,6 +186,6 @@ export default function SystemSettings() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 }

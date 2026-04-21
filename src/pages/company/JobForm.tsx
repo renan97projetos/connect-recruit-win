@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,10 +196,13 @@ export default function JobForm() {
   const benefitTags = benefits.filter(b => b.trim());
 
   return (
-    <DashboardLayout
-      title={isEditing ? 'Editar Vaga' : 'Nova Vaga'}
-      description={isEditing ? 'Atualize as informações da vaga' : 'Preencha os detalhes — o preview ao lado mostra como o candidato verá'}
-    >
+    <CompanyLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">{isEditing ? 'Editar Vaga' : 'Nova Vaga'}</h1>
+        <p className="text-muted-foreground">
+          {isEditing ? 'Atualize as informações da vaga' : 'Preencha os detalhes — o preview ao lado mostra como o candidato verá'}
+        </p>
+      </div>
       <PermissionGuard permission={isEditing ? 'edit_vagas' : 'create_vagas'} showAlert={true}>
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -506,6 +509,6 @@ export default function JobForm() {
           </aside>
         </div>
       </PermissionGuard>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 }
