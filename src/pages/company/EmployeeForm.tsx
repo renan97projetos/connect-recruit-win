@@ -131,6 +131,7 @@ export default function CompanyEmployeeForm() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-employees'] });
+      refreshPlanUsage();
       toast({
         title: isEditing ? 'Colaborador atualizado' : 'Colaborador criado',
         description: 'Os dados foram salvos com sucesso.',
@@ -191,6 +192,8 @@ export default function CompanyEmployeeForm() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar
       </Button>
+
+      {!isEditing && <PlanLimitBanner resource="employees" className="mb-4" />}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
