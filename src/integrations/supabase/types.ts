@@ -813,6 +813,48 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          source: string
+          status: string
+          updated_at: string
+          vacancy_count: number | null
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          vacancy_count?: number | null
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          vacancy_count?: number | null
+        }
+        Relationships: []
+      }
       platform_metrics: {
         Row: {
           active_tenants: number | null

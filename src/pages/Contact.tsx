@@ -7,9 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { saveLead } from '@/lib/storage';
-import { Lead } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -28,24 +26,23 @@ export default function Contact() {
     setLoading(true);
 
     try {
-      const lead: Lead = {
-        id: uuidv4(),
+      // Persist lead in database
+      const { error: dbError } = await supabase.from('leads').insert({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        cnpj: formData.cnpj || undefined,
-        vacancyCount: formData.vacancyCount ? parseInt(formData.vacancyCount) : undefined,
+        cnpj: formData.cnpj || null,
+        vacancy_count: formData.vacancyCount ? parseInt(formData.vacancyCount) : null,
         message: formData.message,
-        source: 'form',
+        source: 'contact_form',
         status: 'new',
-        createdAt: new Date().toISOString(),
-        notes: [],
-      };
+      });
 
-      saveLead(lead);
+      if (dbError) {
+        console.error('Error saving lead:', dbError);
+      }
 
       // Send email notification to admin
-      const { supabase } = await import('@/integrations/supabase/client');
       const { error: emailError } = await supabase.functions.invoke('send-contact-email', {
         body: {
           name: formData.name,
