@@ -150,6 +150,36 @@ export default function JobRequestDetails() {
     }
   };
 
+  const notifyCreator = async (action: 'approved' | 'rejected' | 'published', reason?: string) => {
+    try {
+      if (!request?.created_by) return;
+      const { data: creatorProfile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', request.created_by)
+        .maybeSingle();
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('company_email')
+        .eq('company_id', request.company_id)
+        .maybeSingle();
+      const recipientEmail = tenant?.company_email;
+      if (!recipientEmail) return;
+      supabase.functions.invoke('send-job-request-status-email', {
+        body: {
+          recipientEmail,
+          recipientName: creatorProfile?.name || null,
+          positionTitle: request.position_title,
+          action,
+          reason: reason || null,
+          requestId: id,
+        },
+      });
+    } catch (e) {
+      console.error('Erro ao notificar criador da requisição:', e);
+    }
+  };
+
   const handleApproveRequisition = async () => {
     setActionLoading(true);
     try {
@@ -165,6 +195,7 @@ export default function JobRequestDetails() {
 
       if (error) throw error;
 
+      await notifyCreator('approved');
       toast.success('Requisição aprovada com sucesso!');
       fetchRequest();
     } catch (error: any) {
@@ -193,6 +224,7 @@ export default function JobRequestDetails() {
 
       if (error) throw error;
 
+      await notifyCreator('rejected', rejectionReason);
       toast.success('Requisição rejeitada');
       setShowRejectDialog(false);
       setRejectionReason('');
