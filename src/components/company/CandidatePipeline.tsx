@@ -244,6 +244,29 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     }
 
     setOffersByApp((prev) => ({ ...prev, [selectedCandidate.id]: { id: data.id, status: data.status } }));
+
+    // Disparar email para o candidato com a proposta
+    try {
+      const { data: jobInfo } = await supabase
+        .from('jobs')
+        .select('title, company_name')
+        .eq('id', jobId)
+        .single();
+      supabase.functions.invoke('send-job-offer-email', {
+        body: {
+          candidateName: selectedCandidate.candidate_name,
+          candidateEmail: selectedCandidate.candidate_email,
+          jobTitle: jobInfo?.title || jobTitle,
+          companyName: jobInfo?.company_name || '',
+          offeredSalary: parseFloat(offerSalary),
+          benefits: offerBenefits || null,
+          notes: offerNotes || null,
+        },
+      });
+    } catch (e) {
+      console.error('Erro ao enviar email de proposta:', e);
+    }
+
     toast({ title: 'Proposta registrada!', description: `Para ${selectedCandidate.candidate_name}.` });
     setOfferDialogOpen(false);
   };
