@@ -234,7 +234,7 @@ export default function BackofficePlans() {
           <Input
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Ex: Professional"
+            placeholder="Ex: Pro"
           />
         </div>
         <div className="flex items-center gap-2 pt-6">
