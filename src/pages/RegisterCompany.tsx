@@ -207,6 +207,14 @@ export default function RegisterCompany() {
       toast({ title: 'Verifique o formulário', description: first.message, variant: 'destructive' });
       return;
     }
+    if (!cnpjValidated) {
+      toast({
+        title: 'CNPJ não validado',
+        description: 'Aguarde a validação do CNPJ junto à Receita Federal antes de continuar.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-tenant-user', {
