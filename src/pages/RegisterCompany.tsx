@@ -299,7 +299,7 @@ export default function RegisterCompany() {
                   {cnpjLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   ) : cnpjValidated ? (
-                    <Check className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-green-600" />
+                    <Check className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-primary" />
                   ) : null}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
