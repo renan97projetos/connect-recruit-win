@@ -145,6 +145,29 @@ export default function CompanyDashboard() {
     count: applications.filter((a) => a.current_stage === id || a.status === id).length,
   }));
 
+  // Tempo médio (dias) entre applied_at e updated_at por current_stage
+  const avgDaysMap = useMemo(() => {
+    const groups: Record<string, number[]> = {};
+    applications.forEach((app) => {
+      if (app.current_stage && app.applied_at && app.updated_at) {
+        const days = Math.max(
+          0,
+          Math.round(
+            (new Date(app.updated_at).getTime() - new Date(app.applied_at).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        );
+        if (!groups[app.current_stage]) groups[app.current_stage] = [];
+        groups[app.current_stage].push(days);
+      }
+    });
+    const out: Record<string, number> = {};
+    Object.entries(groups).forEach(([stage, vals]) => {
+      out[stage] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+    });
+    return out;
+  }, [applications]);
+
   if (loading || roleLoading) {
     return (
       <CompanyLayout>
