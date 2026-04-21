@@ -17,6 +17,10 @@ import { JobStagePanel } from '@/components/company/JobStagePanel';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { usePlanType } from '@/hooks/usePlanType';
+import { useJarvisContext } from '@/hooks/useJarvisContext';
+import { JarvisFab } from '@/components/jarvis/JarvisFab';
+import { JarvisPanel } from '@/components/jarvis/JarvisPanel';
 
 type PipelineStageId =
   | 'aberta'
@@ -54,6 +58,9 @@ export default function CompanyDashboard() {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const { companyId, loading: roleLoading } = useCompanyRole();
+  const { isPro } = usePlanType();
+  const { context: jarvisContext } = useJarvisContext();
+  const [jarvisOpen, setJarvisOpen] = useState(false);
 
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
@@ -549,6 +556,17 @@ export default function CompanyDashboard() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {isPro && (
+        <>
+          <JarvisFab onClick={() => setJarvisOpen(true)} />
+          <JarvisPanel
+            open={jarvisOpen}
+            onClose={() => setJarvisOpen(false)}
+            context={jarvisContext}
+          />
+        </>
+      )}
     </CompanyLayout>
   );
 }
