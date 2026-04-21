@@ -109,7 +109,7 @@ export default function JobHistory() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/company/selection-process/${job.id}`)}
+                      onClick={() => navigate(`/company/jobs/${job.id}`)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Detalhes

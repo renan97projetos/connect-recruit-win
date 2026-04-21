@@ -145,7 +145,7 @@ export default function AdminDashboard() {
                   ))}
                   {jobs.length > 3 && (
                     <Button variant="outline" className="w-full" asChild>
-                      <Link to="/admin/jobs">Ver todas as vagas</Link>
+                      <Link to="/company/dashboard">Ver todas as vagas</Link>
                     </Button>
                   )}
                 </div>
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
                   </li>
                 </ul>
                 <Button className="w-full" asChild>
-                  <Link to="/admin/employees">
+                  <Link to="/company/employees">
                     <Users className="mr-2 h-4 w-4" />
                     Acessar Gestão de Colaboradores
                   </Link>
