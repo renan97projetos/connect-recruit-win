@@ -12,17 +12,13 @@ export function Footer() {
   }, []);
   const fetchSocialLinks = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('system_settings').select('instagram_url, linkedin_url').order('created_at', {
-        ascending: true
-      }).limit(1).maybeSingle();
+      const { data, error } = await (supabase as any).rpc('get_public_settings');
       if (error) throw error;
-      if (data) {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) {
         setSocialLinks({
-          instagram: data.instagram_url || '',
-          linkedin: data.linkedin_url || ''
+          instagram: row.instagram_url || '',
+          linkedin: row.linkedin_url || ''
         });
       }
     } catch (error) {

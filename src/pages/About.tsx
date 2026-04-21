@@ -27,15 +27,11 @@ export default function About() {
 
   const fetchContent = async () => {
     try {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('about_content')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc('get_public_settings');
 
       if (error) throw error;
-      setContent(data?.about_content || `<h2>Sobre Nós</h2>
+      const row = Array.isArray(data) ? data[0] : data;
+      setContent(row?.about_content || `<h2>Sobre Nós</h2>
         
         <p>Somos uma plataforma inovadora de gestão de recursos humanos que conecta empresas e talentos de forma eficiente e automatizada.</p>
         
