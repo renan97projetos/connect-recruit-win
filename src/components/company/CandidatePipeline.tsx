@@ -496,5 +496,68 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
         </Droppable>
       </div>
     </DragDropContext>
+
+    {selectedForCompare.size >= 2 && (
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background rounded-full px-5 py-2.5 shadow-lg flex items-center gap-3 text-sm">
+        <span>{selectedForCompare.size} candidatos selecionados</span>
+        <button
+          onClick={() => setCompareOpen(true)}
+          className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-xs font-medium hover:bg-primary/90 transition-colors"
+        >
+          Comparar
+        </button>
+        <button
+          onClick={() => setSelectedForCompare(new Set())}
+          className="text-background/70 hover:text-background"
+          aria-label="Limpar seleção"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    )}
+
+    <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-base font-semibold">Comparar candidatos</DialogTitle>
+        </DialogHeader>
+        <div
+          className="grid gap-4"
+          style={{ gridTemplateColumns: `repeat(${Math.max(selectedForCompare.size, 1)}, minmax(0, 1fr))` }}
+        >
+          {applications
+            .filter((a) => selectedForCompare.has(a.id))
+            .map((app) => (
+              <div key={app.id} className="border border-border rounded-xl p-4">
+                <div className="text-sm font-semibold mb-0.5">{app.candidate_name}</div>
+                <div className="text-xs text-muted-foreground mb-3 truncate">{app.candidate_email}</div>
+                <div className="flex items-center gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <div
+                      key={s}
+                      className={cn(
+                        'w-4 h-4 rounded-sm',
+                        (app.score || 0) >= s * 20 ? 'bg-amber-400' : 'bg-muted'
+                      )}
+                    />
+                  ))}
+                  <span className="text-xs text-muted-foreground ml-1">{app.score || 0}/100</span>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>
+                    <span className="font-medium text-foreground">Etapa:</span>{' '}
+                    {app.current_stage || 'triagem'}
+                  </div>
+                  <div>
+                    <span className="font-medium text-foreground">Candidatou-se:</span>{' '}
+                    {new Date(app.applied_at).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
