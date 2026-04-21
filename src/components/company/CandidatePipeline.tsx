@@ -60,7 +60,14 @@ interface ApplicationRow {
   score: number | null;
   applied_at: string;
   updated_at: string;
+  source?: string | null;
 }
+
+const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
+  board: { label: 'Board', color: 'bg-gray-100 text-gray-500' },
+  career_page: { label: 'Career Page', color: 'bg-violet-50 text-violet-600' },
+  indicacao: { label: 'Indicação', color: 'bg-amber-50 text-amber-600' },
+};
 
 const DEFAULT_STAGES: Stage[] = [
   { id: 'screening', name: 'Triagem', icon: Filter, color: 'border-blue-300', active: 'bg-blue-500 text-white border-blue-500' },
