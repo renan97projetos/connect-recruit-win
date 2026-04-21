@@ -357,6 +357,54 @@ export default function JobDetails() {
               <div>
                 {canApply ? (
                   <>
+                    {!hasApplied && !job.is_archived && questions.length > 0 && (
+                      <div className="mb-6 rounded-lg border bg-muted/30 p-4 space-y-4">
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-primary" />
+                          <h3 className="font-semibold text-sm">Responda para se candidatar</h3>
+                        </div>
+                        {questions.map((q, idx) => (
+                          <div key={q.id} className="space-y-2">
+                            <Label className="text-sm">
+                              {idx + 1}. {q.question}
+                              {q.required && <span className="text-destructive ml-1">*</span>}
+                            </Label>
+                            {q.question_type === 'yes_no' ? (
+                              <RadioGroup
+                                value={answers[q.id] || ''}
+                                onValueChange={(val) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: val }))
+                                }
+                                className="flex gap-4"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="sim" id={`${q.id}-sim`} />
+                                  <Label htmlFor={`${q.id}-sim`} className="font-normal cursor-pointer">
+                                    Sim
+                                  </Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="nao" id={`${q.id}-nao`} />
+                                  <Label htmlFor={`${q.id}-nao`} className="font-normal cursor-pointer">
+                                    Não
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            ) : (
+                              <Textarea
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                                placeholder="Sua resposta..."
+                                rows={3}
+                                className="resize-none"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <Button
                       onClick={handleApply}
                       disabled={hasApplied || applying || job.is_archived}
