@@ -237,18 +237,34 @@ export default function RegisterCompany() {
                 />
               </div>
               <div>
+                <Label>CEP</Label>
+                <div className="relative">
+                  <Input
+                    value={form.cep}
+                    onChange={(e) => handleChange('cep', maskCEP(e.target.value))}
+                    onBlur={(e) => handleCepBlur(e.target.value)}
+                    placeholder="00000-000"
+                    maxLength={9}
+                  />
+                  {cepLoading && (
+                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              <div>
                 <Label>Endereço</Label>
                 <Input
                   value={form.address}
                   onChange={(e) => handleChange('address', e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 md:col-span-2">
                 <div className="col-span-2">
                   <Label>Cidade</Label>
                   <Input
                     value={form.city}
                     onChange={(e) => handleChange('city', e.target.value)}
+                    readOnly={cepLoading}
                   />
                 </div>
                 <div>
@@ -257,6 +273,7 @@ export default function RegisterCompany() {
                     value={form.state}
                     onChange={(e) => handleChange('state', e.target.value.toUpperCase().slice(0, 2))}
                     maxLength={2}
+                    readOnly={cepLoading}
                   />
                 </div>
               </div>
