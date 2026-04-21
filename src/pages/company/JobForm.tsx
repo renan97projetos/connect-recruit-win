@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target } from 'lucide-react';
+import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target, Sparkles, Loader2 } from 'lucide-react';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { JobPreview } from '@/components/jobs/JobPreview';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface FormErrors {
   title?: string;
@@ -51,6 +52,37 @@ export default function JobForm() {
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
   const [benefits, setBenefits] = useState<string[]>(['']);
   const [benefitInput, setBenefitInput] = useState('');
+
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleGenerateDescription = async () => {
+    if (!aiInput.trim()) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-job-description', {
+        body: { input: aiInput },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const text: string = (data as any)?.text || '';
+      if (!text) throw new Error('Resposta vazia.');
+      setFormData(prev => ({ ...prev, description: text }));
+      if (errors.description) setErrors({ ...errors, description: undefined });
+      setAiSheetOpen(false);
+      setAiInput('');
+      toast({ title: 'Descrição gerada!', description: 'Revise e ajuste conforme necessário.' });
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao gerar',
+        description: err?.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -234,7 +266,17 @@ export default function JobForm() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="description">Descrição *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Descrição *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setAiSheetOpen(true)}
+                      className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Gerar com IA
+                    </button>
+                  </div>
                   <Textarea
                     id="description"
                     rows={6}
@@ -509,6 +551,50 @@ export default function JobForm() {
           </aside>
         </div>
       </PermissionGuard>
+
+      <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Gerar descrição com IA
+            </SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4 mt-6">
+            <div className="space-y-1.5">
+              <Label htmlFor="ai-input">Descreva o cargo em poucas palavras</Label>
+              <p className="text-xs text-muted-foreground">
+                Ex: "Analista de RH para empresa de logística de médio porte"
+              </p>
+              <Textarea
+                id="ai-input"
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder="Cargo, setor, contexto da empresa..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+            <Button
+              onClick={handleGenerateDescription}
+              disabled={!aiInput.trim() || aiLoading}
+              className="w-full"
+            >
+              {aiLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                'Gerar descrição'
+              )}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              A descrição gerada será inserida no campo acima para você revisar.
+            </p>
+          </div>
+        </SheetContent>
+      </Sheet>
     </CompanyLayout>
   );
 }
