@@ -384,13 +384,30 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                           {...prov.draggableProps}
                           {...prov.dragHandleProps}
                           className={cn(
-                            'cursor-grab active:cursor-grabbing transition-shadow',
+                            'relative cursor-grab active:cursor-grabbing transition-shadow',
                             snap.isDragging && 'shadow-lg ring-2 ring-primary',
-                            updating === app.id && 'opacity-60'
+                            updating === app.id && 'opacity-60',
+                            selectedForCompare.has(app.id) && 'ring-2 ring-primary'
                           )}
                         >
+                          <input
+                            type="checkbox"
+                            checked={selectedForCompare.has(app.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setSelectedForCompare((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(app.id)) next.delete(app.id);
+                                else if (next.size < 4) next.add(app.id);
+                                return next;
+                              });
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Selecionar para comparar"
+                            className="absolute top-2 left-2 z-10 h-3.5 w-3.5 accent-primary cursor-pointer"
+                          />
                           <CardContent className="p-3 space-y-3">
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-3 pl-5">
                               <Avatar className="h-10 w-10 flex-shrink-0">
                                 <AvatarImage src={profile?.avatar_url || undefined} />
                                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
