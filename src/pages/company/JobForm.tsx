@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target } from 'lucide-react';
+import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target, Sparkles, Loader2 } from 'lucide-react';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { JobPreview } from '@/components/jobs/JobPreview';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface FormErrors {
   title?: string;
