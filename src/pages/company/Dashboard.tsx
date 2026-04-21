@@ -1,20 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useCompanyRole } from '@/hooks/useCompanyRole';
-import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Users, TrendingUp, Clock, BarChart3, Plus, Loader2, KanbanSquare } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Bar, BarChart, Line, LineChart, Pie, PieChart, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CandidatePipeline } from '@/components/company/CandidatePipeline';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompanyRole } from '@/hooks/useCompanyRole';
+import { supabase } from '@/integrations/supabase/client';
+import { BarChart3, Plus, Loader2, Users, MapPin, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { JobStagePanel } from '@/components/company/JobStagePanel';
+
+type PipelineStageId =
+  | 'aberta'
+  | 'triagem'
+  | 'entrevista'
+  | 'avaliacao'
+  | 'proposta'
+  | 'admissao'
+  | 'contratado'
+  | 'reprovado';
+
+const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
+  { id: 'aberta', label: 'Vaga aberta', color: 'text-violet-600' },
+  { id: 'triagem', label: 'Triagem', color: 'text-gray-600' },
+  { id: 'entrevista', label: 'Entrevista', color: 'text-blue-600' },
+  { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
+  { id: 'proposta', label: 'Proposta', color: 'text-orange-600' },
+  { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
+  { id: 'contratado', label: 'Contratado', color: 'text-green-600' },
+  { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
+];
+
+const LOCATION_LABELS: Record<string, string> = {
+  remote: 'Remoto',
+  onsite: 'Presencial',
+  hybrid: 'Híbrido',
+};
+
+const daysAgo = (date: string) => {
+  const diff = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+  return diff;
+};
 
 export default function CompanyDashboard() {
   const { user } = useSupabaseAuth();
@@ -23,105 +53,86 @@ export default function CompanyDashboard() {
 
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'pipeline' | 'metrics'>('pipeline');
+  const [activeStage, setActiveStage] = useState<PipelineStageId>('aberta');
+
+  const [selectedJob, setSelectedJob] = useState<any | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [metricsOpen, setMetricsOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !companyId || roleLoading) return;
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, companyId, roleLoading]);
 
   const loadData = async () => {
     setLoading(true);
-
     const { data: jobsData } = await supabase
       .from('jobs')
       .select('*, applications(id, status, current_stage, applied_at)')
       .eq('company_id', companyId)
       .eq('is_archived', false)
-      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (jobsData) {
       setJobs(jobsData);
       const allApps = jobsData.flatMap((j: any) => j.applications || []);
       setApplications(allApps);
-
-      if (!selectedJobId) {
-        // default: vaga mais recente com candidatos
-        const jobWithApps = jobsData.find((j: any) => (j.applications?.length || 0) > 0);
-        setSelectedJobId(jobWithApps?.id || jobsData[0]?.id || '');
-      }
     }
     setLoading(false);
   };
 
-  const activeJobs = jobs;
-  const pendingApplications = applications.filter(
-    (a) => a.status === 'pending' || a.status === 'in-review'
+  const getCountForStage = (stageId: PipelineStageId) =>
+    jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+
+  const jobsInActiveStage = useMemo(
+    () => jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage),
+    [jobs, activeStage]
   );
-  const selectedJob = jobs.find((j) => j.id === selectedJobId);
 
-  // === Métricas ===
-  const stagesData = [
-    { name: 'Triagem', value: applications.filter(a => a.current_stage === 'triagem' || a.current_stage === 'screening').length },
-    { name: 'Entrevista', value: applications.filter(a => a.current_stage === 'entrevista' || a.current_stage === 'interview').length },
-    { name: 'Avaliações', value: applications.filter(a => a.current_stage === 'avaliacoes' || a.current_stage === 'assessment').length },
-    { name: 'Admissões', value: applications.filter(a => a.current_stage === 'admissoes' || a.current_stage === 'hiring').length },
-  ].filter(i => i.value > 0);
+  const activeStageLabel = PIPELINE_STAGES.find((s) => s.id === activeStage)?.label || '';
 
-  const statusData = [
-    { name: 'Pendente', value: applications.filter(a => a.status === 'pending').length, color: 'hsl(var(--warning))' },
-    { name: 'Em Análise', value: applications.filter(a => a.status === 'in-review').length, color: 'hsl(var(--primary))' },
-    { name: 'Aprovado', value: applications.filter(a => a.status === 'approved').length, color: 'hsl(var(--success))' },
-    { name: 'Rejeitado', value: applications.filter(a => a.status === 'rejected').length, color: 'hsl(var(--destructive))' },
-  ].filter(i => i.value > 0);
+  const openJobPanel = (job: any) => {
+    setSelectedJob(job);
+    setPanelOpen(true);
+  };
 
+  // === Dados de métricas (mantidos para o Sheet) ===
   const last30Days = Array.from({ length: 30 }, (_, i) => {
     const date = startOfDay(subDays(new Date(), 29 - i));
     const dateStr = format(date, 'yyyy-MM-dd');
     return {
       date: format(date, 'dd/MM', { locale: ptBR }),
-      candidaturas: applications.filter(a => a.applied_at && format(new Date(a.applied_at), 'yyyy-MM-dd') === dateStr).length,
+      candidaturas: applications.filter(
+        (a) => a.applied_at && format(new Date(a.applied_at), 'yyyy-MM-dd') === dateStr
+      ).length,
     };
   });
 
   const topJobs = jobs
-    .map(j => ({
-      title: j.title.length > 30 ? j.title.substring(0, 30) + '...' : j.title,
+    .map((j) => ({
+      title: j.title.length > 28 ? j.title.substring(0, 28) + '…' : j.title,
       candidaturas: j.applications?.length || 0,
     }))
     .sort((a, b) => b.candidaturas - a.candidaturas)
     .slice(0, 5);
 
-  const headerActions = (
-    <>
-      <Button
-        variant={view === 'metrics' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setView(view === 'metrics' ? 'pipeline' : 'metrics')}
-        className="gap-2"
-      >
-        <BarChart3 className="h-4 w-4" />
-        <span className="hidden sm:inline">
-          {view === 'metrics' ? 'Ver Pipeline' : 'Ver Métricas'}
-        </span>
-      </Button>
-      <Button
-        onClick={() => navigate('/company/jobs/new')}
-        size="sm"
-        className="gap-2"
-      >
-        <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">Nova Vaga</span>
-      </Button>
-    </>
-  );
+  const stagesData = PIPELINE_STAGES.map((s) => ({
+    name: s.label,
+    value: getCountForStage(s.id),
+  })).filter((i) => i.value > 0);
+
+  const statusData = [
+    { name: 'Pendente', value: applications.filter((a) => a.status === 'pending').length, color: 'hsl(var(--warning))' },
+    { name: 'Em Análise', value: applications.filter((a) => a.status === 'in-review').length, color: 'hsl(var(--primary))' },
+    { name: 'Aprovado', value: applications.filter((a) => a.status === 'approved').length, color: 'hsl(var(--success))' },
+    { name: 'Rejeitado', value: applications.filter((a) => a.status === 'rejected').length, color: 'hsl(var(--destructive))' },
+  ].filter((i) => i.value > 0);
 
   if (loading || roleLoading) {
     return (
-      <CompanyLayout title="Dashboard" description="Pipeline de recrutamento" headerActions={headerActions}>
+      <CompanyLayout>
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -130,208 +141,248 @@ export default function CompanyDashboard() {
   }
 
   return (
-    <CompanyLayout title="Dashboard" description="Pipeline de recrutamento" headerActions={headerActions}>
-      {/* Quick stats */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Badge variant="outline" className="gap-1.5">
-          <Briefcase className="h-3 w-3" /> {activeJobs.length} ativas
-        </Badge>
-        <Badge variant="outline" className="gap-1.5">
-          <Users className="h-3 w-3" /> {applications.length} candidatos
-        </Badge>
-        <Badge variant="outline" className="gap-1.5 text-warning border-warning/40">
-          <Clock className="h-3 w-3" /> {pendingApplications.length} pendentes
-        </Badge>
+    <CompanyLayout>
+      {/* Header da página */}
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Gestão de Vagas</h1>
+          <p className="text-sm text-gray-500">Pipeline de recrutamento</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMetricsOpen(true)}
+            className="gap-2 border-gray-200 shadow-none hover:bg-gray-50 text-gray-700 font-medium"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Ver Métricas
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => navigate('/company/jobs/new')}
+            className="gap-2 bg-primary text-primary-foreground shadow-none border-transparent hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Vaga
+          </Button>
+        </div>
       </div>
 
-      {view === 'pipeline' ? (
-        jobs.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <KanbanSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma vaga ativa</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Crie sua primeira vaga para começar a receber candidatos.
-              </p>
-              <Button onClick={() => navigate('/company/jobs/new')} className="gap-2">
-                <Plus className="h-4 w-4" /> Nova Vaga
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {/* Bloco A — Seletor de vaga */}
-            <Card>
-              <CardContent className="p-3 flex items-center gap-3 flex-wrap">
-                <span className="text-sm font-medium text-muted-foreground">Vaga ativa:</span>
-                <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-                  <SelectTrigger className="w-full sm:w-[360px]">
-                    <SelectValue placeholder="Selecione uma vaga" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobs.map((j) => (
-                      <SelectItem key={j.id} value={j.id}>
-                        {j.title} {j.applications?.length ? `(${j.applications.length})` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedJob && (
-                  <Badge variant="secondary" className="ml-auto">
-                    {selectedJob.applications?.length || 0} candidatos
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Blocos B + C */}
-            {selectedJobId && (
-              <CandidatePipeline
-                jobId={selectedJobId}
-                jobTitle={selectedJob?.title || ''}
-                onChanged={loadData}
-              />
-            )}
-          </div>
-        )
-      ) : (
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Vagas Ativas</CardTitle>
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent><div className="text-2xl font-bold">{activeJobs.length}</div></CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Candidatos</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent><div className="text-2xl font-bold">{applications.length}</div></CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Aguardando Análise</CardTitle>
-                <Clock className="h-4 w-4 text-warning" />
-              </CardHeader>
-              <CardContent><div className="text-2xl font-bold text-warning">{pendingApplications.length}</div></CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Conversão</CardTitle>
-                <TrendingUp className="h-4 w-4 text-success" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-success">
-                  {applications.length > 0
-                    ? Math.round((applications.filter(a => a.status === 'approved').length / applications.length) * 100)
-                    : 0}%
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {applications.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Nenhuma candidatura recebida ainda</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Candidaturas (últimos 30 dias)</CardTitle>
-                  <CardDescription>Volume recebido</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }} className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={last30Days}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="candidaturas" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top 5 Vagas</CardTitle>
-                  <CardDescription>Por candidaturas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }} className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topJobs} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <YAxis dataKey="title" type="category" stroke="hsl(var(--muted-foreground))" fontSize={12} width={150} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="candidaturas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-              {stagesData.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Candidatos por Estágio</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={{ value: { label: 'Candidatos' } }} className="h-[280px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stagesData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
+      {/* Pipeline — contadores clicáveis */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {PIPELINE_STAGES.map((stage) => {
+          const isActive = activeStage === stage.id;
+          const count = getCountForStage(stage.id);
+          return (
+            <button
+              key={stage.id}
+              onClick={() => setActiveStage(stage.id)}
+              className={cn(
+                'flex-shrink-0 min-w-[110px] p-3 rounded-xl border text-left transition-all',
+                isActive
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-white border-gray-200 hover:border-primary/50 hover:bg-primary/5'
               )}
-              {statusData.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Status das Candidaturas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={{ value: { label: 'Candidatos' } }} className="h-[280px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={statusData}
-                            cx="50%" cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={80}
-                            dataKey="value"
-                          >
-                            {statusData.map((entry, i) => (
-                              <Cell key={i} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
+            >
+              <div
+                className={cn(
+                  'text-2xl font-bold mb-0.5',
+                  isActive ? 'text-primary-foreground' : stage.color
+                )}
+              >
+                {count}
+              </div>
+              <div
+                className={cn(
+                  'text-xs font-medium',
+                  isActive ? 'text-primary-foreground/80' : 'text-gray-500'
+                )}
+              >
+                {stage.label}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Conteúdo da etapa selecionada */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            {activeStageLabel} — {jobsInActiveStage.length} {jobsInActiveStage.length === 1 ? 'vaga' : 'vagas'}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {jobsInActiveStage.map((job) => (
+            <button
+              key={job.id}
+              onClick={() => openJobPanel(job)}
+              className="bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <span className="text-sm font-semibold text-gray-900 group-hover:text-primary line-clamp-2">
+                  {job.title}
+                </span>
+                <span
+                  className={cn(
+                    'text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0',
+                    job.is_active
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-gray-100 text-gray-500'
+                  )}
+                >
+                  {job.is_active ? 'Ativa' : 'Inativa'}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <Users className="h-3 w-3" />
+                  {job.applications?.length || 0} candidatos
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <MapPin className="h-3 w-3" />
+                  {job.city || 'Sem localização'}
+                  {job.location && ` · ${LOCATION_LABELS[job.location] || job.location}`}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <Clock className="h-3 w-3" />
+                  Há {daysAgo(job.created_at)} dia(s)
+                </div>
+              </div>
+            </button>
+          ))}
+
+          {jobsInActiveStage.length === 0 && (
+            <div className="col-span-full border-2 border-dashed border-gray-200 rounded-xl p-12 text-center bg-white/50">
+              <p className="text-gray-400 text-sm mb-1">Nenhuma vaga nesta etapa</p>
+              {activeStage === 'aberta' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/company/jobs/new')}
+                  className="mt-3 border-gray-200 shadow-none hover:bg-gray-50 text-gray-700 font-medium"
+                >
+                  Criar primeira vaga
+                </Button>
               )}
             </div>
           )}
         </div>
-      )}
+      </div>
+
+      {/* Sheet do painel da vaga */}
+      <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+        <SheetContent side="right" className="w-[420px] sm:max-w-[420px] p-0 overflow-y-auto bg-white">
+          {selectedJob && <JobStagePanel job={selectedJob} onClose={() => setPanelOpen(false)} />}
+        </SheetContent>
+      </Sheet>
+
+      {/* Sheet de métricas */}
+      <Sheet open={metricsOpen} onOpenChange={setMetricsOpen}>
+        <SheetContent side="right" className="w-[520px] sm:max-w-[520px] overflow-y-auto bg-white">
+          <SheetHeader>
+            <SheetTitle className="text-base font-semibold text-gray-900">Métricas</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-6 mt-6">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                Candidaturas (últimos 30 dias)
+              </p>
+              <ChartContainer
+                config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }}
+                className="h-[220px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={last30Days}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="candidaturas"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--primary))', r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+
+            {topJobs.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                  Top vagas
+                </p>
+                <ChartContainer
+                  config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }}
+                  className="h-[220px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topJobs} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                      <YAxis dataKey="title" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={130} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="candidaturas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            )}
+
+            {stagesData.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                  Vagas por etapa
+                </p>
+                <ChartContainer config={{ value: { label: 'Vagas' } }} className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stagesData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            )}
+
+            {statusData.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                  Status das candidaturas
+                </p>
+                <ChartContainer config={{ value: { label: 'Candidatos' } }} className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={statusData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={70}
+                        dataKey="value"
+                      >
+                        {statusData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </CompanyLayout>
   );
 }
