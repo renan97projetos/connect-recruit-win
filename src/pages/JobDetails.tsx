@@ -131,6 +131,17 @@ export default function JobDetails() {
 
     if (!job) return;
 
+    // Validar perguntas obrigatórias
+    const missing = questions.filter(q => q.required && !(answers[q.id] || '').trim());
+    if (missing.length > 0) {
+      toast({
+        title: 'Responda as perguntas obrigatórias',
+        description: `${missing.length} pergunta(s) sem resposta.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setApplying(true);
 
     try {
