@@ -194,7 +194,7 @@ export default function JobDetails() {
       // Ensure score is between 0 and 100
       const finalScore = Math.min(Math.max(calculatedScore, 0), 100);
 
-      const { error } = await supabase
+      const { data: appInserted, error } = await supabase
         .from('applications')
         .insert({
           job_id: job.id,
@@ -204,9 +204,25 @@ export default function JobDetails() {
           status: 'pending',
           current_stage: 'triagem',
           score: finalScore,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Salvar respostas das perguntas de triagem
+      if (appInserted?.id && questions.length > 0) {
+        const answerRows = questions
+          .filter(q => (answers[q.id] || '').trim())
+          .map(q => ({
+            application_id: appInserted.id,
+            question_id: q.id,
+            answer: (answers[q.id] || '').trim(),
+          }));
+        if (answerRows.length > 0) {
+          await supabase.from('screening_answers').insert(answerRows);
+        }
+      }
 
       setHasApplied(true);
 
