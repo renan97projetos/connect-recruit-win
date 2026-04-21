@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star, Rocket, Target, Heart, MessageCircle } from 'lucide-react';
+import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star, Rocket, Target, Heart, MessageCircle, Briefcase, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { JobFiltersComponent, JobFilters } from '@/components/JobFilters';
@@ -345,47 +345,131 @@ export default function Home() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-black mb-4">Por que escolher a gente?</h2>
-              <p className="text-lg text-muted-foreground">Recursos que fazem diferença de verdade</p>
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-black mb-4">
+                Por que escolher a gente?
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Tudo que o seu RH precisa — do primeiro contato à contratação
+              </p>
             </div>
 
+            {/* JARVIS — destaque principal */}
+            <div className="bg-foreground text-background rounded-2xl border-3 border-foreground shadow-brutal-lg p-8 mb-6 flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-primary rounded-xl border-3 border-background flex items-center justify-center shadow-brutal">
+                  <Sparkles className="h-8 w-8 text-primary-foreground" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 className="text-2xl font-black">Jarvis — seu Analista de RH Digital</h3>
+                  <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-background">
+                    Exclusivo PRO
+                  </span>
+                </div>
+                <p className="text-background/80 text-base leading-relaxed">
+                  Todo dia, ao abrir o sistema, o Jarvis te entrega um briefing do que
+                  aconteceu ontem e o que precisa de atenção hoje. Ele monitora todos os
+                  seus processos, faz análises em tempo real, sugere ações e — quando você
+                  mandar — ele executa. É como ter um analista sênior de RH disponível 24h.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <div className="flex flex-col gap-2 text-sm">
+                  {["Briefing matinal automático",
+                    "Sugestões proativas com dados reais",
+                    "Executa ações por comando (Cmd+K)"].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      <span className="text-background/80">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* GRID 3x3 — 9 features */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[{
-              icon: Zap,
-              title: "Automação total",
-              desc: "Todo processo seletivo automatizado",
-              bg: "bg-yellow"
-            }, {
-              icon: Search,
-              title: "Filtros smart",
-              desc: "Match perfeito entre talento e vaga",
-              bg: "bg-cyan"
-            }, {
-              icon: BarChart3,
-              title: "Dashboard show",
-              desc: "Métricas em tempo real",
-              bg: "bg-pink"
-            }, {
-              icon: Brain,
-              title: "IA que ajuda",
-              desc: "Recomendações inteligentes",
-              bg: "bg-lime"
-            }, {
-              icon: Clock,
-              title: "Rápido demais",
-              desc: "Interface leve e intuitiva",
-              bg: "bg-secondary"
-            }, {
-              icon: Heart,
-              title: "Suporte humano",
-              desc: "Time de verdade te ajudando",
-              bg: "bg-primary text-primary-foreground"
-            }].map((feature, i) => <div key={i} className={`${feature.bg} p-6 rounded-xl border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all`}>
-                  <feature.icon className="h-8 w-8 mb-4" />
-                  <h3 className="text-lg font-black mb-1">{feature.title}</h3>
-                  <p className="text-sm opacity-80">{feature.desc}</p>
-                </div>)}
+              {[
+                {
+                  icon: Briefcase,
+                  title: "Gestão de Vagas em Pipeline",
+                  desc: "Visualize todas as suas vagas e candidatos num pipeline estilo kanban. Do currículo à contratação, tudo em uma tela.",
+                  bg: "bg-yellow",
+                  badge: null as string | null,
+                },
+                {
+                  icon: Users,
+                  title: "Triagem com Score e Notas",
+                  desc: "Avalie candidatos com score, adicione notas internas e mova no pipeline com arrasta e solta. Decisões mais rápidas.",
+                  bg: "bg-cyan",
+                  badge: null,
+                },
+                {
+                  icon: MessageCircle,
+                  title: "WhatsApp Integrado",
+                  desc: "Fale com qualquer candidato em um clique. Mensagem pré-preenchida com o nome e a vaga, sem precisar digitar nada.",
+                  bg: "bg-lime",
+                  badge: null,
+                },
+                {
+                  icon: Brain,
+                  title: "IA para Gerar Vagas e Score",
+                  desc: "Descreva o cargo em uma frase e a IA monta a descrição completa. Candidatos recebem score de compatibilidade automático.",
+                  bg: "bg-pink",
+                  badge: "PRO",
+                },
+                {
+                  icon: Settings,
+                  title: "Workflow Configurável",
+                  desc: "Cada vaga pode ter seu próprio processo seletivo: triagem, entrevista técnica, fit cultural, proposta. Você define as etapas.",
+                  bg: "bg-secondary",
+                  badge: "PRO",
+                },
+                {
+                  icon: Star,
+                  title: "Banco de Talentos",
+                  desc: "Candidatos de processos anteriores ficam salvos e buscáveis por cargo, habilidade ou histórico. Nunca perca um bom perfil.",
+                  bg: "bg-yellow",
+                  badge: "PRO",
+                },
+                {
+                  icon: Building2,
+                  title: "Página de Carreira da Empresa",
+                  desc: "Uma página pública com suas vagas abertas, logo e identidade da sua empresa. Link próprio para compartilhar em qualquer lugar.",
+                  bg: "bg-cyan",
+                  badge: "PRO",
+                },
+                {
+                  icon: BarChart3,
+                  title: "Funil Analytics Completo",
+                  desc: "Veja onde os candidatos travam, quanto tempo ficam em cada etapa e qual a taxa de conversão do seu processo seletivo.",
+                  bg: "bg-lime",
+                  badge: "PRO",
+                },
+                {
+                  icon: Zap,
+                  title: "Do Currículo à Contratação",
+                  desc: "Abertura de vaga, triagem, entrevistas, proposta, admissão e documentos — tudo dentro da mesma plataforma, sem planilha.",
+                  bg: "bg-primary text-primary-foreground",
+                  badge: null,
+                },
+              ].map((feature, i) => (
+                <div
+                  key={i}
+                  className={`${feature.bg} p-6 rounded-xl border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all relative`}
+                >
+                  {feature.badge && (
+                    <span className="absolute top-4 right-4 bg-foreground text-background text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {feature.badge}
+                    </span>
+                  )}
+                  <feature.icon className="h-7 w-7 mb-3" />
+                  <h3 className="text-base font-black mb-1.5">{feature.title}</h3>
+                  <p className="text-sm opacity-80 leading-relaxed">{feature.desc}</p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-12 text-center">
