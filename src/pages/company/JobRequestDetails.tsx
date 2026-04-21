@@ -14,6 +14,22 @@ import { toast } from 'sonner';
 import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+
+interface ApprovalAction {
+  id: string;
+  approver_id: string;
+  approver_name: string | null;
+  action: string;
+  notes: string | null;
+  created_at: string;
+}
+
+interface CompanyUserRow {
+  user_id: string;
+  profiles: { name?: string | null; email?: string | null } | null;
+}
 
 interface JobRequest {
   id: string;
@@ -53,12 +69,55 @@ export default function JobRequestDetails() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectAction, setRejectAction] = useState<'requisition' | 'review'>('requisition');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [approvalActions, setApprovalActions] = useState<ApprovalAction[]>([]);
+  const [companyUsers, setCompanyUsers] = useState<CompanyUserRow[]>([]);
 
   useEffect(() => {
     if (id && user && userRole) {
       fetchRequest();
     }
   }, [id, user, userRole]);
+
+  const loadApprovals = async () => {
+    if (!id) return;
+    const { data } = await (supabase as any)
+      .from('approval_actions')
+      .select('id, approver_id, approver_name, action, notes, created_at')
+      .eq('job_request_id', id)
+      .order('created_at');
+    setApprovalActions((data as ApprovalAction[]) || []);
+  };
+
+  const addApprover = async (userId: string) => {
+    if (!id) return;
+    const u = companyUsers.find((cu) => cu.user_id === userId);
+    const name = u?.profiles?.name || u?.profiles?.email || userId;
+    const { error } = await (supabase as any).from('approval_actions').insert({
+      job_request_id: id,
+      approver_id: userId,
+      approver_name: name,
+      action: 'pending',
+    });
+    if (error) {
+      toast.error('Erro ao adicionar aprovador');
+      return;
+    }
+    toast.success('Aprovador adicionado');
+    loadApprovals();
+  };
+
+  const handleApprovalAction = async (actionId: string, action: 'approved' | 'rejected') => {
+    const { error } = await (supabase as any)
+      .from('approval_actions')
+      .update({ action })
+      .eq('id', actionId);
+    if (error) {
+      toast.error('Erro ao registrar decisão');
+      return;
+    }
+    toast.success(action === 'approved' ? 'Aprovado' : 'Rejeitado');
+    loadApprovals();
+  };
 
   const fetchRequest = async () => {
     try {
@@ -70,6 +129,18 @@ export default function JobRequestDetails() {
 
       if (error) throw error;
       setRequest(data);
+
+      // Carregar aprovações existentes
+      await loadApprovals();
+
+      // Carregar usuários da empresa para adicionar como aprovadores (só se isOwner)
+      if (isOwner && user?.id) {
+        const { data: users } = await supabase
+          .from('company_users')
+          .select('user_id, profiles:user_id(name, email)')
+          .eq('company_id', user.id);
+        setCompanyUsers((users as any) || []);
+      }
     } catch (error: any) {
       console.error('Error fetching request:', error);
       toast.error('Erro ao carregar requisição');
@@ -537,6 +608,100 @@ export default function JobRequestDetails() {
             </CardContent>
           </Card>
         )}
+
+        {/* Fluxo de aprovação */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Fluxo de aprovação</CardTitle>
+              {isOwner && (
+                <Select onValueChange={addApprover} value="">
+                  <SelectTrigger className="w-56">
+                    <SelectValue placeholder="Adicionar aprovador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companyUsers
+                      .filter((cu) => !approvalActions.find((a) => a.approver_id === cu.user_id))
+                      .map((cu) => (
+                        <SelectItem key={cu.user_id} value={cu.user_id}>
+                          {cu.profiles?.name || cu.profiles?.email || cu.user_id}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {approvalActions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum aprovador adicionado</p>
+            ) : (
+              <div className="space-y-2">
+                {approvalActions.map((action) => (
+                  <div
+                    key={action.id}
+                    className="flex items-center justify-between gap-3 rounded-md border border-border p-3"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{action.approver_name}</span>
+                      {action.action !== 'pending' && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(action.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          action.action === 'approved' && 'border-green-500 text-green-600',
+                          action.action === 'rejected' && 'border-destructive text-destructive',
+                          action.action === 'pending' && 'border-amber-500 text-amber-600'
+                        )}
+                      >
+                        {action.action === 'approved'
+                          ? 'Aprovado'
+                          : action.action === 'rejected'
+                          ? 'Rejeitado'
+                          : 'Aguardando'}
+                      </Badge>
+                      {action.approver_id === user?.id && action.action === 'pending' && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApprovalAction(action.id, 'approved')}
+                          >
+                            Aprovar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApprovalAction(action.id, 'rejected')}
+                          >
+                            Rejeitar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {approvalActions.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
+                <span>
+                  {approvalActions.filter((a) => a.action === 'approved').length} aprovações
+                </span>
+                <span>·</span>
+                <span>
+                  {approvalActions.filter((a) => a.action === 'pending').length} pendentes
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </CompanyLayout>
   );
