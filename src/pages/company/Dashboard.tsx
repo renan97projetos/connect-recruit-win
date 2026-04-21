@@ -71,7 +71,7 @@ export default function CompanyDashboard() {
     setLoading(true);
     const { data: jobsData } = await supabase
       .from('jobs')
-      .select('*, applications(id, status, current_stage, applied_at)')
+      .select('*, applications(id, status, current_stage, applied_at, updated_at)')
       .eq('company_id', companyId)
       .eq('is_archived', false)
       .order('created_at', { ascending: false });
@@ -144,6 +144,29 @@ export default function CompanyDashboard() {
     label,
     count: applications.filter((a) => a.current_stage === id || a.status === id).length,
   }));
+
+  // Tempo médio (dias) entre applied_at e updated_at por current_stage
+  const avgDaysMap = useMemo(() => {
+    const groups: Record<string, number[]> = {};
+    applications.forEach((app) => {
+      if (app.current_stage && app.applied_at && app.updated_at) {
+        const days = Math.max(
+          0,
+          Math.round(
+            (new Date(app.updated_at).getTime() - new Date(app.applied_at).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        );
+        if (!groups[app.current_stage]) groups[app.current_stage] = [];
+        groups[app.current_stage].push(days);
+      }
+    });
+    const out: Record<string, number> = {};
+    Object.entries(groups).forEach(([stage, vals]) => {
+      out[stage] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+    });
+    return out;
+  }, [applications]);
 
   if (loading || roleLoading) {
     return (
@@ -443,6 +466,46 @@ export default function CompanyDashboard() {
                       Nenhum candidato para exibir no funil
                     </div>
                   )}
+
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-3">
+                      Tempo médio por etapa
+                    </p>
+                    <div className="space-y-2">
+                      {Object.entries({
+                        screening: 'Triagem',
+                        interview: 'Entrevista RH',
+                        technical: 'Teste Técnico',
+                        approved: 'Aprovado',
+                      }).map(([stage, label]) => {
+                        const avg = avgDaysMap[stage] ?? null;
+                        return (
+                          <div
+                            key={stage}
+                            className="flex items-center justify-between text-xs py-1.5 border-b border-gray-50 last:border-0"
+                          >
+                            <span className="text-gray-600">{label}</span>
+                            <span
+                              className={
+                                avg === null
+                                  ? 'text-gray-300'
+                                  : avg > 7
+                                  ? 'text-red-500 font-medium'
+                                  : avg > 3
+                                  ? 'text-amber-500 font-medium'
+                                  : 'text-green-600 font-medium'
+                              }
+                            >
+                              {avg === null ? '—' : `${avg} dias`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-2">
+                      Vermelho {'>'} 7 dias · Amarelo {'>'} 3 dias · Verde ≤ 3 dias
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
