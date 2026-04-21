@@ -1,12 +1,32 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyHeader } from '@/components/CompanyHeader';
-import { Briefcase, Users, ArrowRight, BarChart3, Settings } from 'lucide-react';
+import { Briefcase, Users, ArrowRight, BarChart3, Settings, Check, Circle } from 'lucide-react';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { checkOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding';
 
 export default function CompanyHub() {
   const navigate = useNavigate();
   const { isOwner, loading: roleLoading } = useCompanyRole();
+  const { user } = useAuth();
+  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    checkOnboardingStatus(user.id).then(setOnboarding);
+  }, [user?.id]);
+
+  const checklist = onboarding
+    ? [
+        { done: onboarding.hasCompanyProfile, label: 'Preencher nome e dados da empresa', href: '/company/profile' },
+        { done: onboarding.hasLogo, label: 'Adicionar logo da empresa', href: '/company/profile' },
+        { done: onboarding.hasFirstJob, label: 'Criar primeira vaga', href: '/company/jobs/new' },
+        { done: onboarding.hasWorkflow, label: 'Configurar workflow de um processo seletivo', href: '/company/dashboard' },
+      ]
+    : [];
+  const doneCount = checklist.filter((c) => c.done).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,6 +40,54 @@ export default function CompanyHub() {
               Escolha por onde quer começar
             </p>
           </div>
+
+          {/* Onboarding checklist */}
+          {onboarding && !onboarding.isComplete && (
+            <div className="mb-10 bg-yellow border-3 border-foreground rounded-2xl shadow-brutal-lg p-6">
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-black mb-1">Configure sua conta</h2>
+                  <p className="text-sm text-foreground/80 font-semibold">
+                    Complete os passos abaixo para começar
+                  </p>
+                </div>
+                <div className="bg-background border-3 border-foreground rounded-xl px-3 py-1.5 shadow-brutal text-sm font-black whitespace-nowrap">
+                  {doneCount}/{checklist.length}
+                </div>
+              </div>
+
+              <ul className="space-y-2">
+                {checklist.map((item, i) => (
+                  <li key={i}>
+                    <button
+                      onClick={() => navigate(item.href)}
+                      className="w-full flex items-center gap-3 text-left bg-background border-2 border-foreground rounded-lg px-4 py-3 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal transition-all"
+                    >
+                      <div
+                        className={`flex-shrink-0 w-6 h-6 rounded-full border-2 border-foreground flex items-center justify-center ${
+                          item.done ? 'bg-lime' : 'bg-background'
+                        }`}
+                      >
+                        {item.done ? (
+                          <Check className="h-3.5 w-3.5 text-foreground" strokeWidth={3} />
+                        ) : (
+                          <Circle className="h-2 w-2 text-muted-foreground" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-sm font-semibold flex-1 ${
+                          item.done ? 'line-through text-muted-foreground' : ''
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                      {!item.done && <ArrowRight className="h-4 w-4 flex-shrink-0" />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className={`grid gap-6 ${!roleLoading && isOwner ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-xl mx-auto'}`}>
             {/* Gestão de Vagas */}
