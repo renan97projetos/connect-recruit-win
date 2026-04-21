@@ -57,6 +57,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { canCreate: canCreateByPlan, refresh: refreshPlanUsage } = usePlanLimits();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -70,6 +71,16 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const onSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
+
+      // Enforcement de limite por plano
+      if (!canCreateByPlan('users')) {
+        toast({
+          title: 'Limite do plano atingido',
+          description: 'Você atingiu o limite de usuários internos do seu plano. Faça upgrade para convidar mais.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       // Verificar se já existe um convite pendente para este email
       const { data: existingInvitation } = await supabase
