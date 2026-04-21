@@ -524,11 +524,23 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                                   locale: ptBR,
                                 })}
                               </div>
-                              {offersByApp[app.id] && offersByApp[app.id].status === 'pending' && (
-                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] h-5 px-2">
-                                  Proposta enviada
-                                </Badge>
-                              )}
+                              <div className="flex items-center gap-1">
+                                {app.source && (
+                                  <span
+                                    className={cn(
+                                      'text-[10px] px-1.5 py-0.5 rounded font-medium',
+                                      SOURCE_LABELS[app.source]?.color || 'bg-gray-100 text-gray-500'
+                                    )}
+                                  >
+                                    {SOURCE_LABELS[app.source]?.label || app.source}
+                                  </span>
+                                )}
+                                {offersByApp[app.id] && offersByApp[app.id].status === 'pending' && (
+                                  <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] h-5 px-2">
+                                    Proposta enviada
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-1 pt-1 border-t border-border">
