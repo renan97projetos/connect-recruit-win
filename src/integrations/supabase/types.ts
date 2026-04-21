@@ -743,6 +743,7 @@ export type Database = {
           job_request_id: string | null
           job_type: string
           location: string
+          pipeline_stage: string
           requirements: string[] | null
           responsibilities: string[] | null
           salary_currency: string | null
@@ -767,6 +768,7 @@ export type Database = {
           job_request_id?: string | null
           job_type: string
           location: string
+          pipeline_stage?: string
           requirements?: string[] | null
           responsibilities?: string[] | null
           salary_currency?: string | null
@@ -791,6 +793,7 @@ export type Database = {
           job_request_id?: string | null
           job_type?: string
           location?: string
+          pipeline_stage?: string
           requirements?: string[] | null
           responsibilities?: string[] | null
           salary_currency?: string | null
