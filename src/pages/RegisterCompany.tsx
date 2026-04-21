@@ -542,18 +542,6 @@ export default function RegisterCompany() {
             )}
           </Card>
 
-          {/* Observações */}
-          <Card className="p-6 border-3 border-foreground shadow-brutal">
-            <Label>Observações (opcional)</Label>
-            <Textarea
-              value={form.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              rows={3}
-              maxLength={1000}
-              placeholder="Informações adicionais sobre a empresa, necessidades específicas, etc."
-            />
-          </Card>
-
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
             <Button type="button" variant="outline" onClick={() => navigate('/')}>
               Cancelar
