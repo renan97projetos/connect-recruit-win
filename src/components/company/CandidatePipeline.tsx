@@ -30,6 +30,7 @@ import {
   Inbox,
   Loader2,
   X,
+  DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
