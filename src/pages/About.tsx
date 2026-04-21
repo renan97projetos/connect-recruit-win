@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Linkedin, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -106,66 +107,77 @@ export default function About() {
   }
 
   return (
-    <DashboardLayout title="Sobre Nós" description="Conheça nossa plataforma">
-      <div className="max-w-6xl mx-auto space-y-12">
-        {/* Conteúdo sobre a empresa */}
-        <div className="bg-card rounded-lg shadow-sm p-8 border-3 border-foreground">
-          <div className="prose prose-slate max-w-none dark:prose-invert">
-            <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br />') }} />
-          </div>
-        </div>
-
-        {/* Seção da Equipe */}
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight">Nossa Equipe</h2>
-            <p className="text-muted-foreground mt-2">
-              Conheça os profissionais por trás do SinapseRH
-            </p>
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-12">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold tracking-tight">Sobre Nós</h1>
+            <p className="text-muted-foreground mt-2">Conheça nossa plataforma</p>
           </div>
 
-          {teamMembers.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {teamMembers.map((member) => (
-                <Card key={member.id} className="border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all">
-                  <CardContent className="pt-6 text-center">
-                    <Avatar className="w-24 h-24 mx-auto mb-4 border-3 border-foreground">
-                      <AvatarImage src={member.photo_url || undefined} alt={member.name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                        {getInitials(member.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="font-bold text-lg">{member.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
-                    {member.bio && (
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{member.bio}</p>
-                    )}
-                    {member.linkedin_url && (
-                      <a
-                        href={member.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-primary hover:underline mt-3 text-sm"
-                      >
-                        <Linkedin className="h-4 w-4" />
-                        LinkedIn
-                      </a>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="space-y-12">
+            {/* Conteúdo sobre a empresa */}
+            <div className="bg-card rounded-lg shadow-sm p-8 border-3 border-foreground">
+              <div className="prose prose-slate max-w-none dark:prose-invert">
+                <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br />') }} />
+              </div>
             </div>
-          ) : (
-            <div className="bg-muted/50 rounded-lg border-3 border-dashed border-muted-foreground/30 p-12 text-center">
-              <User className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Equipe em breve</h3>
-              <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Os membros da equipe serão exibidos aqui. Administradores podem adicionar membros através do painel administrativo.
-              </p>
+
+            {/* Seção da Equipe */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold tracking-tight">Nossa Equipe</h2>
+                <p className="text-muted-foreground mt-2">
+                  Conheça os profissionais por trás do SinapseRH
+                </p>
+              </div>
+
+              {teamMembers.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {teamMembers.map((member) => (
+                    <Card key={member.id} className="border-3 border-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all">
+                      <CardContent className="pt-6 text-center">
+                        <Avatar className="w-24 h-24 mx-auto mb-4 border-3 border-foreground">
+                          <AvatarImage src={member.photo_url || undefined} alt={member.name} />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                            {getInitials(member.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <h3 className="font-bold text-lg">{member.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
+                        {member.bio && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{member.bio}</p>
+                        )}
+                        {member.linkedin_url && (
+                          <a
+                            href={member.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline mt-3 text-sm"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                            LinkedIn
+                          </a>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-muted/50 rounded-lg border-3 border-dashed border-muted-foreground/30 p-12 text-center">
+                  <User className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Equipe em breve</h3>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                    Os membros da equipe serão exibidos aqui. Administradores podem adicionar membros através do painel administrativo.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </main>
+      <Footer />
+    </div>
   );
 }
