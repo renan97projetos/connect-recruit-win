@@ -568,6 +568,89 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">Perguntas de triagem</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O candidato responde ao se candidatar
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setQuestions(prev => [
+                        ...prev,
+                        { question: '', question_type: 'text', required: true },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {questions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma pergunta. Clique em "Adicionar" para criar.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {questions.map((q, i) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <Input
+                          placeholder={`Pergunta ${i + 1}`}
+                          value={q.question}
+                          onChange={(e) =>
+                            setQuestions(prev =>
+                              prev.map((item, idx) =>
+                                idx === i ? { ...item, question: e.target.value } : item,
+                              ),
+                            )
+                          }
+                          className="flex-1 text-sm"
+                        />
+                        <Select
+                          value={q.question_type}
+                          onValueChange={(val) =>
+                            setQuestions(prev =>
+                              prev.map((item, idx) =>
+                                idx === i
+                                  ? { ...item, question_type: val as 'text' | 'yes_no' }
+                                  : item,
+                              ),
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-32 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Texto livre</SelectItem>
+                            <SelectItem value="yes_no">Sim / Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() =>
+                            setQuestions(prev => prev.filter((_, idx) => idx !== i))
+                          }
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Rodapé sticky com 2 CTAs */}
             <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t bg-background/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
               <Button
