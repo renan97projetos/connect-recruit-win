@@ -387,6 +387,23 @@ export default function Home() {
                   <p className="text-sm opacity-80">{feature.desc}</p>
                 </div>)}
             </div>
+
+            <div className="mt-12 text-center">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-3 border-foreground font-bold shadow-brutal hover:shadow-brutal-lg hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
+              >
+                <Link to="/funcionalidades">
+                  Saber mais sobre todas as funcionalidades
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <p className="text-sm text-muted-foreground mt-3">
+                Veja a lista completa de recursos por plano e categoria
+              </p>
+            </div>
           </div>
         </div>
       </section>
