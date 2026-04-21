@@ -312,18 +312,46 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     if (emailStatus && app?.candidate_email) {
       supabase
         .from('jobs')
-        .select('company_name')
+        .select('company_name, company_id')
         .eq('id', jobId)
         .maybeSingle()
-        .then(({ data: jobData }) => {
+        .then(async ({ data: jobData }) => {
+          const companyName = jobData?.company_name || 'Sinapse RH';
+          const ownerId = jobData?.company_id || user?.id;
+
+          // Buscar template customizado da empresa para esta etapa
+          let customSubject: string | null = null;
+          let customBody: string | null = null;
+          if (ownerId) {
+            const { data: tmpl } = await supabase
+              .from('email_templates' as any)
+              .select('subject, body')
+              .eq('company_id', ownerId)
+              .eq('stage_trigger', emailStatus)
+              .maybeSingle();
+            if (tmpl) {
+              const t = tmpl as any;
+              customSubject = String(t.subject)
+                .replace(/\{\{vaga_titulo\}\}/g, jobTitle)
+                .replace(/\{\{empresa_nome\}\}/g, companyName)
+                .replace(/\{\{candidato_nome\}\}/g, app.candidate_name);
+              customBody = String(t.body)
+                .replace(/\{\{candidato_nome\}\}/g, app.candidate_name)
+                .replace(/\{\{vaga_titulo\}\}/g, jobTitle)
+                .replace(/\{\{empresa_nome\}\}/g, companyName);
+            }
+          }
+
           supabase.functions
             .invoke('send-candidate-status-email', {
               body: {
                 candidateName: app.candidate_name,
                 candidateEmail: app.candidate_email,
                 jobTitle: jobTitle,
-                companyName: jobData?.company_name || 'Sinapse RH',
+                companyName,
                 newStatus: emailStatus,
+                customSubject,
+                customBody,
               },
             })
             .catch(console.error);
