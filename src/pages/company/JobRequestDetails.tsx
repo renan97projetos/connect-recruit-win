@@ -69,12 +69,55 @@ export default function JobRequestDetails() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectAction, setRejectAction] = useState<'requisition' | 'review'>('requisition');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [approvalActions, setApprovalActions] = useState<ApprovalAction[]>([]);
+  const [companyUsers, setCompanyUsers] = useState<CompanyUserRow[]>([]);
 
   useEffect(() => {
     if (id && user && userRole) {
       fetchRequest();
     }
   }, [id, user, userRole]);
+
+  const loadApprovals = async () => {
+    if (!id) return;
+    const { data } = await (supabase as any)
+      .from('approval_actions')
+      .select('id, approver_id, approver_name, action, notes, created_at')
+      .eq('job_request_id', id)
+      .order('created_at');
+    setApprovalActions((data as ApprovalAction[]) || []);
+  };
+
+  const addApprover = async (userId: string) => {
+    if (!id) return;
+    const u = companyUsers.find((cu) => cu.user_id === userId);
+    const name = u?.profiles?.name || u?.profiles?.email || userId;
+    const { error } = await (supabase as any).from('approval_actions').insert({
+      job_request_id: id,
+      approver_id: userId,
+      approver_name: name,
+      action: 'pending',
+    });
+    if (error) {
+      toast.error('Erro ao adicionar aprovador');
+      return;
+    }
+    toast.success('Aprovador adicionado');
+    loadApprovals();
+  };
+
+  const handleApprovalAction = async (actionId: string, action: 'approved' | 'rejected') => {
+    const { error } = await (supabase as any)
+      .from('approval_actions')
+      .update({ action })
+      .eq('id', actionId);
+    if (error) {
+      toast.error('Erro ao registrar decisão');
+      return;
+    }
+    toast.success(action === 'approved' ? 'Aprovado' : 'Rejeitado');
+    loadApprovals();
+  };
 
   const fetchRequest = async () => {
     try {
