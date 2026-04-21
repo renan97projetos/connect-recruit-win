@@ -69,6 +69,8 @@ export default function RegisterCompany() {
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjValidated, setCnpjValidated] = useState(false);
   const [form, setForm] = useState({
     company_name: '',
     cnpj: '',
@@ -85,6 +87,69 @@ export default function RegisterCompany() {
     notes: '',
     plan_id: '',
   });
+
+  const validateCNPJDigits = (cnpj: string): boolean => {
+    const c = cnpj.replace(/\D/g, '');
+    if (c.length !== 14 || /^(\d)\1+$/.test(c)) return false;
+    const calc = (base: string, weights: number[]) => {
+      const sum = base.split('').reduce((acc, d, i) => acc + parseInt(d) * weights[i], 0);
+      const r = sum % 11;
+      return r < 2 ? 0 : 11 - r;
+    };
+    const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const w2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const d1 = calc(c.slice(0, 12), w1);
+    const d2 = calc(c.slice(0, 12) + d1, w2);
+    return d1 === parseInt(c[12]) && d2 === parseInt(c[13]);
+  };
+
+  const handleCnpjBlur = async (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    setCnpjValidated(false);
+    if (digits.length !== 14) return;
+    if (!validateCNPJDigits(digits)) {
+      toast({ title: 'CNPJ inválido', description: 'Os dígitos verificadores não conferem.', variant: 'destructive' });
+      return;
+    }
+    setCnpjLoading(true);
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+      if (res.status === 404) {
+        toast({ title: 'CNPJ não encontrado', description: 'Não localizado na Receita Federal.', variant: 'destructive' });
+        return;
+      }
+      if (!res.ok) {
+        toast({ title: 'Erro ao validar CNPJ', description: 'Tente novamente em instantes.', variant: 'destructive' });
+        return;
+      }
+      const data = await res.json();
+      const situacao = (data?.descricao_situacao_cadastral || '').toUpperCase();
+      if (situacao && situacao !== 'ATIVA') {
+        toast({
+          title: 'CNPJ não está ativo',
+          description: `Situação cadastral: ${data.descricao_situacao_cadastral}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        company_name: f.company_name || data.razao_social || data.nome_fantasia || '',
+        cep: f.cep || (data.cep ? maskCEP(String(data.cep)) : ''),
+        address: f.address || [data.logradouro, data.numero].filter(Boolean).join(', '),
+        city: f.city || data.municipio || '',
+        state: f.state || (data.uf || '').toUpperCase(),
+        company_phone: f.company_phone || (data.ddd_telefone_1 ? maskPhone(String(data.ddd_telefone_1)) : ''),
+        company_email: f.company_email || data.email || '',
+      }));
+      setCnpjValidated(true);
+      toast({ title: 'CNPJ validado!', description: data.razao_social || 'Dados preenchidos automaticamente.' });
+    } catch {
+      toast({ title: 'Erro ao validar CNPJ', description: 'Falha de conexão com a Receita Federal.', variant: 'destructive' });
+    } finally {
+      setCnpjLoading(false);
+    }
+  };
 
   const handleCepBlur = async (raw: string) => {
     const digits = raw.replace(/\D/g, '');
@@ -140,6 +205,14 @@ export default function RegisterCompany() {
     if (!parsed.success) {
       const first = parsed.error.errors[0];
       toast({ title: 'Verifique o formulário', description: first.message, variant: 'destructive' });
+      return;
+    }
+    if (!cnpjValidated) {
+      toast({
+        title: 'CNPJ não validado',
+        description: 'Aguarde a validação do CNPJ junto à Receita Federal antes de continuar.',
+        variant: 'destructive',
+      });
       return;
     }
     setSubmitting(true);
@@ -220,12 +293,26 @@ export default function RegisterCompany() {
               </div>
               <div>
                 <Label>CNPJ *</Label>
-                <Input
-                  value={form.cnpj}
-                  onChange={(e) => handleChange('cnpj', maskCNPJ(e.target.value))}
-                  placeholder="00.000.000/0000-00"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    value={form.cnpj}
+                    onChange={(e) => {
+                      handleChange('cnpj', maskCNPJ(e.target.value));
+                      setCnpjValidated(false);
+                    }}
+                    onBlur={(e) => handleCnpjBlur(e.target.value)}
+                    placeholder="00.000.000/0000-00"
+                    required
+                  />
+                  {cnpjLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  ) : cnpjValidated ? (
+                    <Check className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-primary" />
+                  ) : null}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Validação automática junto à Receita Federal.
+                </p>
               </div>
               <div>
                 <Label>Telefone *</Label>
