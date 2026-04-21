@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Check, Loader2, Zap } from 'lucide-react';
+import { Building2, Check, Eye, EyeOff, Loader2, Zap } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
