@@ -620,6 +620,53 @@ export type Database = {
         }
         Relationships: []
       }
+      job_offers: {
+        Row: {
+          application_id: string
+          benefits_offered: string | null
+          company_id: string
+          created_at: string
+          id: string
+          job_id: string
+          notes: string | null
+          offered_salary: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          benefits_offered?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          notes?: string | null
+          offered_salary?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          benefits_offered?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          notes?: string | null
+          offered_salary?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_offers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_requests: {
         Row: {
           benefits: string[] | null
