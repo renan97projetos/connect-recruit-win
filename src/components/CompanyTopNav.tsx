@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,7 +14,6 @@ import {
   LogOut,
   Menu,
   ChevronDown,
-  LayoutGrid,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -28,45 +27,45 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
-type NavItem = { path: string; label: string; icon: any; end?: boolean };
+type NavItem = {
+  path: string;
+  label: string;
+  icon: any;
+  end?: boolean;
+  ownerOnly?: boolean;
+};
 
-const recruitmentItems: NavItem[] = [
+const mainMenuItems: NavItem[] = [
   { path: '/company/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { path: '/company/job-requests', label: 'Gestão de Vagas', icon: Briefcase },
-  { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp },
+  { path: '/company/job-requests', label: 'Vagas', icon: Briefcase },
+  { path: '/company/talent-pool', label: 'Talentos', icon: TrendingUp },
   { path: '/company/job-history', label: 'Histórico', icon: Archive },
 ];
 
-const hrItems: NavItem[] = [
+const hrMenuItems: NavItem[] = [
   { path: '/company/employee-dashboard', label: 'Dashboard RH', icon: BarChart3 },
   { path: '/company/employees', label: 'Colaboradores', icon: Users },
   { path: '/company/assessments', label: 'Avaliações', icon: FileText },
   { path: '/company/employee-requests', label: 'Solicitações', icon: Clock },
 ];
 
-const HR_PATHS = ['/company/employee-dashboard', '/company/employees', '/company/assessments', '/company/employee-requests'];
+const configMenuItems: NavItem[] = [
+  { path: '/company/profile', label: 'Minha Conta', icon: Settings },
+  { path: '/company/permissions', label: 'Permissões', icon: Shield, ownerOnly: true },
+];
 
 export function CompanyTopNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useSupabaseAuth();
-  const { isOwner, loading: roleLoading } = useCompanyRole();
+  const { isOwner } = useCompanyRole();
   const [companyName, setCompanyName] = useState('');
   const [userName, setUserName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Detecta área ativa pela rota: 'hr' para gestão interna, 'recruitment' para o restante
-  const area: 'hr' | 'recruitment' = useMemo(() => {
-    return HR_PATHS.some((p) => location.pathname.startsWith(p)) ? 'hr' : 'recruitment';
-  }, [location.pathname]);
-
-  const isHubRoute = location.pathname === '/company' || location.pathname === '/company/hub';
-  const activeItems = area === 'hr' ? hrItems : recruitmentItems;
-  const areaLabel = area === 'hr' ? 'Gestão RH Interna' : 'Recrutamento e Seleção';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -85,7 +84,6 @@ export function CompanyTopNav() {
     fetchProfile();
 
     if (!user?.id) return;
-    // Atualiza em tempo real quando o avatar/nome do perfil for alterado
     const channel = supabase
       .channel(`profile-nav-${user.id}`)
       .on(
@@ -107,242 +105,257 @@ export function CompanyTopNav() {
       supabase.removeChannel(channel);
       window.removeEventListener('focus', onFocus);
     };
-  }, [user?.id, user?.email, location.pathname]);
+  }, [user?.id, user?.email]);
 
   const isActive = (path: string, end = false) =>
     end ? location.pathname === path : location.pathname.startsWith(path) && path !== '/company';
+
+  const isInGroup = (items: NavItem[]) =>
+    items.some((i) => isActive(i.path, i.end));
 
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
 
-  const initials = (companyName || 'E').charAt(0).toUpperCase();
-
-  const NavLinkItem = ({ item }: { item: NavItem }) => {
-    const active = item.end ? location.pathname === item.path : isActive(item.path);
-    return (
-      <Link
-        to={item.path}
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
-          active
-            ? 'bg-primary text-primary-foreground'
-            : 'text-foreground/70 hover:text-foreground hover:bg-muted'
-        )}
-      >
-        <item.icon className="h-4 w-4" />
-        <span>{item.label}</span>
-      </Link>
-    );
-  };
-
-  const DropdownGroup = ({
-    label,
-    items,
-    icon: Icon,
-  }: {
-    label: string;
-    items: NavItem[];
-    icon: any;
-  }) => {
-    const anyActive = items.some((i) => isActive(i.path, i.end));
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-              anyActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-foreground/70 hover:text-foreground hover:bg-muted'
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            <span>{label}</span>
-            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuLabel>{label}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {items.map((item) => (
-            <DropdownMenuItem
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className="cursor-pointer"
-            >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
+  const companyInitials = (companyName || 'E').charAt(0).toUpperCase();
+  const userInitials = (userName || user?.email || 'U').charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-16 items-center gap-3 px-4 md:px-6">
-        {/* Logo + nome empresa */}
-        <Link to="/company" className="flex items-center gap-3 min-w-0 flex-shrink-0">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={companyName}
-              className="h-12 w-12 rounded-md object-contain"
-            />
-          ) : (
-            <div className="h-9 w-9 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-              {initials}
-            </div>
-          )}
-          <div className="hidden sm:block min-w-0">
-            <p className="text-sm font-bold leading-tight truncate max-w-[180px]">
-              {companyName || 'Empresa'}
-            </p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide leading-tight">
-              SinapseRH
-            </p>
-          </div>
-        </Link>
+    <header className="sticky top-0 z-50 h-12 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 gap-4 md:gap-6">
+      {/* Logo + nome empresa */}
+      <Link to="/company" className="flex items-center gap-2 mr-2 min-w-0 flex-shrink-0">
+        <Avatar className="h-7 w-7 rounded-md">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt={companyName} className="object-contain" />}
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs rounded-md font-semibold">
+            {companyInitials}
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-semibold text-sm text-gray-900 truncate max-w-[160px] hidden sm:inline">
+          {companyName || 'Empresa'}
+        </span>
+      </Link>
 
-        {/* Centro: navegação desktop — apenas a área ativa */}
-        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
-          {!isHubRoute && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/company')}
-                className="gap-1.5 mr-2"
-                title="Trocar de área"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                <span>Áreas</span>
-              </Button>
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-2">
-                {areaLabel}
-              </span>
-              {(area !== 'hr' || isOwner) &&
-                activeItems.map((item) => <NavLinkItem key={item.path} item={item} />)}
-            </>
-          )}
+      {/* Separador */}
+      <div className="hidden md:block h-5 w-px bg-gray-200" />
+
+      {/* Nav links — desktop */}
+      <nav className="hidden md:flex items-center gap-1 flex-1 min-w-0">
+        {mainMenuItems.map((item) => {
+          const active = item.end ? location.pathname === item.path : isActive(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+                active
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              )}
+            >
+              <item.icon className="h-3.5 w-3.5" />
+              {item.label}
+            </Link>
+          );
+        })}
+
+        {/* Gestão RH — dropdown (só owner) */}
+        {isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted transition-colors ml-auto">
-                <Settings className="h-4 w-4" />
-                <span>Configurações</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              <button
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  isInGroup(hrMenuItems)
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                )}
+              >
+                <Users className="h-3.5 w-3.5" />
+                Gestão RH
+                <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem
-                onClick={() => navigate('/company/profile')}
-                className="cursor-pointer"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Minha Conta
-              </DropdownMenuItem>
-              {isOwner && (
+            <DropdownMenuContent align="start" className="w-48 shadow-lg border border-gray-200">
+              {hrMenuItems.map((item) => (
                 <DropdownMenuItem
-                  onClick={() => navigate('/company/permissions')}
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
                   className="cursor-pointer"
                 >
-                  <Shield className="mr-2 h-4 w-4" />
-                  Permissões
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
                 </DropdownMenuItem>
-              )}
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </nav>
+        )}
+      </nav>
 
-        <div className="flex-1 lg:hidden" />
+      {/* Right side */}
+      <div className="hidden md:flex items-center gap-2 ml-auto flex-shrink-0">
+        {/* Configurações */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              <Settings className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">Configurações</span>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 shadow-lg border border-gray-200">
+            {configMenuItems
+              .filter((item) => !item.ownerOnly || isOwner)
+              .map((item) => (
+                <DropdownMenuItem
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="cursor-pointer"
+                >
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.label}
+                </DropdownMenuItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-        {/* Direita: usuário + sair */}
-        <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-          <div className="text-right">
-            <p className="text-xs font-medium leading-tight truncate max-w-[160px]">
-              {userName || 'Usuário'}
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-tight truncate max-w-[160px]">
+        {/* Avatar + sair */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex-shrink-0">
+              <Avatar className="h-7 w-7 cursor-pointer">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
+                <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-semibold">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 shadow-lg border border-gray-200">
+            <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
               {user?.email}
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="gap-1.5"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden xl:inline">Sair</span>
-          </Button>
-        </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="cursor-pointer text-red-600 focus:text-red-600"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Mobile menu */}
+      {/* Mobile menu */}
+      <div className="md:hidden ml-auto flex items-center gap-2">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden">
+            <button className="p-1.5 rounded-md text-gray-600 hover:bg-gray-100">
               <Menu className="h-5 w-5" />
-            </Button>
+            </button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] p-0">
-            <div className="p-4 border-b border-border">
-              <p className="font-bold text-base truncate">{companyName}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          <SheetContent side="right" className="w-[300px] p-0 bg-white">
+            <div className="p-4 border-b border-gray-200">
+              <p className="font-semibold text-sm text-gray-900 truncate">{companyName}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
             <nav className="p-3 space-y-4 overflow-y-auto">
-              {!isHubRoute && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    navigate('/company');
-                  }}
-                  className="w-full gap-2 justify-start"
-                >
-                  <LayoutGrid className="h-4 w-4" /> Trocar de área
-                </Button>
-              )}
-              {!isHubRoute && (area !== 'hr' || isOwner) && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5 px-2">
+                  Recrutamento
+                </p>
+                <div className="flex flex-col gap-0.5">
+                  {mainMenuItems.map((item) => {
+                    const active = item.end
+                      ? location.pathname === item.path
+                      : isActive(item.path);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                          active
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {isOwner && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-2">
-                    {areaLabel}
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5 px-2">
+                    Gestão RH
                   </p>
-                  <div className="flex flex-col gap-1">
-                    {activeItems.map((item) => (
-                      <NavLinkItem key={item.path} item={item} />
-                    ))}
+                  <div className="flex flex-col gap-0.5">
+                    {hrMenuItems.map((item) => {
+                      const active = isActive(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                            active
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          )}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}
+
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 px-2">
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5 px-2">
                   Configurações
                 </p>
-                <div className="flex flex-col gap-1">
-                  <NavLinkItem
-                    item={{ path: '/company/profile', label: 'Minha Conta', icon: Settings }}
-                  />
-                  {isOwner && (
-                    <NavLinkItem
-                      item={{ path: '/company/permissions', label: 'Permissões', icon: Shield }}
-                    />
-                  )}
+                <div className="flex flex-col gap-0.5">
+                  {configMenuItems
+                    .filter((item) => !item.ownerOnly || isOwner)
+                    .map((item) => {
+                      const active = isActive(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                            active
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          )}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
-              <div className="pt-3 border-t border-border">
-                <Button
-                  variant="outline"
-                  size="sm"
+
+              <div className="pt-3 border-t border-gray-200">
+                <button
                   onClick={handleLogout}
-                  className="w-full gap-2"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4" /> Sair
-                </Button>
+                </button>
               </div>
             </nav>
           </SheetContent>
