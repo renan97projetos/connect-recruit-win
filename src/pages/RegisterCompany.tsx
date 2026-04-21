@@ -58,12 +58,17 @@ function maskPhone(v: string) {
   return d.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim();
 }
 
+function maskCEP(v: string) {
+  return v.replace(/\D/g, '').slice(0, 8).replace(/^(\d{5})(\d)/, '$1-$2');
+}
+
 export default function RegisterCompany() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState({
     company_name: '',
     cnpj: '',
@@ -73,12 +78,38 @@ export default function RegisterCompany() {
     confirmPassword: '',
     responsible_name: '',
     responsible_role: '',
+    cep: '',
     address: '',
     city: '',
     state: '',
     notes: '',
     plan_id: '',
   });
+
+  const handleCepBlur = async (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data?.erro) {
+        toast({ title: 'CEP não encontrado', variant: 'destructive' });
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        city: data.localidade || f.city,
+        state: (data.uf || f.state).toUpperCase(),
+        address: f.address || data.logradouro || '',
+      }));
+    } catch {
+      toast({ title: 'Erro ao buscar CEP', variant: 'destructive' });
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     document.title = 'Cadastro de Empresa | Sinapse RH';
@@ -206,18 +237,34 @@ export default function RegisterCompany() {
                 />
               </div>
               <div>
+                <Label>CEP</Label>
+                <div className="relative">
+                  <Input
+                    value={form.cep}
+                    onChange={(e) => handleChange('cep', maskCEP(e.target.value))}
+                    onBlur={(e) => handleCepBlur(e.target.value)}
+                    placeholder="00000-000"
+                    maxLength={9}
+                  />
+                  {cepLoading && (
+                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              <div>
                 <Label>Endereço</Label>
                 <Input
                   value={form.address}
                   onChange={(e) => handleChange('address', e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 md:col-span-2">
                 <div className="col-span-2">
                   <Label>Cidade</Label>
                   <Input
                     value={form.city}
                     onChange={(e) => handleChange('city', e.target.value)}
+                    readOnly={cepLoading}
                   />
                 </div>
                 <div>
@@ -226,6 +273,7 @@ export default function RegisterCompany() {
                     value={form.state}
                     onChange={(e) => handleChange('state', e.target.value.toUpperCase().slice(0, 2))}
                     maxLength={2}
+                    readOnly={cepLoading}
                   />
                 </div>
               </div>
