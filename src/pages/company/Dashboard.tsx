@@ -300,101 +300,152 @@ export default function CompanyDashboard() {
           <SheetHeader>
             <SheetTitle className="text-base font-semibold text-gray-900">Métricas</SheetTitle>
           </SheetHeader>
-          <div className="space-y-6 mt-6">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
-                Candidaturas (últimos 30 dias)
-              </p>
-              <ChartContainer
-                config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }}
-                className="h-[220px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={last30Days}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line
-                      type="monotone"
-                      dataKey="candidaturas"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={{ fill: 'hsl(var(--primary))', r: 3 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
+          <div className="mt-6">
+            <Tabs defaultValue="overview">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                <TabsTrigger value="funnel">Funil</TabsTrigger>
+              </TabsList>
 
-            {topJobs.length > 0 && (
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
-                  Top vagas
-                </p>
-                <ChartContainer
-                  config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }}
-                  className="h-[220px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={topJobs} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                      <YAxis dataKey="title" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={130} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="candidaturas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-            )}
+              <TabsContent value="overview" className="space-y-6 mt-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                    Candidaturas (últimos 30 dias)
+                  </p>
+                  <ChartContainer
+                    config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }}
+                    className="h-[220px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={last30Days}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line
+                          type="monotone"
+                          dataKey="candidaturas"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={{ fill: 'hsl(var(--primary))', r: 3 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
 
-            {stagesData.length > 0 && (
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
-                  Vagas por etapa
-                </p>
-                <ChartContainer config={{ value: { label: 'Vagas' } }} className="h-[220px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stagesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-            )}
+                {topJobs.length > 0 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                      Top vagas
+                    </p>
+                    <ChartContainer
+                      config={{ candidaturas: { label: 'Candidaturas', color: 'hsl(var(--primary))' } }}
+                      className="h-[220px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={topJobs} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis dataKey="title" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={130} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="candidaturas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                )}
 
-            {statusData.length > 0 && (
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
-                  Status das candidaturas
-                </p>
-                <ChartContainer config={{ value: { label: 'Candidatos' } }} className="h-[220px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={statusData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={70}
-                        dataKey="value"
-                      >
-                        {statusData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-            )}
+                {stagesData.length > 0 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                      Vagas por etapa
+                    </p>
+                    <ChartContainer config={{ value: { label: 'Vagas' } }} className="h-[220px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stagesData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                )}
+
+                {statusData.length > 0 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+                      Status das candidaturas
+                    </p>
+                    <ChartContainer config={{ value: { label: 'Candidatos' } }} className="h-[220px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statusData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={70}
+                            dataKey="value"
+                          >
+                            {statusData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="funnel" className="mt-4">
+                <div className="space-y-4">
+                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">
+                    Distribuição de candidatos por etapa
+                  </p>
+                  {funnelData.filter((s) => s.count > 0).length > 0 ? (
+                    (() => {
+                      const visible = funnelData.filter((s) => s.count > 0);
+                      const maxCount = Math.max(...visible.map((s) => s.count));
+                      return visible.map((stage, i, arr) => {
+                        const pct = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
+                        return (
+                          <div key={stage.stage}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-sm font-medium text-gray-700">{stage.label}</span>
+                              <span className="text-xs text-gray-500">{stage.count} candidatos</span>
+                            </div>
+                            <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            {i < arr.length - 1 && (
+                              <div className="text-xs text-gray-400 mt-1.5 ml-1">
+                                {arr[i + 1].count > 0 && stage.count > 0
+                                  ? `${Math.round((arr[i + 1].count / stage.count) * 100)}% avançam para ${arr[i + 1].label}`
+                                  : ''}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()
+                  ) : (
+                    <div className="text-center py-12 text-sm text-gray-400">
+                      Nenhum candidato para exibir no funil
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </SheetContent>
       </Sheet>
