@@ -350,9 +350,15 @@ export default function CompanyDashboard() {
       <Sheet open={metricsOpen} onOpenChange={setMetricsOpen}>
         <SheetContent side="right" className="w-[520px] sm:max-w-[520px] overflow-y-auto bg-white">
           <SheetHeader>
-            <SheetTitle className="text-base font-semibold text-gray-900">Métricas</SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-base font-semibold text-gray-900">Métricas</SheetTitle>
+              <Button variant="outline" size="sm" onClick={handleExportPDF} className="h-7 text-xs">
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Exportar PDF
+              </Button>
+            </div>
           </SheetHeader>
-          <div className="mt-6">
+          <div ref={metricsRef} className="mt-6">
             <Tabs defaultValue="overview">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
