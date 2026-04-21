@@ -53,6 +53,7 @@ import NotFound from "./pages/NotFound";
 import ProspectFunnel from "./pages/ProspectFunnel";
 import RegisterInvitation from "./pages/RegisterInvitation";
 import Register from "./pages/Register";
+import RegisterCompany from "./pages/RegisterCompany";
 import CareerPage from "./pages/careers/CareerPage";
 import CareerPageConfig from "./pages/company/CareerPageConfig";
 import EmailTemplates from "./pages/company/EmailTemplates";
@@ -87,6 +88,7 @@ const App = () => {
               <Route path="/funcionalidades" element={<Features />} />
               
               <Route path="/register" element={<Register />} />
+              <Route path="/cadastro-empresa" element={<RegisterCompany />} />
               <Route path="/register-invitation" element={<RegisterInvitation />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
