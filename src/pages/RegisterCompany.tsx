@@ -243,6 +243,7 @@ export default function RegisterCompany() {
       // Send welcome email (non-blocking — do not fail registration if email fails)
       try {
         const tenantId = (data as any)?.tenant?.id || (data as any)?.user_id;
+        const loginUrl = `${window.location.origin}/empresa/acesso`;
         await supabase.functions.invoke('send-transactional-email', {
           body: {
             templateName: 'company-welcome',
@@ -250,6 +251,10 @@ export default function RegisterCompany() {
             idempotencyKey: `company-welcome-${tenantId || form.company_email}`,
             templateData: {
               name: form.responsible_name || form.company_name,
+              companyName: form.company_name,
+              cnpj: form.cnpj,
+              email: form.company_email,
+              loginUrl,
             },
           },
         });

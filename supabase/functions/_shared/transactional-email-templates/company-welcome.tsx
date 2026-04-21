@@ -16,13 +16,25 @@ import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = 'Sinapse RH'
 const CONTACT_URL = 'https://sinapserh.com.br/contact'
+const COMPANY_LOGIN_URL = 'https://sinapserh.com.br/empresa/acesso'
 
 interface CompanyWelcomeProps {
   name?: string
+  companyName?: string
+  cnpj?: string
+  email?: string
+  loginUrl?: string
 }
 
-const CompanyWelcomeEmail = ({ name }: CompanyWelcomeProps) => {
+const CompanyWelcomeEmail = ({
+  name,
+  companyName,
+  cnpj,
+  email,
+  loginUrl,
+}: CompanyWelcomeProps) => {
   const greeting = name ? `Olá, ${name}, tudo bem?` : 'Olá, tudo bem?'
+  const accessUrl = loginUrl || COMPANY_LOGIN_URL
   return (
     <Html lang="pt-BR" dir="ltr">
       <Head />
@@ -53,19 +65,54 @@ const CompanyWelcomeEmail = ({ name }: CompanyWelcomeProps) => {
               suas contratações.
             </Text>
 
+            {(companyName || cnpj || email) && (
+              <Section style={dataBox}>
+                <Text style={dataTitle}>📋 Dados do seu cadastro</Text>
+                {companyName && (
+                  <Text style={dataLine}>
+                    <strong>Empresa:</strong> {companyName}
+                  </Text>
+                )}
+                {cnpj && (
+                  <Text style={dataLine}>
+                    <strong>CNPJ:</strong> {cnpj}
+                  </Text>
+                )}
+                {email && (
+                  <Text style={dataLine}>
+                    <strong>E-mail de acesso:</strong> {email}
+                  </Text>
+                )}
+              </Section>
+            )}
+
+            <Text style={text}>
+              Para acessar o sistema, use o link exclusivo abaixo (este é o
+              endereço oficial de acesso da sua empresa):
+            </Text>
+
+            <Section style={buttonWrap}>
+              <Button style={button} href={accessUrl}>
+                🔐 Acessar o sistema
+              </Button>
+            </Section>
+
+            <Text style={urlNote}>
+              Ou copie e cole no navegador:
+              <br />
+              <span style={urlText}>{accessUrl}</span>
+            </Text>
+
+            <Hr style={hr} />
+
             <Text style={text}>
               Se em qualquer momento você precisar de ajuda, tiver dúvidas ou
               quiser entender como extrair o máximo da plataforma, pode contar
               com a gente.
             </Text>
 
-            <Text style={text}>
-              É só clicar no botão abaixo que nosso time entra em contato com
-              você:
-            </Text>
-
             <Section style={buttonWrap}>
-              <Button style={button} href={CONTACT_URL}>
+              <Button style={secondaryButton} href={CONTACT_URL}>
                 👉 Falar com nosso time
               </Button>
             </Section>
@@ -94,9 +141,15 @@ const CompanyWelcomeEmail = ({ name }: CompanyWelcomeProps) => {
 
 export const template = {
   component: CompanyWelcomeEmail,
-  subject: 'Bem-vindo(a) à Sinapse RH! 🚀',
+  subject: 'Bem-vindo(a) à Sinapse RH! 🚀 Seus dados de acesso',
   displayName: 'Boas-vindas à empresa',
-  previewData: { name: 'Maria' },
+  previewData: {
+    name: 'Maria',
+    companyName: 'Acme Ltda',
+    cnpj: '12.345.678/0001-90',
+    email: 'contato@acme.com.br',
+    loginUrl: 'https://sinapserh.com.br/empresa/acesso',
+  },
 } satisfies TemplateEntry
 
 export default CompanyWelcomeEmail
@@ -127,10 +180,44 @@ const text = {
   lineHeight: '1.65',
   margin: '0 0 16px',
 }
-const buttonWrap = { textAlign: 'center' as const, margin: '28px 0' }
+const dataBox = {
+  backgroundColor: '#FFFFFF',
+  border: '2px solid #0D0D0D',
+  borderRadius: '8px',
+  padding: '18px 20px',
+  margin: '20px 0 24px',
+  boxShadow: '3px 3px 0 #0D0D0D',
+}
+const dataTitle = {
+  fontSize: '14px',
+  fontWeight: 'bold' as const,
+  color: '#0D0D0D',
+  margin: '0 0 12px',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+}
+const dataLine = {
+  fontSize: '14px',
+  color: '#0D0D0D',
+  lineHeight: '1.6',
+  margin: '0 0 6px',
+}
+const buttonWrap = { textAlign: 'center' as const, margin: '24px 0' }
 const button = {
   backgroundColor: '#7C3AED',
   color: '#ffffff',
+  fontSize: '16px',
+  fontWeight: 'bold' as const,
+  border: '2px solid #0D0D0D',
+  borderRadius: '8px',
+  padding: '16px 32px',
+  textDecoration: 'none',
+  boxShadow: '4px 4px 0 #0D0D0D',
+  display: 'inline-block',
+}
+const secondaryButton = {
+  backgroundColor: '#FFFEF7',
+  color: '#0D0D0D',
   fontSize: '15px',
   fontWeight: 'bold' as const,
   border: '2px solid #0D0D0D',
@@ -139,6 +226,19 @@ const button = {
   textDecoration: 'none',
   boxShadow: '4px 4px 0 #0D0D0D',
   display: 'inline-block',
+}
+const urlNote = {
+  fontSize: '12px',
+  color: '#737373',
+  lineHeight: '1.5',
+  margin: '0 0 8px',
+  textAlign: 'center' as const,
+}
+const urlText = {
+  fontSize: '12px',
+  color: '#7C3AED',
+  fontWeight: 'bold' as const,
+  wordBreak: 'break-all' as const,
 }
 const hr = {
   border: 'none',

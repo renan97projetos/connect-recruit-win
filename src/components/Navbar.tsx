@@ -148,11 +148,8 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {!isAuthenticated ? (
               <>
-                <Button variant="ghost" asChild>
-                  <Link to="/login?as=candidate">Área de Candidato</Link>
-                </Button>
                 <Button variant="default" asChild>
-                  <Link to="/login?as=company">Área de Empresa</Link>
+                  <Link to="/login?as=candidate">Área de Candidato</Link>
                 </Button>
               </>
             ) : (
@@ -237,11 +234,8 @@ export function Navbar() {
               <div className="border-t-3 border-foreground mt-2 pt-4 flex flex-col gap-2">
                 {!isAuthenticated ? (
                   <>
-                    <Button variant="ghost" asChild className="justify-start">
-                      <Link to="/login?as=candidate" onClick={() => setMobileMenuOpen(false)}>Área de Candidato</Link>
-                    </Button>
                     <Button variant="default" asChild className="justify-start">
-                      <Link to="/login?as=company" onClick={() => setMobileMenuOpen(false)}>Área de Empresa</Link>
+                      <Link to="/login?as=candidate" onClick={() => setMobileMenuOpen(false)}>Área de Candidato</Link>
                     </Button>
                   </>
                 ) : (
