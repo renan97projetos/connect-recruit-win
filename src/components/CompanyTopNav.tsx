@@ -31,6 +31,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { HelpButton } from '@/components/onboarding/HelpButton';
 
 type NavItem = {
   path: string;
@@ -129,7 +130,7 @@ export function CompanyTopNav() {
   return (
     <header className="sticky top-0 z-50 h-12 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 gap-4 md:gap-6">
       {/* Logo + nome empresa */}
-      <Link to="/company" className="flex items-center gap-2 mr-2 min-w-0 flex-shrink-0">
+      <Link to="/company" data-tour="company-logo" className="flex items-center gap-2 mr-2 min-w-0 flex-shrink-0">
         <Avatar className="h-7 w-7 rounded-md">
           {avatarUrl && <AvatarImage src={avatarUrl} alt={companyName} className="object-contain" />}
           <AvatarFallback className="bg-primary text-primary-foreground text-xs rounded-md font-semibold">
@@ -145,7 +146,7 @@ export function CompanyTopNav() {
       <div className="hidden md:block h-5 w-px bg-gray-200" />
 
       {/* Nav links — desktop */}
-      <nav className="hidden md:flex items-center gap-1 flex-1 min-w-0">
+      <nav data-tour="nav-main" className="hidden md:flex items-center gap-1 flex-1 min-w-0">
         {mainMenuItems.map((item) => {
           const active = item.end ? location.pathname === item.path : isActive(item.path);
           return (
@@ -200,6 +201,7 @@ export function CompanyTopNav() {
 
       {/* Right side */}
       <div className="hidden md:flex items-center gap-2 ml-auto flex-shrink-0">
+        <HelpButton />
         {/* Configurações */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
