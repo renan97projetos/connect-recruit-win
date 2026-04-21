@@ -73,6 +73,44 @@ export type Database = {
           },
         ]
       }
+      approval_actions: {
+        Row: {
+          action: string
+          approver_id: string
+          approver_name: string | null
+          created_at: string | null
+          id: string
+          job_request_id: string
+          notes: string | null
+        }
+        Insert: {
+          action?: string
+          approver_id: string
+          approver_name?: string | null
+          created_at?: string | null
+          id?: string
+          job_request_id: string
+          notes?: string | null
+        }
+        Update: {
+          action?: string
+          approver_id?: string
+          approver_name?: string | null
+          created_at?: string | null
+          id?: string
+          job_request_id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_actions_job_request_id_fkey"
+            columns: ["job_request_id"]
+            isOneToOne: false
+            referencedRelation: "job_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessments: {
         Row: {
           company_id: string
