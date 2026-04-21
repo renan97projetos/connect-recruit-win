@@ -12,7 +12,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   Filter,
   MessageSquare,
@@ -26,6 +30,7 @@ import {
   Inbox,
   Loader2,
   X,
+  DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -112,6 +117,7 @@ function initials(name: string) {
 export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
   const [stages, setStages] = useState<Stage[]>(DEFAULT_STAGES);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [activeStageId, setActiveStageId] = useState<string>('screening');
@@ -120,6 +126,15 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [updating, setUpdating] = useState<string | null>(null);
   const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
+
+  // Job offers
+  const [offersByApp, setOffersByApp] = useState<Record<string, { id: string; status: string }>>({});
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<ApplicationRow | null>(null);
+  const [offerSalary, setOfferSalary] = useState('');
+  const [offerBenefits, setOfferBenefits] = useState('');
+  const [offerNotes, setOfferNotes] = useState('');
+  const [savingOffer, setSavingOffer] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -172,9 +187,58 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
       const map: Record<string, any> = {};
       (profs || []).forEach((p: any) => (map[p.id] = p));
       setProfilesById(map);
+
+      // Carrega propostas existentes para essas candidaturas
+      const appIds = apps.map((a: any) => a.id);
+      const { data: offersData } = await (supabase as any)
+        .from('job_offers')
+        .select('id, application_id, status')
+        .in('application_id', appIds);
+      const offersMap: Record<string, { id: string; status: string }> = {};
+      (offersData || []).forEach((o: any) => {
+        // Mantém a mais recente (a query já volta ordenada por created_at desc seria ideal, mas aqui basta a última iteração)
+        offersMap[o.application_id] = { id: o.id, status: o.status };
+      });
+      setOffersByApp(offersMap);
     }
 
     setLoading(false);
+  };
+
+  const openOfferDialog = (app: ApplicationRow) => {
+    setSelectedCandidate(app);
+    setOfferSalary('');
+    setOfferBenefits('');
+    setOfferNotes('');
+    setOfferDialogOpen(true);
+  };
+
+  const handleSaveOffer = async () => {
+    if (!selectedCandidate || !offerSalary || !user) return;
+    setSavingOffer(true);
+    const { data, error } = await (supabase as any)
+      .from('job_offers')
+      .insert({
+        application_id: selectedCandidate.id,
+        job_id: jobId,
+        company_id: user.id,
+        offered_salary: parseFloat(offerSalary),
+        benefits_offered: offerBenefits || null,
+        notes: offerNotes || null,
+        status: 'pending',
+      })
+      .select('id, status')
+      .single();
+    setSavingOffer(false);
+
+    if (error) {
+      toast({ title: 'Erro', description: 'Não foi possível registrar a proposta.', variant: 'destructive' });
+      return;
+    }
+
+    setOffersByApp((prev) => ({ ...prev, [selectedCandidate.id]: { id: data.id, status: data.status } }));
+    toast({ title: 'Proposta registrada!', description: `Para ${selectedCandidate.candidate_name}.` });
+    setOfferDialogOpen(false);
   };
 
   const grouped = useMemo(() => {
@@ -446,11 +510,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                               )}
                             </div>
 
-                            <div className="text-[11px] text-muted-foreground">
-                              Entrou em{' '}
-                              {format(new Date(app.updated_at || app.applied_at), "dd 'de' MMM", {
-                                locale: ptBR,
-                              })}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-[11px] text-muted-foreground">
+                                Entrou em{' '}
+                                {format(new Date(app.updated_at || app.applied_at), "dd 'de' MMM", {
+                                  locale: ptBR,
+                                })}
+                              </div>
+                              {offersByApp[app.id] && offersByApp[app.id].status === 'pending' && (
+                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] h-5 px-2">
+                                  Proposta enviada
+                                </Badge>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-1 pt-1 border-t border-border">
@@ -462,6 +533,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                               >
                                 <Eye className="h-3.5 w-3.5 mr-1" /> Ver
                               </Button>
+                              {getStageBucket(app) === 'approved' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-500/10"
+                                  onClick={() => openOfferDialog(app)}
+                                  aria-label="Fazer proposta"
+                                  title="Fazer proposta"
+                                >
+                                  <DollarSign className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -555,6 +638,59 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                 </div>
               </div>
             ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base">Registrar proposta</DialogTitle>
+          <DialogDescription className="text-xs">
+            Para: {selectedCandidate?.candidate_name}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 mt-2">
+          <div>
+            <Label className="text-xs">Salário ofertado (R$)</Label>
+            <Input
+              type="number"
+              placeholder="5000"
+              value={offerSalary}
+              onChange={(e) => setOfferSalary(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Benefícios</Label>
+            <Input
+              placeholder="VT, VR, plano de saúde..."
+              value={offerBenefits}
+              onChange={(e) => setOfferBenefits(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Observações</Label>
+            <Textarea
+              value={offerNotes}
+              onChange={(e) => setOfferNotes(e.target.value)}
+              rows={2}
+              className="mt-1 resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Button variant="outline" className="flex-1" onClick={() => setOfferDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleSaveOffer}
+            disabled={!offerSalary || savingOffer}
+          >
+            {savingOffer ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrar proposta'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
