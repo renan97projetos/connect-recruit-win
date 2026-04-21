@@ -551,6 +551,50 @@ export default function JobForm() {
           </aside>
         </div>
       </PermissionGuard>
+
+      <Sheet open={aiSheetOpen} onOpenChange={setAiSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Gerar descrição com IA
+            </SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4 mt-6">
+            <div className="space-y-1.5">
+              <Label htmlFor="ai-input">Descreva o cargo em poucas palavras</Label>
+              <p className="text-xs text-muted-foreground">
+                Ex: "Analista de RH para empresa de logística de médio porte"
+              </p>
+              <Textarea
+                id="ai-input"
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder="Cargo, setor, contexto da empresa..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+            <Button
+              onClick={handleGenerateDescription}
+              disabled={!aiInput.trim() || aiLoading}
+              className="w-full"
+            >
+              {aiLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                'Gerar descrição'
+              )}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              A descrição gerada será inserida no campo acima para você revisar.
+            </p>
+          </div>
+        </SheetContent>
+      </Sheet>
     </CompanyLayout>
   );
 }
