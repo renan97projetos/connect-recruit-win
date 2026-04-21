@@ -358,6 +358,7 @@ export function StageEditModal({ open, onClose, onSave, stage }: StageEditModalP
                   className="resize-none text-sm"
                 />
               )}
+            </div>
           </TabsContent>
         </Tabs>
 
