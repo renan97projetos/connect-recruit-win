@@ -71,7 +71,7 @@ export default function CompanyDashboard() {
     setLoading(true);
     const { data: jobsData } = await supabase
       .from('jobs')
-      .select('*, applications(id, status, current_stage, applied_at)')
+      .select('*, applications(id, status, current_stage, applied_at, updated_at)')
       .eq('company_id', companyId)
       .eq('is_archived', false)
       .order('created_at', { ascending: false });
