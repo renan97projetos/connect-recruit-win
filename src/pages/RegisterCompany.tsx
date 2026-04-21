@@ -285,12 +285,26 @@ export default function RegisterCompany() {
               </div>
               <div>
                 <Label>CNPJ *</Label>
-                <Input
-                  value={form.cnpj}
-                  onChange={(e) => handleChange('cnpj', maskCNPJ(e.target.value))}
-                  placeholder="00.000.000/0000-00"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    value={form.cnpj}
+                    onChange={(e) => {
+                      handleChange('cnpj', maskCNPJ(e.target.value));
+                      setCnpjValidated(false);
+                    }}
+                    onBlur={(e) => handleCnpjBlur(e.target.value)}
+                    placeholder="00.000.000/0000-00"
+                    required
+                  />
+                  {cnpjLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  ) : cnpjValidated ? (
+                    <Check className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-green-600" />
+                  ) : null}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Validação automática junto à Receita Federal.
+                </p>
               </div>
               <div>
                 <Label>Telefone *</Label>
