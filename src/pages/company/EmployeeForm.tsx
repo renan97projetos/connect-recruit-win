@@ -56,6 +56,7 @@ export default function CompanyEmployeeForm() {
   const queryClient = useQueryClient();
   const { user } = useSupabaseAuth();
   const { isOwner, loading: roleLoading } = useCompanyRole();
+  const { canCreate: canCreateByPlan, refresh: refreshPlanUsage } = usePlanLimits();
   const isEditing = !!id;
 
   const form = useForm<EmployeeFormData>({
@@ -146,6 +147,14 @@ export default function CompanyEmployeeForm() {
   });
 
   const onSubmit = (data: EmployeeFormData) => {
+    if (!isEditing && !canCreateByPlan('employees')) {
+      toast({
+        title: 'Limite do plano atingido',
+        description: 'Você atingiu o limite de colaboradores do seu plano. Faça upgrade para adicionar mais.',
+        variant: 'destructive',
+      });
+      return;
+    }
     mutation.mutate(data);
   };
 
