@@ -131,6 +131,20 @@ export default function CompanyDashboard() {
     { name: 'Rejeitado', value: applications.filter((a) => a.status === 'rejected').length, color: 'hsl(var(--destructive))' },
   ].filter((i) => i.value > 0);
 
+  // === Funil de etapas ===
+  const stageLabels: Record<string, string> = {
+    screening: 'Triagem',
+    interview: 'Entrevista RH',
+    technical: 'Teste Técnico',
+    approved: 'Aprovado',
+    rejected: 'Reprovado',
+  };
+  const funnelData = Object.entries(stageLabels).map(([id, label]) => ({
+    stage: id,
+    label,
+    count: applications.filter((a) => a.current_stage === id || a.status === id).length,
+  }));
+
   if (loading || roleLoading) {
     return (
       <CompanyLayout>
