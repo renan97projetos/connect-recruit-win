@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 
 const employeeSchema = z.object({
   matricula: z.string().min(1, 'Matrícula é obrigatória'),

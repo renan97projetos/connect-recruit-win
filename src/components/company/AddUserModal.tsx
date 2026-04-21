@@ -25,6 +25,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Loader2, Info } from 'lucide-react';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 
 const PERMISSIONS = [
   { key: 'view_vagas', label: 'Ver vagas abertas' },
