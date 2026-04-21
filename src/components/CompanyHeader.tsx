@@ -66,22 +66,9 @@ export function CompanyHeader({ showHubLink = true }: CompanyHeaderProps) {
               </Button>
             )}
 
-            <div className="flex items-center gap-3 min-w-0">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={companyName}
-                  className="h-12 w-12 rounded-md object-cover flex-shrink-0"
-                />
-              ) : (
-                <div className="h-12 w-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-black text-base flex-shrink-0">
-                  {companyName.charAt(0).toUpperCase() || 'E'}
-                </div>
-              )}
-              <span className="font-bold text-sm truncate max-w-[180px]">
-                {companyName || 'Empresa'}
-              </span>
-            </div>
+            <span className="font-bold text-sm truncate max-w-[220px]">
+              {companyName || 'Empresa'}
+            </span>
 
             <Button
               variant="outline"
