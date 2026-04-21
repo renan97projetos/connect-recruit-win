@@ -510,11 +510,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                               )}
                             </div>
 
-                            <div className="text-[11px] text-muted-foreground">
-                              Entrou em{' '}
-                              {format(new Date(app.updated_at || app.applied_at), "dd 'de' MMM", {
-                                locale: ptBR,
-                              })}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-[11px] text-muted-foreground">
+                                Entrou em{' '}
+                                {format(new Date(app.updated_at || app.applied_at), "dd 'de' MMM", {
+                                  locale: ptBR,
+                                })}
+                              </div>
+                              {offersByApp[app.id] && offersByApp[app.id].status === 'pending' && (
+                                <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] h-5 px-2">
+                                  Proposta enviada
+                                </Badge>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-1 pt-1 border-t border-border">
@@ -526,6 +533,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                               >
                                 <Eye className="h-3.5 w-3.5 mr-1" /> Ver
                               </Button>
+                              {getStageBucket(app) === 'approved' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-500/10"
+                                  onClick={() => openOfferDialog(app)}
+                                  aria-label="Fazer proposta"
+                                  title="Fazer proposta"
+                                >
+                                  <DollarSign className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="ghost"
