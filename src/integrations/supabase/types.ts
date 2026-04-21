@@ -26,6 +26,7 @@ export type Database = {
           job_id: string
           notes: Json | null
           score: number | null
+          source: string | null
           stage_history: Json | null
           status: string
           updated_at: string
@@ -41,6 +42,7 @@ export type Database = {
           job_id: string
           notes?: Json | null
           score?: number | null
+          source?: string | null
           stage_history?: Json | null
           status?: string
           updated_at?: string
@@ -56,6 +58,7 @@ export type Database = {
           job_id?: string
           notes?: Json | null
           score?: number | null
+          source?: string | null
           stage_history?: Json | null
           status?: string
           updated_at?: string
