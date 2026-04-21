@@ -163,6 +163,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
       });
 
       form.reset();
+      refreshPlanUsage();
       onSuccess();
     } catch (error: any) {
       console.error('Erro ao criar convite:', error);
@@ -188,6 +189,8 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
             Envie um convite por email para o novo colaborador criar sua conta
           </DialogDescription>
         </DialogHeader>
+
+        <PlanLimitBanner resource="users" />
 
         <Alert className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-600" />
