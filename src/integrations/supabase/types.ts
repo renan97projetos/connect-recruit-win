@@ -358,6 +358,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body: string
+          company_id: string
+          created_at: string | null
+          id: string
+          name: string
+          stage_trigger: string | null
+          subject: string
+        }
+        Insert: {
+          body: string
+          company_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          stage_trigger?: string | null
+          subject: string
+        }
+        Update: {
+          body?: string
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          stage_trigger?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       employee_evaluations: {
         Row: {
           avaliador_id: string
