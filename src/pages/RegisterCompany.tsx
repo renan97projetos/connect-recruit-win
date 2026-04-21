@@ -422,23 +422,47 @@ export default function RegisterCompany() {
               </div>
               <div>
                 <Label>Senha *</Label>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
-                  required
-                  minLength={8}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={(e) => handleChange('password', e.target.value)}
+                    required
+                    minLength={8}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <Label>Confirmar Senha *</Label>
-                <Input
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                  required
-                  minLength={8}
-                />
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={form.confirmPassword}
+                    onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                    required
+                    minLength={8}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             </div>
           </Card>
