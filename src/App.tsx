@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BackofficeProtectedRoute } from "@/components/backoffice/BackofficeProtectedRoute";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import Home from "./pages/Home";
+import Features from "./pages/Features";
 import Login from "./pages/Login";
 
 import ForgotPassword from "./pages/ForgotPassword";
