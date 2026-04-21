@@ -217,6 +217,7 @@ export default function CompanyDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Button
+            data-tour="metrics-btn"
             variant="outline"
             size="sm"
             onClick={() => setMetricsOpen(true)}
@@ -226,6 +227,7 @@ export default function CompanyDashboard() {
             Ver Métricas
           </Button>
           <Button
+            data-tour="new-job-btn"
             size="sm"
             onClick={() => navigate('/company/jobs/new')}
             className="gap-2 bg-primary text-primary-foreground shadow-none border-transparent hover:bg-primary/90"
@@ -237,7 +239,7 @@ export default function CompanyDashboard() {
       </div>
 
       {/* Pipeline — contadores clicáveis */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div data-tour="pipeline-stages" className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {PIPELINE_STAGES.map((stage) => {
           const isActive = activeStage === stage.id;
           const count = getCountForStage(stage.id);

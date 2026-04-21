@@ -90,7 +90,7 @@ export default function JobRequests() {
 
   const headerActions = (
     <PermissionGuard permission="create_vagas" showAlert={false}>
-      <Button onClick={() => navigate('/company/job-requests/new')} size="sm" className="gap-2">
+      <Button data-tour="new-request-btn" onClick={() => navigate('/company/job-requests/new')} size="sm" className="gap-2">
         <Plus className="h-4 w-4" />
         <span className="hidden sm:inline">Nova Requisição</span>
       </Button>
