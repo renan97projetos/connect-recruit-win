@@ -5,10 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, DollarSign, Building2, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { MapPin, DollarSign, Building2, Clock, CheckCircle2, ArrowLeft, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
+
+interface ScreeningQuestion {
+  id: string;
+  question: string;
+  question_type: string;
+  required: boolean;
+  order_position: number;
+}
 
 export default function JobDetails() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +29,8 @@ export default function JobDetails() {
   const [applying, setApplying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
