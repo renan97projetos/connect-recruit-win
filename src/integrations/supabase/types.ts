@@ -1631,6 +1631,30 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      get_invitation_by_token: {
+        Args: { _token: string }
+        Returns: {
+          company_id: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          name: string
+          permissions: string[]
+          status: string
+        }[]
+      }
+      get_public_settings: {
+        Args: never
+        Returns: {
+          about_content: string
+          instagram_url: string
+          linkedin_url: string
+          privacy_policy_content: string
+          terms_of_use_content: string
+          whatsapp_number: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
