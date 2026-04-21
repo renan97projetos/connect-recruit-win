@@ -154,7 +154,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
 
     const { data: apps } = await supabase
       .from('applications')
-      .select('id, candidate_id, candidate_name, candidate_email, status, current_stage, score, applied_at, updated_at, profiles:candidate_id (phone)')
+      .select('id, candidate_id, candidate_name, candidate_email, status, current_stage, score, applied_at, updated_at')
       .eq('job_id', jobId)
       .order('applied_at', { ascending: false });
 
