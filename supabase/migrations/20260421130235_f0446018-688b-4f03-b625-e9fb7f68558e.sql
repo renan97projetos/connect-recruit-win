@@ -1,0 +1,1 @@
+INSERT INTO public.system_settings (contact_email, whatsapp_number) VALUES ('contato@sinapserh.com.br', '5527999058730');
