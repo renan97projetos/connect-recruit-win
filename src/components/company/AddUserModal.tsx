@@ -25,6 +25,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Loader2, Info } from 'lucide-react';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 
 const PERMISSIONS = [
   { key: 'view_vagas', label: 'Ver vagas abertas' },
@@ -55,6 +57,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { canCreate: canCreateByPlan, refresh: refreshPlanUsage } = usePlanLimits();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,6 +71,16 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const onSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
+
+      // Enforcement de limite por plano
+      if (!canCreateByPlan('users')) {
+        toast({
+          title: 'Limite do plano atingido',
+          description: 'Você atingiu o limite de usuários internos do seu plano. Faça upgrade para convidar mais.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       // Verificar se já existe um convite pendente para este email
       const { data: existingInvitation } = await supabase
@@ -150,6 +163,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
       });
 
       form.reset();
+      refreshPlanUsage();
       onSuccess();
     } catch (error: any) {
       console.error('Erro ao criar convite:', error);
@@ -175,6 +189,8 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
             Envie um convite por email para o novo colaborador criar sua conta
           </DialogDescription>
         </DialogHeader>
+
+        <PlanLimitBanner resource="users" />
 
         <Alert className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-600" />

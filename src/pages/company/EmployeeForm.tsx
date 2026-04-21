@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 
 const employeeSchema = z.object({
   matricula: z.string().min(1, 'Matrícula é obrigatória'),
@@ -54,6 +56,7 @@ export default function CompanyEmployeeForm() {
   const queryClient = useQueryClient();
   const { user } = useSupabaseAuth();
   const { isOwner, loading: roleLoading } = useCompanyRole();
+  const { canCreate: canCreateByPlan, refresh: refreshPlanUsage } = usePlanLimits();
   const isEditing = !!id;
 
   const form = useForm<EmployeeFormData>({
@@ -128,6 +131,7 @@ export default function CompanyEmployeeForm() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-employees'] });
+      refreshPlanUsage();
       toast({
         title: isEditing ? 'Colaborador atualizado' : 'Colaborador criado',
         description: 'Os dados foram salvos com sucesso.',
@@ -144,6 +148,14 @@ export default function CompanyEmployeeForm() {
   });
 
   const onSubmit = (data: EmployeeFormData) => {
+    if (!isEditing && !canCreateByPlan('employees')) {
+      toast({
+        title: 'Limite do plano atingido',
+        description: 'Você atingiu o limite de colaboradores do seu plano. Faça upgrade para adicionar mais.',
+        variant: 'destructive',
+      });
+      return;
+    }
     mutation.mutate(data);
   };
 
@@ -180,6 +192,8 @@ export default function CompanyEmployeeForm() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar
       </Button>
+
+      {!isEditing && <PlanLimitBanner resource="employees" className="mb-4" />}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

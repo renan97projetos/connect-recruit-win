@@ -16,6 +16,8 @@ import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target, S
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { JobPreview } from '@/components/jobs/JobPreview';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 
 interface FormErrors {
   title?: string;
@@ -35,6 +37,7 @@ export default function JobForm() {
   const [loading, setLoading] = useState<'draft' | 'publish' | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [companyName, setCompanyName] = useState<string>('');
+  const { canCreate: canCreateByPlan, refresh: refreshPlanUsage } = usePlanLimits();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -173,6 +176,16 @@ export default function JobForm() {
       return;
     }
 
+    // Enforcement de limite por plano (apenas em criação)
+    if (!isEditing && !canCreateByPlan('jobs')) {
+      toast({
+        title: 'Limite do plano atingido',
+        description: 'Você atingiu o limite de vagas do seu plano. Faça upgrade para criar mais.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(mode);
     try {
       const filteredRequirements = requirements.filter(r => r.trim() !== '');
@@ -235,6 +248,7 @@ export default function JobForm() {
           ? 'A vaga está visível para candidatos.'
           : 'Você pode publicá-la depois quando quiser.',
       });
+      refreshPlanUsage();
       navigate('/company/dashboard');
     } catch (e) {
       console.error('Error saving job:', e);
@@ -285,6 +299,8 @@ export default function JobForm() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
+
+        {!isEditing && <PlanLimitBanner resource="jobs" className="mb-4" />}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
           {/* COLUNA ESQUERDA — FORMULÁRIO */}
