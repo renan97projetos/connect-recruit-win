@@ -198,12 +198,36 @@ export default function JobForm() {
       };
 
       let error;
+      let jobId: string | null = id ?? null;
       if (isEditing && id) {
         ({ error } = await supabase.from('jobs').update(jobData).eq('id', id));
       } else {
-        ({ error } = await supabase.from('jobs').insert(jobData));
+        const { data: inserted, error: insertError } = await supabase
+          .from('jobs')
+          .insert(jobData)
+          .select('id')
+          .single();
+        error = insertError;
+        jobId = inserted?.id ?? null;
       }
       if (error) throw error;
+
+      const validQuestions = questions.filter(q => q.question.trim());
+      if (jobId) {
+        await supabase.from('screening_questions').delete().eq('job_id', jobId);
+        if (validQuestions.length > 0) {
+          await supabase.from('screening_questions').insert(
+            validQuestions.map((q, i) => ({
+              job_id: jobId!,
+              company_id: user.id,
+              question: q.question.trim(),
+              question_type: q.question_type,
+              required: q.required,
+              order_position: i,
+            })),
+          );
+        }
+      }
 
       toast({
         title: mode === 'publish' ? 'Vaga publicada!' : 'Rascunho salvo',
