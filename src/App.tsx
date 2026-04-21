@@ -41,10 +41,6 @@ import Permissions from "./pages/company/Permissions";
 import UploadDocuments from "./pages/UploadDocuments";
 import AdminAuth from "./pages/admin/Auth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import CreateJob from "./pages/admin/CreateJob";
-import EmployeeManagement from "./pages/admin/EmployeeManagement";
-import EmployeeForm from "./pages/admin/EmployeeForm";
-import EmployeeDetails from "./pages/admin/EmployeeDetails";
 import SystemSettings from "./pages/admin/SystemSettings";
 import ContentManagement from "./pages/admin/ContentManagement";
 import TeamManagement from "./pages/admin/TeamManagement";
@@ -120,11 +116,6 @@ const App = () => {
               <Route path="/company/profile" element={<ProtectedRoute requiredRole="company"><CompanyProfile /></ProtectedRoute>} />
               <Route path="/admin/auth" element={<AdminAuth />} />
               <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/jobs/new" element={<ProtectedRoute requiredRole="admin"><CreateJob /></ProtectedRoute>} />
-              <Route path="/admin/employees" element={<ProtectedRoute requiredRole="admin"><EmployeeManagement /></ProtectedRoute>} />
-              <Route path="/admin/employees/new" element={<ProtectedRoute requiredRole="admin"><EmployeeForm /></ProtectedRoute>} />
-              <Route path="/admin/employees/:id" element={<ProtectedRoute requiredRole="admin"><EmployeeDetails /></ProtectedRoute>} />
-              <Route path="/admin/employees/:id/edit" element={<ProtectedRoute requiredRole="admin"><EmployeeForm /></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><SystemSettings /></ProtectedRoute>} />
               <Route path="/admin/content" element={<ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>} />
               <Route path="/admin/team" element={<ProtectedRoute requiredRole="admin"><TeamManagement /></ProtectedRoute>} />
