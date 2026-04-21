@@ -6,7 +6,7 @@ export type PlanType = 'starter' | 'pro';
 
 // DEV_MODE: todos os usuários têm acesso Pro durante desenvolvimento.
 // Quando o billing estiver ativo, mude DEV_MODE para false.
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 export function usePlanType() {
   const { user } = useSupabaseAuth();

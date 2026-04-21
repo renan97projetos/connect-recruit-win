@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 interface ApprovalAction {
   id: string;
@@ -643,7 +644,8 @@ export default function JobRequestDetails() {
           </Card>
         )}
 
-        {/* Fluxo de aprovação */}
+        {/* Fluxo de aprovação (multi-nível - Pro) */}
+        <ProFeatureGate featureName="Aprovação Multi-nível">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -736,6 +738,7 @@ export default function JobRequestDetails() {
             )}
           </CardContent>
         </Card>
+        </ProFeatureGate>
       </div>
     </CompanyLayout>
   );

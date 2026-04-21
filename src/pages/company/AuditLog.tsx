@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 interface AuditLogRow {
   id: string;
@@ -88,6 +89,7 @@ export default function AuditLog() {
 
   return (
     <CompanyLayout>
+      <ProFeatureGate featureName="Audit Log">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex items-center gap-3">
           <Shield className="h-6 w-6 text-primary" />
@@ -147,6 +149,7 @@ export default function AuditLog() {
           </CardContent>
         </Card>
       </div>
+      </ProFeatureGate>
     </CompanyLayout>
   );
 }

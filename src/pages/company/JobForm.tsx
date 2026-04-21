@@ -18,6 +18,7 @@ import { JobPreview } from '@/components/jobs/JobPreview';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { PlanLimitBanner } from '@/components/PlanLimitBanner';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 interface FormErrors {
   title?: string;
@@ -329,14 +330,16 @@ export default function JobForm() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="description">Descrição *</Label>
-                    <button
-                      type="button"
-                      onClick={() => setAiSheetOpen(true)}
-                      className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Gerar com IA
-                    </button>
+                    <ProFeatureGate compact featureName="IA">
+                      <button
+                        type="button"
+                        onClick={() => setAiSheetOpen(true)}
+                        className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Gerar com IA
+                      </button>
+                    </ProFeatureGate>
                   </div>
                   <Textarea
                     id="description"
@@ -584,6 +587,7 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
+            <ProFeatureGate featureName="Perguntas de Triagem">
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -666,6 +670,7 @@ export default function JobForm() {
                 )}
               </CardContent>
             </Card>
+            </ProFeatureGate>
 
             {/* Rodapé sticky com 2 CTAs */}
             <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t bg-background/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">

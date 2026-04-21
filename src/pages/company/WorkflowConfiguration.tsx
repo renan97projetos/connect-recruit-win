@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 export default function WorkflowConfiguration() {
   const { id } = useParams(); // job_id
@@ -197,6 +198,7 @@ export default function WorkflowConfiguration() {
       title={isEditing ? 'Editar Workflow' : 'Configurar Workflow'}
       description={jobTitle ? `Vaga: ${jobTitle}` : 'Configure as etapas do processo seletivo'}
     >
+      <ProFeatureGate featureName="Workflow Configurável">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate(returnUrl)}>
@@ -245,6 +247,7 @@ export default function WorkflowConfiguration() {
           </TabsContent>
         </Tabs>
       </div>
+      </ProFeatureGate>
     </CompanyLayout>
   );
 }

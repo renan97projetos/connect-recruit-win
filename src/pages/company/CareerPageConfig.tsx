@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, ExternalLink } from 'lucide-react';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 export default function CareerPageConfig() {
   const { user } = useSupabaseAuth();
@@ -81,6 +82,7 @@ export default function CareerPageConfig() {
 
   return (
     <CompanyLayout>
+      <ProFeatureGate featureName="Career Page Própria">
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Career Page</h1>
@@ -181,6 +183,7 @@ export default function CareerPageConfig() {
           </Button>
         </div>
       </div>
+      </ProFeatureGate>
     </CompanyLayout>
   );
 }
