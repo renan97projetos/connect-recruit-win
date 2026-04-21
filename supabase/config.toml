@@ -2,3 +2,6 @@ project_id = "herfafjqjvlaehabfxss"
 
 [functions.create-tenant-user]
 verify_jwt = false
+
+[functions.send-candidate-status-email]
+verify_jwt = false
