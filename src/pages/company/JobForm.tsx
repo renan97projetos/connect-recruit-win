@@ -37,6 +37,7 @@ export default function JobForm() {
   const [loading, setLoading] = useState<'draft' | 'publish' | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [companyName, setCompanyName] = useState<string>('');
+  const { canCreate: canCreateByPlan, refresh: refreshPlanUsage } = usePlanLimits();
 
   const [formData, setFormData] = useState({
     title: '',
