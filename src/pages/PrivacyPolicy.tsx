@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -87,14 +88,22 @@ export default function PrivacyPolicy() {
   }
 
   return (
-    <DashboardLayout title="Política de Privacidade" description="Como tratamos seus dados">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-card rounded-lg shadow-sm p-8">
-          <div className="prose prose-slate max-w-none dark:prose-invert">
-            <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br />') }} />
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Política de Privacidade</h1>
+            <p className="text-muted-foreground">Como tratamos seus dados</p>
+          </div>
+          <div className="bg-card rounded-lg shadow-sm p-8">
+            <div className="prose prose-slate max-w-none dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br />') }} />
+            </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </main>
+      <Footer />
+    </div>
   );
 }

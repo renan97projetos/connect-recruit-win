@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -254,10 +254,11 @@ export default function ContentManagement() {
   }
 
   return (
-    <DashboardLayout
-      title="Gerenciamento de Conteúdo"
-      description="Gerencie o conteúdo institucional e redes sociais"
-    >
+    <CompanyLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Gerenciamento de Conteúdo</h1>
+        <p className="text-muted-foreground">Gerencie o conteúdo institucional e redes sociais</p>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="about" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
@@ -377,6 +378,6 @@ export default function ContentManagement() {
           </Button>
         </div>
       </form>
-    </DashboardLayout>
+    </CompanyLayout>
   );
 }

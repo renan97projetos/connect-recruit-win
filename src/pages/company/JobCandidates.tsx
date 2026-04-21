@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,20 +88,21 @@ export default function JobCandidates() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Carregando..." description="">
+      <CompanyLayout>
         <p>Carregando dados...</p>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
   if (!job) {
     return (
-      <DashboardLayout title="Vaga não encontrada" description="">
+      <CompanyLayout>
+        <h1 className="text-2xl font-bold mb-4">Vaga não encontrada</h1>
         <Button variant="ghost" onClick={() => navigate('/company')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
-      </DashboardLayout>
+      </CompanyLayout>
     );
   }
 
@@ -372,10 +373,11 @@ export default function JobCandidates() {
 
   return (
     <TooltipProvider>
-      <DashboardLayout
-        title={job.title}
-        description="Gerencie os candidatos desta vaga"
-      >
+      <CompanyLayout>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
+          <p className="text-muted-foreground">Gerencie os candidatos desta vaga</p>
+        </div>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate('/company')}>
@@ -561,7 +563,7 @@ export default function JobCandidates() {
           </CardContent>
         </Card>
       </div>
-      </DashboardLayout>
+      </CompanyLayout>
     </TooltipProvider>
   );
 }
