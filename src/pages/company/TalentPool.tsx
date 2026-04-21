@@ -23,7 +23,10 @@ import {
   Search,
   TrendingUp,
   Loader2,
+  Download,
 } from 'lucide-react';
+import Papa from 'papaparse';
+import { useToast } from '@/hooks/use-toast';
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +55,9 @@ type TalentRow = {
 
 export default function TalentPool() {
   const { user } = useSupabaseAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+
 
   const { data: candidates = [], isLoading } = useQuery<TalentRow[]>({
     queryKey: ['talent-pool', user?.id],
@@ -133,6 +138,44 @@ export default function TalentPool() {
       );
     });
   }, [searchQuery, candidates]);
+
+  const handleExportCSV = async () => {
+    if (!filteredCandidates || filteredCandidates.length === 0) {
+      toast({ title: 'Nenhum candidato para exportar' });
+      return;
+    }
+
+    const allJobIds = Array.from(
+      new Set(filteredCandidates.flatMap((c) => c.applications.map((a) => a.job_id)))
+    );
+    const { data: jobsData } = await supabase
+      .from('jobs')
+      .select('id, title')
+      .in('id', allJobIds);
+    const jobTitleMap = new Map((jobsData || []).map((j) => [j.id, j.title]));
+
+    const rows = filteredCandidates.map(({ profile, applications }) => {
+      const lastJobId = applications[applications.length - 1]?.job_id;
+      return {
+        Nome: profile.name,
+        'E-mail': profile.email,
+        Telefone: profile.phone || '',
+        Habilidades: (profile.skills || []).join(', '),
+        'Última vaga aplicada': lastJobId ? jobTitleMap.get(lastJobId) || '' : '',
+        Candidaturas: applications.length,
+      };
+    });
+
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `banco-de-talentos-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   const getAverageScore = (apps: TalentRow['applications']) => {
     if (apps.length === 0) return 0;
@@ -221,6 +264,15 @@ export default function TalentPool() {
               {filteredCandidates.length} Candidato
               {filteredCandidates.length !== 1 ? 's' : ''}
             </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={filteredCandidates.length === 0}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Exportar CSV
+            </Button>
           </div>
 
           {isLoading ? (
