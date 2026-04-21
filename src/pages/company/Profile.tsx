@@ -58,27 +58,35 @@ export default function CompanyProfile() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
+      const [{ data: profile, error: profileErr }, { data: tenant }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user?.id).maybeSingle(),
+        supabase
+          .from('tenants')
+          .select('company_name, cnpj, company_email, company_phone, notes')
+          .eq('company_id', user?.id)
+          .maybeSingle(),
+      ]);
 
-      if (error) throw error;
+      if (profileErr) throw profileErr;
 
-      if (data) {
-        form.reset({
-          name: data.name || '',
-          company_name: data.company_name || '',
-          cnpj: data.cnpj || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          zip_code: data.zip_code || '',
-        });
-        setAvatarUrl(data.avatar_url);
-      }
+      // Extrai endereço/cidade/UF salvos em tenants.notes (formato "Endereço: X | Cidade: Y | UF: Z")
+      const parseNote = (key: string) => {
+        if (!tenant?.notes) return '';
+        const m = tenant.notes.split('|').map((p) => p.trim()).find((p) => p.toLowerCase().startsWith(`${key.toLowerCase()}:`));
+        return m ? m.split(':').slice(1).join(':').trim() : '';
+      };
+
+      form.reset({
+        name: profile?.name || tenant?.company_name || '',
+        company_name: tenant?.company_name || profile?.company_name || '',
+        cnpj: tenant?.cnpj || profile?.cnpj || '',
+        phone: tenant?.company_phone || profile?.phone || '',
+        address: profile?.address || parseNote('Endereço') || '',
+        city: profile?.city || parseNote('Cidade') || '',
+        state: profile?.state || parseNote('UF') || '',
+        zip_code: profile?.zip_code || '',
+      });
+      setAvatarUrl(profile?.avatar_url ?? null);
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
       toast({
