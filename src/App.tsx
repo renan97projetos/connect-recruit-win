@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { BackofficeAuthProvider } from "@/contexts/BackofficeAuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -102,7 +102,7 @@ const App = () => {
               <Route path="/company/jobs/new" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id/edit" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id" element={<ProtectedRoute requiredRole="company"><JobCandidates /></ProtectedRoute>} />
-              <Route path="/company/selection-process" element={<ProtectedRoute requiredRole="company"><SelectionProcess /></ProtectedRoute>} />
+              <Route path="/company/selection-process" element={<Navigate to="/company" replace />} />
               <Route path="/company/workflow/:id" element={<ProtectedRoute requiredRole="company"><WorkflowConfiguration /></ProtectedRoute>} />
               <Route path="/company/assessments" element={<ProtectedRoute requiredRole="company"><Assessments /></ProtectedRoute>} />
               <Route path="/company/job-history" element={<ProtectedRoute requiredRole="company"><JobHistory /></ProtectedRoute>} />
