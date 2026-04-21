@@ -241,6 +241,8 @@ export interface WorkflowStageData {
       on_approve?: boolean;
       on_reject?: boolean;
     };
+    whatsapp_enabled?: boolean;
+    whatsapp_message?: string;
   };
   stage_config: {
     meeting_link?: string;
