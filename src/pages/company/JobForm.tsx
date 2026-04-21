@@ -53,6 +53,13 @@ export default function JobForm() {
   const [benefits, setBenefits] = useState<string[]>(['']);
   const [benefitInput, setBenefitInput] = useState('');
 
+  type ScreeningQuestion = {
+    question: string;
+    question_type: 'text' | 'yes_no';
+    required: boolean;
+  };
+  const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
