@@ -20,6 +20,7 @@ import CandidateProfile from "./pages/candidate/Profile";
 import CompanyDashboard from "./pages/company/Dashboard";
 import CompanyHub from "./pages/company/Hub";
 import JobForm from "./pages/company/JobForm";
+import JobPipeline from "./pages/company/JobPipeline";
 
 // SelectionProcess removed — replaced by Dashboard pipeline
 import WorkflowConfiguration from "./pages/company/WorkflowConfiguration";
@@ -87,11 +88,11 @@ const App = () => {
               <Route path="/candidate" element={<ProtectedRoute requiredRole="candidate"><CandidateDashboard /></ProtectedRoute>} />
               <Route path="/candidate/profile" element={<ProtectedRoute requiredRole="candidate"><CandidateProfile /></ProtectedRoute>} />
               <Route path="/company" element={<ProtectedRoute requiredRole="company"><CompanyHub /></ProtectedRoute>} />
-              <Route path="/company/hub" element={<ProtectedRoute requiredRole="company"><CompanyHub /></ProtectedRoute>} />
               <Route path="/company/dashboard" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
               <Route path="/company/jobs/new" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id/edit" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
-              <Route path="/company/jobs/:id" element={<Navigate to="/company" replace />} />
+              <Route path="/company/jobs/:id" element={<ProtectedRoute requiredRole="company"><JobPipeline /></ProtectedRoute>} />
+              <Route path="/company/jobs/:id/candidates" element={<ProtectedRoute requiredRole="company"><JobPipeline /></ProtectedRoute>} />
               <Route path="/company/selection-process" element={<Navigate to="/company" replace />} />
               <Route path="/company/workflow/:id" element={<ProtectedRoute requiredRole="company"><WorkflowConfiguration /></ProtectedRoute>} />
               <Route path="/company/assessments" element={<ProtectedRoute requiredRole="company"><Assessments /></ProtectedRoute>} />

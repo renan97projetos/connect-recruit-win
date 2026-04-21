@@ -41,7 +41,7 @@ export default function JobPipeline() {
         </div>
       </div>
 
-      {id && <CandidatePipeline jobId={id} />}
+      {id && <CandidatePipeline jobId={id} jobTitle={jobTitle} />}
     </CompanyLayout>
   );
 }
