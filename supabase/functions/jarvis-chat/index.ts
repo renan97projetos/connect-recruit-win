@@ -14,7 +14,7 @@ Você NÃO executa ações no sistema — apenas sugere e o usuário decide.
 Responda em português do Brasil. Seja conciso (máximo 4 parágrafos curtos).`;
 
 interface Body {
-  mode: 'report' | 'suggestions' | 'chat';
+  mode: 'report' | 'suggestions' | 'chat' | 'briefing' | 'insights';
   context: Record<string, unknown>;
   messages?: { role: 'user' | 'assistant'; content: string }[];
 }
@@ -45,6 +45,22 @@ ${JSON.stringify(context, null, 2)}`;
       userPrompt = `Gere de 3 a 5 sugestões proativas e específicas com base nos dados.
 Responda APENAS com JSON neste formato exato, sem nenhum texto antes ou depois:
 {"suggestions":[{"title":"...","reason":"...","cta":"Ver vagas|Ver candidatos|Ver requisições|Ver propostas"}]}
+
+Contexto (JSON):
+${JSON.stringify(context, null, 2)}`;
+    } else if (mode === 'briefing') {
+      userPrompt = `Monte o briefing matinal para o gestor.
+Responda APENAS com JSON neste formato exato, sem nenhum texto antes ou depois:
+{"highlights":["...","...","..."],"agenda":["...","...","..."],"alert":"frase curta de urgência ou null"}
+- highlights: 3 a 4 frases curtas sobre o dia anterior / situação atual
+- agenda: 3 a 5 prioridades para hoje, específicas
+- alert: uma frase de alerta se houver urgência real, senão exatamente null
+
+Contexto (JSON):
+${JSON.stringify(context, null, 2)}`;
+    } else if (mode === 'insights') {
+      userPrompt = `Gere exatamente 3 insights muito curtos (máximo 70 caracteres cada) sobre os dados.
+Responda APENAS com JSON neste formato: {"insights":["...","...","..."]}
 
 Contexto (JSON):
 ${JSON.stringify(context, null, 2)}`;
