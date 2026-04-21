@@ -21,6 +21,9 @@ import { usePlanType } from '@/hooks/usePlanType';
 import { useJarvisContext } from '@/hooks/useJarvisContext';
 import { JarvisFab } from '@/components/jarvis/JarvisFab';
 import { JarvisPanel } from '@/components/jarvis/JarvisPanel';
+import { JarvisStrip } from '@/components/jarvis/JarvisStrip';
+import { JarvisBriefing } from '@/components/jarvis/JarvisBriefing';
+import { JarvisCommandBar } from '@/components/jarvis/JarvisCommandBar';
 
 type PipelineStageId =
   | 'aberta'
