@@ -14,6 +14,22 @@ import { toast } from 'sonner';
 import { ArrowLeft, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+
+interface ApprovalAction {
+  id: string;
+  approver_id: string;
+  approver_name: string | null;
+  action: string;
+  notes: string | null;
+  created_at: string;
+}
+
+interface CompanyUserRow {
+  user_id: string;
+  profiles: { name?: string | null; email?: string | null } | null;
+}
 
 interface JobRequest {
   id: string;
