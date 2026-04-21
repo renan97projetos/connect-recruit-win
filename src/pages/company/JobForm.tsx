@@ -16,6 +16,8 @@ import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target, S
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { JobPreview } from '@/components/jobs/JobPreview';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 
 interface FormErrors {
   title?: string;
