@@ -37,7 +37,7 @@ export function CompanyHeader({ showHubLink = true }: CompanyHeaderProps) {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate('/empresa/acesso');
   };
 
   return (

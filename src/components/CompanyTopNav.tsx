@@ -121,7 +121,7 @@ export function CompanyTopNav() {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate('/empresa/acesso');
   };
 
   const companyInitials = (companyName || 'E').charAt(0).toUpperCase();
