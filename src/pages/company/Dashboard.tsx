@@ -466,6 +466,46 @@ export default function CompanyDashboard() {
                       Nenhum candidato para exibir no funil
                     </div>
                   )}
+
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-3">
+                      Tempo médio por etapa
+                    </p>
+                    <div className="space-y-2">
+                      {Object.entries({
+                        screening: 'Triagem',
+                        interview: 'Entrevista RH',
+                        technical: 'Teste Técnico',
+                        approved: 'Aprovado',
+                      }).map(([stage, label]) => {
+                        const avg = avgDaysMap[stage] ?? null;
+                        return (
+                          <div
+                            key={stage}
+                            className="flex items-center justify-between text-xs py-1.5 border-b border-gray-50 last:border-0"
+                          >
+                            <span className="text-gray-600">{label}</span>
+                            <span
+                              className={
+                                avg === null
+                                  ? 'text-gray-300'
+                                  : avg > 7
+                                  ? 'text-red-500 font-medium'
+                                  : avg > 3
+                                  ? 'text-amber-500 font-medium'
+                                  : 'text-green-600 font-medium'
+                              }
+                            >
+                              {avg === null ? '—' : `${avg} dias`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-2">
+                      Vermelho {'>'} 7 dias · Amarelo {'>'} 3 dias · Verde ≤ 3 dias
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
