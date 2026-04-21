@@ -6,7 +6,7 @@ export type JobLocation = 'remote' | 'onsite' | 'hybrid';
 export type WorkflowStage = 'inscription' | 'screening' | 'interview' | 'evaluation' | 'candidate-management' | 'decision';
 export type ApplicationStatus = 'pending' | 'in-review' | 'interview' | 'approved' | 'rejected';
 
-export type PlanType = 'free' | 'starter' | 'professional' | 'enterprise' | 'custom';
+export type PlanType = 'starter' | 'pro';
 
 export interface User {
   id: string;
