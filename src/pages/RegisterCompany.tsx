@@ -134,7 +134,7 @@ export default function RegisterCompany() {
       }
       setForm((f) => ({
         ...f,
-        company_name: f.company_name || data.razao_social || data.nome_fantasia || '',
+        company_name: data.razao_social || data.nome_fantasia || f.company_name,
         cep: f.cep || (data.cep ? maskCEP(String(data.cep)) : ''),
         address: f.address || [data.logradouro, data.numero].filter(Boolean).join(', '),
         city: f.city || data.municipio || '',
