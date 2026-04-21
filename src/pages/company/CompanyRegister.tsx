@@ -52,9 +52,9 @@ function maskCEP(v: string) {
 }
 
 const inputCls = (err = false) =>
-  `w-full h-11 rounded-lg bg-white/5 border px-4 text-white placeholder:text-white/30 outline-none transition-all focus:bg-white/[0.07] focus:ring-2 focus:ring-violet-500/40 ${err ? 'border-red-400/60' : 'border-white/10 hover:border-white/20'}`;
+  `w-full h-12 rounded-lg bg-background border-3 border-foreground px-4 text-foreground placeholder:text-muted-foreground outline-none transition-all focus:shadow-brutal focus:translate-x-[-2px] focus:translate-y-[-2px] font-medium ${err ? 'border-destructive' : ''}`;
 
-const labelCls = 'text-xs font-medium text-white/70 tracking-wide block mb-1.5';
+const labelCls = 'text-sm font-bold text-foreground tracking-wide block mb-2';
 
 export default function CompanyRegister() {
   const navigate = useNavigate();
@@ -230,10 +230,10 @@ export default function CompanyRegister() {
     typeof v === 'number' ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
 
   const steps = [
-    { n: 1, label: 'Empresa', icon: Building2 },
-    { n: 2, label: 'Responsável', icon: User },
-    { n: 3, label: 'Acesso', icon: Lock },
-    { n: 4, label: 'Plano', icon: Briefcase },
+    { n: 1, label: 'Empresa', icon: Building2, bg: 'bg-yellow' },
+    { n: 2, label: 'Responsável', icon: User, bg: 'bg-cyan' },
+    { n: 3, label: 'Acesso', icon: Lock, bg: 'bg-lime' },
+    { n: 4, label: 'Plano', icon: Briefcase, bg: 'bg-pink' },
   ];
 
   const goNext = () => {
@@ -257,363 +257,407 @@ export default function CompanyRegister() {
     setStep((s) => Math.min(4, s + 1));
   };
 
-  return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0a0a14]">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_hsl(262_83%_30%_/_0.4),_transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_hsl(200_90%_30%_/_0.3),_transparent_50%)]" />
-        <div className="absolute inset-0 opacity-[0.04]" style={{
-          backgroundImage: 'linear-gradient(hsl(0 0% 100%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 0% 100%) 1px, transparent 1px)',
-          backgroundSize: '64px 64px',
-        }} />
-        <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-violet-600/20 blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-[28rem] h-[28rem] rounded-full bg-indigo-500/15 blur-3xl" />
-      </div>
+  const currentStepBg = steps.find((s) => s.n === step)?.bg || 'bg-yellow';
 
-      <div className="relative">
-        {/* Header */}
-        <header className="px-6 lg:px-12 py-6 flex items-center justify-between text-white">
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b-3 border-foreground bg-background">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <Building2 className="h-5 w-5" />
+            <div className="w-10 h-10 rounded-lg bg-primary border-3 border-foreground shadow-brutal flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">SinapseRH <span className="text-violet-300/80 font-normal">Empresas</span></span>
+            <span className="font-black text-xl tracking-tight text-foreground">
+              SinapseRH <span className="text-muted-foreground font-bold">Empresas</span>
+            </span>
           </Link>
-          <Link to="/empresa/acesso" className="text-sm text-white/60 hover:text-white transition-colors">
+          <Link
+            to="/empresa/acesso"
+            className="text-sm font-bold text-foreground hover:underline underline-offset-4"
+          >
             Já tenho conta →
           </Link>
-        </header>
+        </div>
+      </header>
 
-        <div className="max-w-6xl mx-auto px-6 lg:px-12 pb-16 pt-4">
-          {/* Title */}
-          <div className="text-center mb-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-violet-200 backdrop-blur-sm mb-5">
-              <Sparkles className="h-3.5 w-3.5" />
-              Comece em minutos
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-tight mb-4">
-              Crie sua conta <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-indigo-300">empresarial</span>
-            </h1>
-            <p className="text-white/60 text-lg">
-              Configure seu acesso, escolha o plano ideal e transforme seu processo de recrutamento.
-            </p>
+      <div className="container mx-auto px-4 py-10 max-w-5xl">
+        {/* Title */}
+        <div className="text-center mb-10 max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 rounded-full border-3 border-foreground bg-yellow px-4 py-1.5 text-sm font-bold text-foreground shadow-brutal mb-6">
+            <Sparkles className="h-4 w-4" />
+            Comece em minutos
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight leading-tight mb-4">
+            Crie sua conta empresarial
+          </h1>
+          <p className="text-muted-foreground text-lg font-medium">
+            Configure seu acesso, escolha o plano ideal e transforme seu processo de recrutamento.
+          </p>
+        </div>
+
+        {/* Stepper */}
+        <div className="flex items-center justify-center gap-2 lg:gap-3 mb-10 flex-wrap">
+          {steps.map((s, i) => {
+            const active = step === s.n;
+            const done = step > s.n;
+            const Icon = s.icon;
+            return (
+              <div key={s.n} className="flex items-center">
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border-3 border-foreground font-bold text-sm transition-all ${
+                    active
+                      ? `${s.bg} text-foreground shadow-brutal`
+                      : done
+                      ? 'bg-lime text-foreground shadow-brutal'
+                      : 'bg-background text-muted-foreground'
+                  }`}
+                >
+                  {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                  <span className="hidden sm:inline">{s.label}</span>
+                  <span className="sm:hidden">{s.n}</span>
+                </div>
+                {i < steps.length - 1 && (
+                  <div className={`w-3 lg:w-6 h-1 mx-1 ${done ? 'bg-foreground' : 'bg-muted'}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Form card */}
+        <form onSubmit={handleSubmit}>
+          <div
+            className={`${currentStepBg} rounded-2xl border-3 border-foreground shadow-brutal-lg p-6 lg:p-10 transition-colors`}
+          >
+            {/* Step 1: Empresa */}
+            {step === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-foreground">Dados da empresa</h2>
+                  <p className="text-sm text-foreground/70 mt-1 font-medium">
+                    Comece pelo CNPJ — preencheremos o restante automaticamente.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>CNPJ *</label>
+                    <div className="relative">
+                      <input
+                        value={form.cnpj}
+                        onChange={(e) => { handleChange('cnpj', maskCNPJ(e.target.value)); setCnpjValidated(false); }}
+                        onBlur={(e) => handleCnpjBlur(e.target.value)}
+                        placeholder="00.000.000/0000-00"
+                        className={inputCls()}
+                        required
+                      />
+                      {cnpjLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-foreground" />
+                      ) : cnpjValidated ? (
+                        <Check className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-foreground" />
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-foreground/60 mt-1.5 font-medium">
+                      Validação automática junto à Receita Federal.
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>Razão social / Nome da empresa *</label>
+                    <input
+                      value={form.company_name}
+                      onChange={(e) => handleChange('company_name', e.target.value)}
+                      className={inputCls()}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Telefone *</label>
+                    <input
+                      value={form.company_phone}
+                      onChange={(e) => handleChange('company_phone', maskPhone(e.target.value))}
+                      placeholder="(00) 00000-0000"
+                      className={inputCls()}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>CEP</label>
+                    <div className="relative">
+                      <input
+                        value={form.cep}
+                        onChange={(e) => handleChange('cep', maskCEP(e.target.value))}
+                        onBlur={(e) => handleCepBlur(e.target.value)}
+                        placeholder="00000-000"
+                        maxLength={9}
+                        className={inputCls()}
+                      />
+                      {cepLoading && <Loader2 className="h-5 w-5 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-foreground" />}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>Endereço</label>
+                    <input
+                      value={form.address}
+                      onChange={(e) => handleChange('address', e.target.value)}
+                      className={inputCls()}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 md:col-span-2">
+                    <div className="col-span-2">
+                      <label className={labelCls}>Cidade</label>
+                      <input
+                        value={form.city}
+                        onChange={(e) => handleChange('city', e.target.value)}
+                        className={inputCls()}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>UF</label>
+                      <input
+                        value={form.state}
+                        onChange={(e) => handleChange('state', e.target.value.toUpperCase().slice(0, 2))}
+                        maxLength={2}
+                        className={inputCls()}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Responsável */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-foreground">Responsável pela conta</h2>
+                  <p className="text-sm text-foreground/70 mt-1 font-medium">
+                    Quem será o administrador principal do painel.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelCls}>Nome completo *</label>
+                    <input
+                      value={form.responsible_name}
+                      onChange={(e) => handleChange('responsible_name', e.target.value)}
+                      className={inputCls()}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Cargo</label>
+                    <input
+                      value={form.responsible_role}
+                      onChange={(e) => handleChange('responsible_role', e.target.value)}
+                      placeholder="Ex.: Gerente de RH"
+                      className={inputCls()}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Acesso */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-foreground">Dados de acesso</h2>
+                  <p className="text-sm text-foreground/70 mt-1 font-medium">
+                    Você usará estes dados para entrar no painel.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>E-mail corporativo *</label>
+                    <input
+                      type="email"
+                      value={form.company_email}
+                      onChange={(e) => handleChange('company_email', e.target.value)}
+                      className={inputCls()}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Senha *</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={form.password}
+                        onChange={(e) => handleChange('password', e.target.value)}
+                        className={`${inputCls()} pr-10`}
+                        required
+                        minLength={8}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-foreground/60 mt-1.5 font-medium">Mínimo 8 caracteres.</p>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Confirmar senha *</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={form.confirmPassword}
+                        onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                        className={`${inputCls()} pr-10`}
+                        required
+                        minLength={8}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-foreground"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Plano */}
+            {step === 4 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-foreground">Escolha seu plano</h2>
+                  <p className="text-sm text-foreground/70 mt-1 font-medium">
+                    Você poderá alterar a qualquer momento.
+                  </p>
+                </div>
+                {loadingPlans ? (
+                  <div className="flex items-center justify-center py-16">
+                    <Loader2 className="h-6 w-6 animate-spin text-foreground" />
+                  </div>
+                ) : plans.length === 0 ? (
+                  <p className="text-foreground/70 font-medium">Nenhum plano disponível no momento.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {plans.map((plan, idx) => {
+                      const selected = form.plan_id === plan.id;
+                      const features = Array.isArray(plan.features) ? plan.features : [];
+                      const planBgs = ['bg-cyan', 'bg-lime', 'bg-yellow'];
+                      const planBg = planBgs[idx % planBgs.length];
+                      return (
+                        <button
+                          type="button"
+                          key={plan.id}
+                          onClick={() => handleChange('plan_id', plan.id)}
+                          className={`text-left p-5 rounded-xl border-3 border-foreground transition-all relative ${
+                            selected
+                              ? `${planBg} shadow-brutal-lg translate-x-[-2px] translate-y-[-2px]`
+                              : 'bg-background shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover'
+                          }`}
+                        >
+                          {selected && (
+                            <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-foreground border-3 border-foreground flex items-center justify-center">
+                              <Check className="h-4 w-4 text-background" />
+                            </div>
+                          )}
+                          <h3 className="font-black text-foreground text-xl">{plan.name}</h3>
+                          <div className="mt-2 mb-3">
+                            <span className="text-3xl font-black text-foreground tracking-tight">
+                              {formatPrice(plan.price_monthly)}
+                            </span>
+                            <span className="text-sm text-foreground/60 font-bold">/mês</span>
+                          </div>
+                          {plan.description && (
+                            <p className="text-sm text-foreground/80 mb-4 font-medium">{plan.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1.5 mb-4">
+                            {plan.max_users && (
+                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-foreground text-background font-bold">
+                                {plan.max_users} usuários
+                              </span>
+                            )}
+                            {plan.max_jobs && (
+                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-foreground text-background font-bold">
+                                {plan.max_jobs} vagas
+                              </span>
+                            )}
+                            {plan.max_employees && (
+                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-foreground text-background font-bold">
+                                {plan.max_employees} colaboradores
+                              </span>
+                            )}
+                          </div>
+                          {features.length > 0 && (
+                            <ul className="space-y-1.5 text-sm text-foreground/80 font-medium">
+                              {features.slice(0, 4).map((f: any, i: number) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <Check className="h-4 w-4 mt-0.5 shrink-0 text-foreground" />
+                                  <span>{typeof f === 'string' ? f : f?.name || ''}</span>
+                                </li>
+                              ))}
+                              <li className="text-xs italic text-foreground/60 pl-6">E muito mais...</li>
+                            </ul>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Stepper */}
-          <div className="flex items-center justify-center gap-2 lg:gap-4 mb-10">
-            {steps.map((s, i) => {
-              const active = step === s.n;
-              const done = step > s.n;
-              const Icon = s.icon;
-              return (
-                <div key={s.n} className="flex items-center">
-                  <div className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full border transition-all ${
-                    active ? 'border-violet-400/60 bg-violet-500/10 text-white' :
-                    done ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' :
-                    'border-white/10 bg-white/[0.02] text-white/40'
-                  }`}>
-                    {done ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                    <span className="text-xs font-medium hidden sm:inline">{s.label}</span>
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className={`w-4 lg:w-8 h-px mx-1 ${done ? 'bg-emerald-400/40' : 'bg-white/10'}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {/* Nav */}
+          <div className="flex items-center justify-between mt-6">
+            <button
+              type="button"
+              onClick={() => step === 1 ? navigate('/') : setStep((s) => s - 1)}
+              className="inline-flex items-center gap-2 h-12 px-5 rounded-lg bg-background border-3 border-foreground font-bold text-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {step === 1 ? 'Cancelar' : 'Voltar'}
+            </button>
 
-          {/* Form card */}
-          <form onSubmit={handleSubmit}>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-6 lg:p-10 shadow-2xl shadow-black/40">
-              {/* Step 1: Empresa */}
-              {step === 1 && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">Dados da empresa</h2>
-                    <p className="text-sm text-white/50 mt-1">Comece pelo CNPJ — preencheremos o restante automaticamente.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <label className={labelCls}>CNPJ *</label>
-                      <div className="relative">
-                        <input
-                          value={form.cnpj}
-                          onChange={(e) => { handleChange('cnpj', maskCNPJ(e.target.value)); setCnpjValidated(false); }}
-                          onBlur={(e) => handleCnpjBlur(e.target.value)}
-                          placeholder="00.000.000/0000-00"
-                          className={inputCls()}
-                          required
-                        />
-                        {cnpjLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-violet-300" />
-                        ) : cnpjValidated ? (
-                          <Check className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400" />
-                        ) : null}
-                      </div>
-                      <p className="text-xs text-white/40 mt-1.5">Validação automática junto à Receita Federal.</p>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className={labelCls}>Razão social / Nome da empresa *</label>
-                      <input
-                        value={form.company_name}
-                        onChange={(e) => handleChange('company_name', e.target.value)}
-                        className={inputCls()}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelCls}>Telefone *</label>
-                      <input
-                        value={form.company_phone}
-                        onChange={(e) => handleChange('company_phone', maskPhone(e.target.value))}
-                        placeholder="(00) 00000-0000"
-                        className={inputCls()}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className={labelCls}>CEP</label>
-                      <div className="relative">
-                        <input
-                          value={form.cep}
-                          onChange={(e) => handleChange('cep', maskCEP(e.target.value))}
-                          onBlur={(e) => handleCepBlur(e.target.value)}
-                          placeholder="00000-000"
-                          maxLength={9}
-                          className={inputCls()}
-                        />
-                        {cepLoading && <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-violet-300" />}
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className={labelCls}>Endereço</label>
-                      <input
-                        value={form.address}
-                        onChange={(e) => handleChange('address', e.target.value)}
-                        className={inputCls()}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 md:col-span-2">
-                      <div className="col-span-2">
-                        <label className={labelCls}>Cidade</label>
-                        <input value={form.city} onChange={(e) => handleChange('city', e.target.value)} className={inputCls()} />
-                      </div>
-                      <div>
-                        <label className={labelCls}>UF</label>
-                        <input
-                          value={form.state}
-                          onChange={(e) => handleChange('state', e.target.value.toUpperCase().slice(0, 2))}
-                          maxLength={2}
-                          className={inputCls()}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Responsável */}
-              {step === 2 && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">Responsável pela conta</h2>
-                    <p className="text-sm text-white/50 mt-1">Quem será o administrador principal do painel.</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                      <label className={labelCls}>Nome completo *</label>
-                      <input
-                        value={form.responsible_name}
-                        onChange={(e) => handleChange('responsible_name', e.target.value)}
-                        className={inputCls()}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Cargo</label>
-                      <input
-                        value={form.responsible_role}
-                        onChange={(e) => handleChange('responsible_role', e.target.value)}
-                        placeholder="Ex.: Gerente de RH"
-                        className={inputCls()}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Acesso */}
-              {step === 3 && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">Dados de acesso</h2>
-                    <p className="text-sm text-white/50 mt-1">Você usará estes dados para entrar no painel.</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <label className={labelCls}>E-mail corporativo *</label>
-                      <input
-                        type="email"
-                        value={form.company_email}
-                        onChange={(e) => handleChange('company_email', e.target.value)}
-                        className={inputCls()}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Senha *</label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={form.password}
-                          onChange={(e) => handleChange('password', e.target.value)}
-                          className={`${inputCls()} pr-10`}
-                          required
-                          minLength={8}
-                        />
-                        <button type="button" onClick={() => setShowPassword((v) => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80" tabIndex={-1}>
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-white/40 mt-1.5">Mínimo 8 caracteres.</p>
-                    </div>
-                    <div>
-                      <label className={labelCls}>Confirmar senha *</label>
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          value={form.confirmPassword}
-                          onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                          className={`${inputCls()} pr-10`}
-                          required
-                          minLength={8}
-                        />
-                        <button type="button" onClick={() => setShowConfirmPassword((v) => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80" tabIndex={-1}>
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Plano */}
-              {step === 4 && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">Escolha seu plano</h2>
-                    <p className="text-sm text-white/50 mt-1">Você poderá alterar a qualquer momento.</p>
-                  </div>
-                  {loadingPlans ? (
-                    <div className="flex items-center justify-center py-16">
-                      <Loader2 className="h-6 w-6 animate-spin text-violet-300" />
-                    </div>
-                  ) : plans.length === 0 ? (
-                    <p className="text-white/50">Nenhum plano disponível no momento.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {plans.map((plan) => {
-                        const selected = form.plan_id === plan.id;
-                        const features = Array.isArray(plan.features) ? plan.features : [];
-                        return (
-                          <button
-                            type="button"
-                            key={plan.id}
-                            onClick={() => handleChange('plan_id', plan.id)}
-                            className={`text-left p-5 rounded-xl border transition-all relative ${
-                              selected
-                                ? 'border-violet-400/60 bg-gradient-to-br from-violet-500/15 to-indigo-500/10 ring-2 ring-violet-500/30'
-                                : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
-                            }`}
-                          >
-                            {selected && (
-                              <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                                <Check className="h-3.5 w-3.5 text-white" />
-                              </div>
-                            )}
-                            <h3 className="font-semibold text-white text-lg">{plan.name}</h3>
-                            <div className="mt-2 mb-3">
-                              <span className="text-3xl font-semibold text-white tracking-tight">{formatPrice(plan.price_monthly)}</span>
-                              <span className="text-sm text-white/40">/mês</span>
-                            </div>
-                            {plan.description && (
-                              <p className="text-sm text-white/60 mb-4">{plan.description}</p>
-                            )}
-                            <div className="flex flex-wrap gap-1.5 mb-4">
-                              {plan.max_users && <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/70">{plan.max_users} usuários</span>}
-                              {plan.max_jobs && <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/70">{plan.max_jobs} vagas</span>}
-                              {plan.max_employees && <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/70">{plan.max_employees} colaboradores</span>}
-                            </div>
-                            {features.length > 0 && (
-                              <ul className="space-y-1.5 text-sm text-white/70">
-                                {features.slice(0, 4).map((f: any, i: number) => (
-                                  <li key={i} className="flex items-start gap-2">
-                                    <Check className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-400/80" />
-                                    <span>{typeof f === 'string' ? f : f?.name || ''}</span>
-                                  </li>
-                                ))}
-                                <li className="text-xs italic text-white/40 pl-5">E muito mais...</li>
-                              </ul>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Nav */}
-            <div className="flex items-center justify-between mt-6">
+            {step < 4 ? (
               <button
                 type="button"
-                onClick={() => step === 1 ? navigate('/') : setStep((s) => s - 1)}
-                className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors px-4 py-2"
+                onClick={goNext}
+                className="inline-flex items-center gap-2 h-12 px-6 rounded-lg bg-primary border-3 border-foreground text-primary-foreground font-black shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all"
               >
-                <ArrowLeft className="h-4 w-4" />
-                {step === 1 ? 'Cancelar' : 'Voltar'}
+                Continuar <ArrowRight className="h-4 w-4" />
               </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center gap-2 h-12 px-6 rounded-lg bg-primary border-3 border-foreground text-primary-foreground font-black shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all disabled:opacity-60"
+              >
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Cadastrando...</>
+                ) : (
+                  <>Finalizar cadastro <Check className="h-4 w-4" /></>
+                )}
+              </button>
+            )}
+          </div>
 
-              {step < 4 ? (
-                <button
-                  type="button"
-                  onClick={goNext}
-                  className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-medium shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 hover:from-violet-400 hover:to-indigo-500 transition-all"
-                >
-                  Continuar <ArrowRight className="h-4 w-4" />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-medium shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 hover:from-violet-400 hover:to-indigo-500 transition-all disabled:opacity-60"
-                >
-                  {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Cadastrando...</>) : (<>Finalizar cadastro <Check className="h-4 w-4" /></>)}
-                </button>
-              )}
-            </div>
-
-            <div className="mt-8 flex items-center justify-center gap-3 text-xs text-white/40">
-              <ShieldCheck className="h-4 w-4 text-emerald-400/70" />
-              <span>
-                Ao se cadastrar, você concorda com nossos{' '}
-                <Link to="/terms-of-use" className="text-white/60 hover:text-white underline underline-offset-2">Termos</Link>{' '}e{' '}
-                <Link to="/privacy-policy" className="text-white/60 hover:text-white underline underline-offset-2">Privacidade</Link>.
-              </span>
-            </div>
-          </form>
-        </div>
+          <div className="mt-8 flex items-center justify-center gap-3 text-sm text-muted-foreground font-medium">
+            <ShieldCheck className="h-4 w-4 text-foreground" />
+            <span>
+              Ao se cadastrar, você concorda com nossos{' '}
+              <Link to="/terms-of-use" className="text-foreground font-bold underline underline-offset-2">Termos</Link>{' '}e{' '}
+              <Link to="/privacy-policy" className="text-foreground font-bold underline underline-offset-2">Privacidade</Link>.
+            </span>
+          </div>
+        </form>
       </div>
     </div>
   );
