@@ -89,6 +89,18 @@ export function JarvisPanel({ open, onClose, context, injectedExchange, onExchan
     }
   }, [messages]);
 
+  // Injeção de troca vinda da Command Bar
+  useEffect(() => {
+    if (open && injectedExchange) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: injectedExchange.question },
+        { role: 'assistant', content: injectedExchange.answer },
+      ]);
+      onExchangeConsumed?.();
+    }
+  }, [open, injectedExchange, onExchangeConsumed]);
+
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || chatLoading) return;
