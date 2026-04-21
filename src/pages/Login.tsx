@@ -232,10 +232,18 @@ export default function Login() {
 
           </form>
 
-          <div className="text-center">
-            <Link 
-              to="/" 
-              className="text-sm text-muted-foreground hover:text-foreground font-semibold"
+          <div className="text-center space-y-2">
+            {intendedRole !== 'company' && (
+              <p className="text-sm text-muted-foreground">
+                Não tem uma conta?{' '}
+                <Link to="/register" className="font-semibold text-primary hover:underline underline-offset-4">
+                  Cadastre-se como candidato
+                </Link>
+              </p>
+            )}
+            <Link
+              to="/"
+              className="text-sm text-muted-foreground hover:text-foreground font-semibold inline-block"
             >
               ← Voltar para o início
             </Link>

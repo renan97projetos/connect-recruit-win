@@ -51,6 +51,7 @@ import ApiDocumentation from "./pages/ApiDocumentation";
 import NotFound from "./pages/NotFound";
 import ProspectFunnel from "./pages/ProspectFunnel";
 import RegisterInvitation from "./pages/RegisterInvitation";
+import Register from "./pages/Register";
 import CareerPage from "./pages/careers/CareerPage";
 import CareerPageConfig from "./pages/company/CareerPageConfig";
 import EmailTemplates from "./pages/company/EmailTemplates";
@@ -83,6 +84,7 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               
+              <Route path="/register" element={<Register />} />
               <Route path="/register-invitation" element={<RegisterInvitation />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
