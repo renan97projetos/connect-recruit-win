@@ -183,7 +183,7 @@ export function EmployeeTable({ employees, isCompanyView = false }: EmployeeTabl
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/admin/employees/${employee.id}`)}
+                          onClick={() => navigate(`/company/employees/${employee.id}`)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

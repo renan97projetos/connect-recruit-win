@@ -745,7 +745,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
         // Atualizar candidatos para a nova etapa - sincronizar status
         const newStatus = getStatusForStage(destColId);
         toast.info('Gerencie candidatos na página de processo seletivo');
-        navigate(`/company/selection-process/${item.id}`);
+        navigate(`/company/jobs/${item.id}`);
         return;
       }
       
@@ -848,7 +848,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
       case 'screen_resumes':
       case 'bulk_approve':
       case 'bulk_reject':
-        navigate(`/company/selection-process/${itemId}`);
+        navigate(`/company/jobs/${itemId}`);
         break;
       case 'share_job':
         navigator.clipboard.writeText(`https://www.sinapserh.com.br/jobs/${itemId}`);
@@ -869,7 +869,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
       case 'send_video_link':
       case 'schedule_video':
       case 'view_recordings':
-        navigate(`/company/selection-process/${itemId}`);
+        navigate(`/company/jobs/${itemId}`);
         break;
       
       // Ações de Seleção
@@ -894,21 +894,21 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
       case 'update_terms':
       case 'compare_offers':
       case 'finalize_negotiation':
-        navigate(`/company/selection-process/${itemId}`);
+        navigate(`/company/jobs/${itemId}`);
         break;
       
       // Ações de Contratação
       case 'collect_documents':
-        navigate(`/company/selection-process/${itemId}?tab=documents`);
+        navigate(`/company/jobs/${itemId}?tab=documents`);
         break;
       case 'send_welcome':
         toast.info('Funcionalidade de boas-vindas em desenvolvimento');
         break;
       case 'start_onboarding':
-        navigate(`/company/selection-process/${itemId}?tab=onboarding`);
+        navigate(`/company/jobs/${itemId}?tab=onboarding`);
         break;
       case 'complete_hiring':
-        navigate(`/company/selection-process/${itemId}`);
+        navigate(`/company/jobs/${itemId}`);
         break;
       
       default:

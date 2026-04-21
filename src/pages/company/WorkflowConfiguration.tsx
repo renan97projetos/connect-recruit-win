@@ -26,7 +26,7 @@ export default function WorkflowConfiguration() {
   const [jobTitle, setJobTitle] = useState('');
 
   const isEditing = !!id && !!workflowId;
-  const returnUrl = searchParams.get('return') || '/company/selection-process';
+  const returnUrl = searchParams.get('return') || '/company/dashboard';
 
   useEffect(() => {
     if (id) {
