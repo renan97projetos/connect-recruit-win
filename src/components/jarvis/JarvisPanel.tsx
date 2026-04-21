@@ -13,6 +13,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   context: JarvisContext | null;
+  injectedExchange?: { question: string; answer: string } | null;
+  onExchangeConsumed?: () => void;
 }
 
 interface ChatMsg {
@@ -35,7 +37,7 @@ const ctaToRoute = (cta: string): string => {
   return '/company/dashboard';
 };
 
-export function JarvisPanel({ open, onClose, context }: Props) {
+export function JarvisPanel({ open, onClose, context, injectedExchange, onExchangeConsumed }: Props) {
   const navigate = useNavigate();
   const [report, setReport] = useState<string>('');
   const [reportLoading, setReportLoading] = useState(false);
