@@ -641,6 +641,59 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
         </div>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base">Registrar proposta</DialogTitle>
+          <DialogDescription className="text-xs">
+            Para: {selectedCandidate?.candidate_name}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 mt-2">
+          <div>
+            <Label className="text-xs">Salário ofertado (R$)</Label>
+            <Input
+              type="number"
+              placeholder="5000"
+              value={offerSalary}
+              onChange={(e) => setOfferSalary(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Benefícios</Label>
+            <Input
+              placeholder="VT, VR, plano de saúde..."
+              value={offerBenefits}
+              onChange={(e) => setOfferBenefits(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Observações</Label>
+            <Textarea
+              value={offerNotes}
+              onChange={(e) => setOfferNotes(e.target.value)}
+              rows={2}
+              className="mt-1 resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Button variant="outline" className="flex-1" onClick={() => setOfferDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleSaveOffer}
+            disabled={!offerSalary || savingOffer}
+          >
+            {savingOffer ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrar proposta'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
