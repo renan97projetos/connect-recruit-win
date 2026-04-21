@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 export default function Assessments() {
   const { isOwner, loading: roleLoading } = useCompanyRole();
@@ -92,6 +93,7 @@ export default function Assessments() {
 
   return (
     <CompanyLayout area="hr">
+      <ProFeatureGate featureName="Testes e Avaliações">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -251,6 +253,7 @@ export default function Assessments() {
           </div>
         </DialogContent>
       </Dialog>
+      </ProFeatureGate>
     </CompanyLayout>
   );
 }

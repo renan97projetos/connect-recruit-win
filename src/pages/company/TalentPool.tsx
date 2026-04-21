@@ -36,6 +36,7 @@ import {
 import { CandidateProfileView } from '@/components/CandidateProfileView';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 type Experience = { id?: string; company: string; position: string; [k: string]: any };
 type Education = { id?: string; institution: string; degree: string; field: string; [k: string]: any };
@@ -231,6 +232,7 @@ export default function TalentPool() {
   return (
     <TooltipProvider>
       <CompanyLayout title="Banco de Talentos">
+        <ProFeatureGate featureName="Banco de Talentos">
         <div className="space-y-6">
           <div>
             <h1 className="text-xl font-semibold text-gray-900">Banco de Talentos</h1>
@@ -428,6 +430,7 @@ export default function TalentPool() {
             </div>
           )}
         </div>
+        </ProFeatureGate>
       </CompanyLayout>
     </TooltipProvider>
   );

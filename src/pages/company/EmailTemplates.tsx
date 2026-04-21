@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 const STAGE_OPTIONS = [
   { value: 'none', label: 'Sem vínculo (manual)' },
@@ -165,6 +166,7 @@ export default function EmailTemplates() {
 
   return (
     <CompanyLayout>
+      <ProFeatureGate featureName="Templates de E-mail">
       <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -351,6 +353,7 @@ export default function EmailTemplates() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </ProFeatureGate>
     </CompanyLayout>
   );
 }
