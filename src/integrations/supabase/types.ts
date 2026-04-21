@@ -250,6 +250,39 @@ export type Database = {
           },
         ]
       }
+      career_pages: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          custom_description: string | null
+          custom_title: string | null
+          id: string
+          is_active: boolean
+          primary_color: string | null
+          slug: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          custom_description?: string | null
+          custom_title?: string | null
+          id?: string
+          is_active?: boolean
+          primary_color?: string | null
+          slug: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          custom_description?: string | null
+          custom_title?: string | null
+          id?: string
+          is_active?: boolean
+          primary_color?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
       company_invitations: {
         Row: {
           accepted_at: string | null
