@@ -4,13 +4,13 @@ import { CompanyHeader } from '@/components/CompanyHeader';
 import { Briefcase, Users, ArrowRight, BarChart3, Settings, Check, Circle } from 'lucide-react';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { checkOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding';
 
 export default function CompanyHub() {
   const navigate = useNavigate();
   const { isOwner, loading: roleLoading } = useCompanyRole();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
 
   useEffect(() => {
