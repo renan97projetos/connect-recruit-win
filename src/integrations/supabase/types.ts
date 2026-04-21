@@ -1026,6 +1026,89 @@ export type Database = {
         }
         Relationships: []
       }
+      screening_answers: {
+        Row: {
+          answer: string | null
+          application_id: string
+          created_at: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          answer?: string | null
+          application_id: string
+          created_at?: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          answer?: string | null
+          application_id?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screening_answers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screening_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "screening_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      screening_questions: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          job_id: string
+          options: Json | null
+          order_position: number
+          question: string
+          question_type: string
+          required: boolean
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          options?: Json | null
+          order_position?: number
+          question: string
+          question_type?: string
+          required?: boolean
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          options?: Json | null
+          order_position?: number
+          question?: string
+          question_type?: string
+          required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screening_questions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           about_content: string | null
