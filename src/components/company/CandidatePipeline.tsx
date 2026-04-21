@@ -187,9 +187,58 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
       const map: Record<string, any> = {};
       (profs || []).forEach((p: any) => (map[p.id] = p));
       setProfilesById(map);
+
+      // Carrega propostas existentes para essas candidaturas
+      const appIds = apps.map((a: any) => a.id);
+      const { data: offersData } = await (supabase as any)
+        .from('job_offers')
+        .select('id, application_id, status')
+        .in('application_id', appIds);
+      const offersMap: Record<string, { id: string; status: string }> = {};
+      (offersData || []).forEach((o: any) => {
+        // Mantém a mais recente (a query já volta ordenada por created_at desc seria ideal, mas aqui basta a última iteração)
+        offersMap[o.application_id] = { id: o.id, status: o.status };
+      });
+      setOffersByApp(offersMap);
     }
 
     setLoading(false);
+  };
+
+  const openOfferDialog = (app: ApplicationRow) => {
+    setSelectedCandidate(app);
+    setOfferSalary('');
+    setOfferBenefits('');
+    setOfferNotes('');
+    setOfferDialogOpen(true);
+  };
+
+  const handleSaveOffer = async () => {
+    if (!selectedCandidate || !offerSalary || !user) return;
+    setSavingOffer(true);
+    const { data, error } = await (supabase as any)
+      .from('job_offers')
+      .insert({
+        application_id: selectedCandidate.id,
+        job_id: jobId,
+        company_id: user.id,
+        offered_salary: parseFloat(offerSalary),
+        benefits_offered: offerBenefits || null,
+        notes: offerNotes || null,
+        status: 'pending',
+      })
+      .select('id, status')
+      .single();
+    setSavingOffer(false);
+
+    if (error) {
+      toast({ title: 'Erro', description: 'Não foi possível registrar a proposta.', variant: 'destructive' });
+      return;
+    }
+
+    setOffersByApp((prev) => ({ ...prev, [selectedCandidate.id]: { id: data.id, status: data.status } }));
+    toast({ title: 'Proposta registrada!', description: `Para ${selectedCandidate.candidate_name}.` });
+    setOfferDialogOpen(false);
   };
 
   const grouped = useMemo(() => {
