@@ -37,6 +37,7 @@ import JobRequests from "./pages/company/JobRequests";
 import JobRequestForm from "./pages/company/JobRequestForm";
 import JobRequestDetails from "./pages/company/JobRequestDetails";
 import Permissions from "./pages/company/Permissions";
+import AuditLog from "./pages/company/AuditLog";
 import UploadDocuments from "./pages/UploadDocuments";
 import AdminAuth from "./pages/admin/Auth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -108,6 +109,7 @@ const App = () => {
               <Route path="/company/job-requests/new" element={<ProtectedRoute requiredRole="company"><JobRequestForm /></ProtectedRoute>} />
               <Route path="/company/job-requests/:id" element={<ProtectedRoute requiredRole="company"><JobRequestDetails /></ProtectedRoute>} />
               <Route path="/company/permissions" element={<ProtectedRoute requiredRole="company"><Permissions /></ProtectedRoute>} />
+              <Route path="/company/audit-log" element={<ProtectedRoute requiredRole="company"><AuditLog /></ProtectedRoute>} />
               <Route path="/company/profile" element={<ProtectedRoute requiredRole="company"><CompanyProfile /></ProtectedRoute>} />
               <Route path="/admin/auth" element={<AdminAuth />} />
               <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
