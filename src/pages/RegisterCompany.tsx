@@ -400,6 +400,9 @@ export default function RegisterCompany() {
                               <span>{typeof f === 'string' ? f : f?.name || ''}</span>
                             </li>
                           ))}
+                          <li className="flex items-start gap-1.5 font-bold italic opacity-90">
+                            <span className="ml-5">E muito mais...</span>
+                          </li>
                         </ul>
                       )}
                     </button>
