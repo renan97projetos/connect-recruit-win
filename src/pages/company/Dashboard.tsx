@@ -219,6 +219,14 @@ export default function CompanyDashboard() {
 
   return (
     <CompanyLayout>
+      {isPro && (
+        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-4">
+          <JarvisStrip
+            context={jarvisContext}
+            onOpenPanel={() => setJarvisOpen(true)}
+          />
+        </div>
+      )}
       {/* Header da página */}
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
@@ -567,7 +575,25 @@ export default function CompanyDashboard() {
             open={jarvisOpen}
             onClose={() => setJarvisOpen(false)}
             context={jarvisContext}
+            injectedExchange={pendingExchange}
+            onExchangeConsumed={() => setPendingExchange(null)}
           />
+          <JarvisCommandBar
+            open={commandBarOpen}
+            onClose={() => setCommandBarOpen(false)}
+            context={jarvisContext}
+            onAnswer={(question, answer) => {
+              setPendingExchange({ question, answer });
+              setJarvisOpen(true);
+            }}
+          />
+          {showBriefing && (
+            <JarvisBriefing
+              context={jarvisContext}
+              userName={(user?.user_metadata as any)?.name?.split(' ')[0] || 'gestor'}
+              onClose={closeBriefing}
+            />
+          )}
         </>
       )}
     </CompanyLayout>
