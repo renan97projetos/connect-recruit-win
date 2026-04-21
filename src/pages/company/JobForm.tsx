@@ -299,6 +299,8 @@ export default function JobForm() {
           Voltar
         </Button>
 
+        {!isEditing && <PlanLimitBanner resource="jobs" className="mb-4" />}
+
         <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
           {/* COLUNA ESQUERDA — FORMULÁRIO */}
           <div className="space-y-5">
