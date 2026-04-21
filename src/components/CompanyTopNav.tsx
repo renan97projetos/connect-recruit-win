@@ -15,6 +15,7 @@ import {
   Menu,
   ChevronDown,
   Globe,
+  Mail,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -56,6 +57,7 @@ const hrMenuItems: NavItem[] = [
 const configMenuItems: NavItem[] = [
   { path: '/company/profile', label: 'Minha Conta', icon: Settings },
   { path: '/company/career-page', label: 'Career Page', icon: Globe, ownerOnly: true },
+  { path: '/company/email-templates', label: 'Templates de E-mail', icon: Mail, ownerOnly: true },
   { path: '/company/permissions', label: 'Permissões', icon: Shield, ownerOnly: true },
   { path: '/company/audit-log', label: 'Audit Log', icon: Shield, ownerOnly: true },
 ];

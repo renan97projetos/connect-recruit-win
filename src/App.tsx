@@ -53,6 +53,7 @@ import ProspectFunnel from "./pages/ProspectFunnel";
 import RegisterInvitation from "./pages/RegisterInvitation";
 import CareerPage from "./pages/careers/CareerPage";
 import CareerPageConfig from "./pages/company/CareerPageConfig";
+import EmailTemplates from "./pages/company/EmailTemplates";
 
 // Backoffice pages
 import BackofficeLogin from "./pages/backoffice/Login";
@@ -114,6 +115,7 @@ const App = () => {
               <Route path="/company/audit-log" element={<ProtectedRoute requiredRole="company"><AuditLog /></ProtectedRoute>} />
               <Route path="/company/profile" element={<ProtectedRoute requiredRole="company"><CompanyProfile /></ProtectedRoute>} />
               <Route path="/company/career-page" element={<ProtectedRoute requiredRole="company"><CareerPageConfig /></ProtectedRoute>} />
+              <Route path="/company/email-templates" element={<ProtectedRoute requiredRole="company"><EmailTemplates /></ProtectedRoute>} />
               <Route path="/careers/:slug" element={<CareerPage />} />
               <Route path="/admin/auth" element={<AdminAuth />} />
               <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />

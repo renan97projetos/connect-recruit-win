@@ -19,6 +19,8 @@ interface StatusEmailRequest {
   companyName: string;
   newStatus: StatusKey;
   feedback?: string;
+  customSubject?: string | null;
+  customBody?: string | null;
 }
 
 const STATUS_MESSAGES: Record<StatusKey, { subject: string; body: string }> = {
@@ -53,6 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
       companyName,
       newStatus,
       feedback,
+      customSubject,
+      customBody,
     }: StatusEmailRequest = await req.json();
 
     if (!candidateEmail || !candidateName || !jobTitle || !companyName || !newStatus) {
@@ -70,7 +74,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { subject, body } = message;
+    const subject = (customSubject && customSubject.trim()) ? customSubject : message.subject;
+    const body = (customBody && customBody.trim()) ? customBody : message.body;
 
     const feedbackHtml = feedback
       ? `<div style="background:#fff7e6;border-left:4px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;">
