@@ -117,6 +117,7 @@ function initials(name: string) {
 export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
   const [stages, setStages] = useState<Stage[]>(DEFAULT_STAGES);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [activeStageId, setActiveStageId] = useState<string>('screening');
@@ -125,6 +126,15 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [updating, setUpdating] = useState<string | null>(null);
   const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
+
+  // Job offers
+  const [offersByApp, setOffersByApp] = useState<Record<string, { id: string; status: string }>>({});
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<ApplicationRow | null>(null);
+  const [offerSalary, setOfferSalary] = useState('');
+  const [offerBenefits, setOfferBenefits] = useState('');
+  const [offerNotes, setOfferNotes] = useState('');
+  const [savingOffer, setSavingOffer] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
