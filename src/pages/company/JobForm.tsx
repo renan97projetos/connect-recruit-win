@@ -248,6 +248,7 @@ export default function JobForm() {
           ? 'A vaga está visível para candidatos.'
           : 'Você pode publicá-la depois quando quiser.',
       });
+      refreshPlanUsage();
       navigate('/company/dashboard');
     } catch (e) {
       console.error('Error saving job:', e);
