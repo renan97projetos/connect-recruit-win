@@ -53,6 +53,37 @@ export default function JobForm() {
   const [benefits, setBenefits] = useState<string[]>(['']);
   const [benefitInput, setBenefitInput] = useState('');
 
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleGenerateDescription = async () => {
+    if (!aiInput.trim()) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-job-description', {
+        body: { input: aiInput },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const text: string = (data as any)?.text || '';
+      if (!text) throw new Error('Resposta vazia.');
+      setFormData(prev => ({ ...prev, description: text }));
+      if (errors.description) setErrors({ ...errors, description: undefined });
+      setAiSheetOpen(false);
+      setAiInput('');
+      toast({ title: 'Descrição gerada!', description: 'Revise e ajuste conforme necessário.' });
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao gerar',
+        description: err?.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       if (user) {
