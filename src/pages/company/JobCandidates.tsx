@@ -169,8 +169,26 @@ export default function JobCandidates() {
       return;
     }
 
+    // Notificar candidato por e-mail (background, não bloqueia UI)
+    if (
+      job &&
+      ['in-review', 'interview', 'approved', 'rejected'].includes(newStatus)
+    ) {
+      supabase.functions
+        .invoke('send-candidate-status-email', {
+          body: {
+            candidateName: application.candidateName,
+            candidateEmail: application.candidateEmail,
+            jobTitle: job.title,
+            companyName: job.company_name,
+            newStatus,
+          },
+        })
+        .catch((err) => console.error('Erro ao enviar e-mail:', err));
+    }
+
     loadJobAndApplications();
-    
+
     toast({
       title: 'Status atualizado',
       description: `Status alterado para ${newStatus}.`,
