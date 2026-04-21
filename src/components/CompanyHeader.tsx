@@ -66,15 +66,15 @@ export function CompanyHeader({ showHubLink = true }: CompanyHeaderProps) {
               </Button>
             )}
 
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border-3 border-foreground bg-secondary shadow-brutal min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={companyName}
-                  className="h-8 w-8 rounded-md object-cover border-2 border-foreground flex-shrink-0"
+                  className="h-12 w-12 rounded-md object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground border-2 border-foreground flex items-center justify-center font-black text-sm flex-shrink-0">
+                <div className="h-12 w-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-black text-base flex-shrink-0">
                   {companyName.charAt(0).toUpperCase() || 'E'}
                 </div>
               )}
