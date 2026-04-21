@@ -53,6 +53,13 @@ export default function JobForm() {
   const [benefits, setBenefits] = useState<string[]>(['']);
   const [benefitInput, setBenefitInput] = useState('');
 
+  type ScreeningQuestion = {
+    question: string;
+    question_type: 'text' | 'yes_no';
+    required: boolean;
+  };
+  const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -116,6 +123,20 @@ export default function JobForm() {
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
           setBenefits(job.benefits?.length > 0 ? job.benefits : ['']);
         }
+        const { data: qs } = await supabase
+          .from('screening_questions')
+          .select('question, question_type, required, order_position')
+          .eq('job_id', id)
+          .order('order_position');
+        if (qs && qs.length > 0) {
+          setQuestions(
+            qs.map((q: any) => ({
+              question: q.question,
+              question_type: (q.question_type === 'yes_no' ? 'yes_no' : 'text') as 'text' | 'yes_no',
+              required: !!q.required,
+            })),
+          );
+        }
       }
     };
     load();
@@ -177,12 +198,36 @@ export default function JobForm() {
       };
 
       let error;
+      let jobId: string | null = id ?? null;
       if (isEditing && id) {
         ({ error } = await supabase.from('jobs').update(jobData).eq('id', id));
       } else {
-        ({ error } = await supabase.from('jobs').insert(jobData));
+        const { data: inserted, error: insertError } = await supabase
+          .from('jobs')
+          .insert(jobData)
+          .select('id')
+          .single();
+        error = insertError;
+        jobId = inserted?.id ?? null;
       }
       if (error) throw error;
+
+      const validQuestions = questions.filter(q => q.question.trim());
+      if (jobId) {
+        await supabase.from('screening_questions').delete().eq('job_id', jobId);
+        if (validQuestions.length > 0) {
+          await supabase.from('screening_questions').insert(
+            validQuestions.map((q, i) => ({
+              job_id: jobId!,
+              company_id: user.id,
+              question: q.question.trim(),
+              question_type: q.question_type,
+              required: q.required,
+              order_position: i,
+            })),
+          );
+        }
+      }
 
       toast({
         title: mode === 'publish' ? 'Vaga publicada!' : 'Rascunho salvo',
@@ -520,6 +565,89 @@ export default function JobForm() {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">Perguntas de triagem</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O candidato responde ao se candidatar
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setQuestions(prev => [
+                        ...prev,
+                        { question: '', question_type: 'text', required: true },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {questions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma pergunta. Clique em "Adicionar" para criar.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {questions.map((q, i) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <Input
+                          placeholder={`Pergunta ${i + 1}`}
+                          value={q.question}
+                          onChange={(e) =>
+                            setQuestions(prev =>
+                              prev.map((item, idx) =>
+                                idx === i ? { ...item, question: e.target.value } : item,
+                              ),
+                            )
+                          }
+                          className="flex-1 text-sm"
+                        />
+                        <Select
+                          value={q.question_type}
+                          onValueChange={(val) =>
+                            setQuestions(prev =>
+                              prev.map((item, idx) =>
+                                idx === i
+                                  ? { ...item, question_type: val as 'text' | 'yes_no' }
+                                  : item,
+                              ),
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-32 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Texto livre</SelectItem>
+                            <SelectItem value="yes_no">Sim / Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() =>
+                            setQuestions(prev => prev.filter((_, idx) => idx !== i))
+                          }
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

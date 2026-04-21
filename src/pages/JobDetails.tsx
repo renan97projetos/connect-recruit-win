@@ -5,10 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, DollarSign, Building2, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { MapPin, DollarSign, Building2, Clock, CheckCircle2, ArrowLeft, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
+
+interface ScreeningQuestion {
+  id: string;
+  question: string;
+  question_type: string;
+  required: boolean;
+  order_position: number;
+}
 
 export default function JobDetails() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +29,8 @@ export default function JobDetails() {
   const [applying, setApplying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -57,6 +70,14 @@ export default function JobDetails() {
           setCompanyLogo(companyProfile.avatar_url);
         }
       }
+
+      // Fetch screening questions
+      const { data: qs } = await supabase
+        .from('screening_questions')
+        .select('id, question, question_type, required, order_position')
+        .eq('job_id', id)
+        .order('order_position');
+      setQuestions((qs as ScreeningQuestion[]) || []);
       
       // Check user role and if has applied
       if (user) {
@@ -110,6 +131,17 @@ export default function JobDetails() {
 
     if (!job) return;
 
+    // Validar perguntas obrigatórias
+    const missing = questions.filter(q => q.required && !(answers[q.id] || '').trim());
+    if (missing.length > 0) {
+      toast({
+        title: 'Responda as perguntas obrigatórias',
+        description: `${missing.length} pergunta(s) sem resposta.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setApplying(true);
 
     try {
@@ -162,7 +194,7 @@ export default function JobDetails() {
       // Ensure score is between 0 and 100
       const finalScore = Math.min(Math.max(calculatedScore, 0), 100);
 
-      const { error } = await supabase
+      const { data: appInserted, error } = await supabase
         .from('applications')
         .insert({
           job_id: job.id,
@@ -172,9 +204,25 @@ export default function JobDetails() {
           status: 'pending',
           current_stage: 'triagem',
           score: finalScore,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Salvar respostas das perguntas de triagem
+      if (appInserted?.id && questions.length > 0) {
+        const answerRows = questions
+          .filter(q => (answers[q.id] || '').trim())
+          .map(q => ({
+            application_id: appInserted.id,
+            question_id: q.id,
+            answer: (answers[q.id] || '').trim(),
+          }));
+        if (answerRows.length > 0) {
+          await supabase.from('screening_answers').insert(answerRows);
+        }
+      }
 
       setHasApplied(true);
 
@@ -309,6 +357,54 @@ export default function JobDetails() {
               <div>
                 {canApply ? (
                   <>
+                    {!hasApplied && !job.is_archived && questions.length > 0 && (
+                      <div className="mb-6 rounded-lg border bg-muted/30 p-4 space-y-4">
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-primary" />
+                          <h3 className="font-semibold text-sm">Responda para se candidatar</h3>
+                        </div>
+                        {questions.map((q, idx) => (
+                          <div key={q.id} className="space-y-2">
+                            <Label className="text-sm">
+                              {idx + 1}. {q.question}
+                              {q.required && <span className="text-destructive ml-1">*</span>}
+                            </Label>
+                            {q.question_type === 'yes_no' ? (
+                              <RadioGroup
+                                value={answers[q.id] || ''}
+                                onValueChange={(val) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: val }))
+                                }
+                                className="flex gap-4"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="sim" id={`${q.id}-sim`} />
+                                  <Label htmlFor={`${q.id}-sim`} className="font-normal cursor-pointer">
+                                    Sim
+                                  </Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="nao" id={`${q.id}-nao`} />
+                                  <Label htmlFor={`${q.id}-nao`} className="font-normal cursor-pointer">
+                                    Não
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            ) : (
+                              <Textarea
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                                placeholder="Sua resposta..."
+                                rows={3}
+                                className="resize-none"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <Button
                       onClick={handleApply}
                       disabled={hasApplied || applying || job.is_archived}
