@@ -221,6 +221,39 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     );
     toast({ title: 'Candidato movido', description: 'Etapa atualizada com sucesso.' });
     onChanged?.();
+
+    // Notificar candidato por e-mail (não bloqueia UI)
+    const app = applications.find((a) => a.id === appId);
+    const emailStatusMap: Record<string, string> = {
+      screening: 'in-review',
+      interview: 'interview',
+      assessment: 'interview',
+      technical: 'interview',
+      approved: 'approved',
+      rejected: 'rejected',
+    };
+    const emailStatus = emailStatusMap[targetStageId] || null;
+
+    if (emailStatus && app?.candidate_email) {
+      supabase
+        .from('jobs')
+        .select('company_name')
+        .eq('id', jobId)
+        .maybeSingle()
+        .then(({ data: jobData }) => {
+          supabase.functions
+            .invoke('send-candidate-status-email', {
+              body: {
+                candidateName: app.candidate_name,
+                candidateEmail: app.candidate_email,
+                jobTitle: jobTitle,
+                companyName: jobData?.company_name || 'Sinapse RH',
+                newStatus: emailStatus,
+              },
+            })
+            .catch(console.error);
+        });
+    }
   };
 
   const onDragEnd = (result: DropResult) => {
