@@ -318,6 +318,47 @@ export function StageEditModal({ open, onClose, onSave, stage }: StageEditModalP
                 </Label>
               </div>
             </div>
+
+            <div className="space-y-3 pt-4 border-t border-border">
+              <Label className="text-sm font-medium">Mensagem WhatsApp automática</Label>
+              <p className="text-xs text-muted-foreground">
+                Abre o WhatsApp do candidato ao mover para esta etapa.
+                Variáveis: {"{{candidato_nome}}"}, {"{{vaga_titulo}}"}
+              </p>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="whatsapp_enabled"
+                  checked={formData.automation_config?.whatsapp_enabled || false}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      automation_config: {
+                        ...formData.automation_config,
+                        whatsapp_enabled: checked,
+                      },
+                    })
+                  }
+                />
+                <Label htmlFor="whatsapp_enabled">Ativar mensagem automática</Label>
+              </div>
+              {formData.automation_config?.whatsapp_enabled && (
+                <Textarea
+                  rows={3}
+                  placeholder="Olá {{candidato_nome}}, você avançou no processo para {{vaga_titulo}}. Em breve entraremos em contato!"
+                  value={formData.automation_config?.whatsapp_message || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      automation_config: {
+                        ...formData.automation_config,
+                        whatsapp_message: e.target.value,
+                      },
+                    })
+                  }
+                  className="resize-none text-sm"
+                />
+              )}
+            </div>
           </TabsContent>
         </Tabs>
 

@@ -357,6 +357,32 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
             .catch(console.error);
         });
     }
+
+    // WhatsApp automático baseado no workflow da etapa
+    if (targetStageId && app) {
+      const { data: wfStage } = await supabase
+        .from('workflow_stages')
+        .select('automation_config')
+        .eq('id', targetStageId)
+        .maybeSingle();
+      const autoConfig = wfStage?.automation_config as any;
+
+      if (autoConfig?.whatsapp_enabled && autoConfig?.whatsapp_message) {
+        const phone = profilesById[app.candidate_id]?.phone;
+        if (phone) {
+          const message = (autoConfig.whatsapp_message as string)
+            .replace(/\{\{candidato_nome\}\}/g, app.candidate_name)
+            .replace(/\{\{vaga_titulo\}\}/g, jobTitle);
+
+          setTimeout(() => {
+            window.open(
+              `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`,
+              '_blank'
+            );
+          }, 600);
+        }
+      }
+    }
   };
 
   const onDragEnd = (result: DropResult) => {
