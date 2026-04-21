@@ -21,6 +21,9 @@ import { usePlanType } from '@/hooks/usePlanType';
 import { useJarvisContext } from '@/hooks/useJarvisContext';
 import { JarvisFab } from '@/components/jarvis/JarvisFab';
 import { JarvisPanel } from '@/components/jarvis/JarvisPanel';
+import { JarvisStrip } from '@/components/jarvis/JarvisStrip';
+import { JarvisBriefing } from '@/components/jarvis/JarvisBriefing';
+import { JarvisCommandBar } from '@/components/jarvis/JarvisCommandBar';
 
 type PipelineStageId =
   | 'aberta'
@@ -61,6 +64,38 @@ export default function CompanyDashboard() {
   const { isPro } = usePlanType();
   const { context: jarvisContext } = useJarvisContext();
   const [jarvisOpen, setJarvisOpen] = useState(false);
+  const [showBriefing, setShowBriefing] = useState(false);
+  const [commandBarOpen, setCommandBarOpen] = useState(false);
+  const [pendingExchange, setPendingExchange] = useState<{ question: string; answer: string } | null>(null);
+
+  // Mostrar briefing 1x por dia
+  useEffect(() => {
+    if (!isPro || !user?.id) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `jarvis_briefing_${user.id}_${today}`;
+    if (!localStorage.getItem(key)) setShowBriefing(true);
+  }, [isPro, user?.id]);
+
+  // Atalho Cmd/Ctrl + K
+  useEffect(() => {
+    if (!isPro) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandBarOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPro]);
+
+  const closeBriefing = () => {
+    if (user?.id) {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`jarvis_briefing_${user.id}_${today}`, '1');
+    }
+    setShowBriefing(false);
+  };
 
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
@@ -216,6 +251,14 @@ export default function CompanyDashboard() {
 
   return (
     <CompanyLayout>
+      {isPro && (
+        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-4">
+          <JarvisStrip
+            context={jarvisContext}
+            onOpenPanel={() => setJarvisOpen(true)}
+          />
+        </div>
+      )}
       {/* Header da página */}
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
@@ -564,7 +607,25 @@ export default function CompanyDashboard() {
             open={jarvisOpen}
             onClose={() => setJarvisOpen(false)}
             context={jarvisContext}
+            injectedExchange={pendingExchange}
+            onExchangeConsumed={() => setPendingExchange(null)}
           />
+          <JarvisCommandBar
+            open={commandBarOpen}
+            onClose={() => setCommandBarOpen(false)}
+            context={jarvisContext}
+            onAnswer={(question, answer) => {
+              setPendingExchange({ question, answer });
+              setJarvisOpen(true);
+            }}
+          />
+          {showBriefing && (
+            <JarvisBriefing
+              context={jarvisContext}
+              userName={(user?.user_metadata as any)?.name?.split(' ')[0] || 'gestor'}
+              onClose={closeBriefing}
+            />
+          )}
         </>
       )}
     </CompanyLayout>
