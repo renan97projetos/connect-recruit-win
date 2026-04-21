@@ -167,12 +167,12 @@ export default function SystemSettings() {
                   <Input
                     id="whatsappNumber"
                     type="text"
-                    placeholder="5511999999999"
+                    placeholder="5527999058730"
                     value={whatsappNumber}
                     onChange={(e) => setWhatsappNumber(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Digite apenas números, incluindo código do país e DDD (ex: 5511999999999)
+                    Digite apenas números, incluindo código do país e DDD (ex: 5527999058730)
                   </p>
                 </div>
               </CardContent>
