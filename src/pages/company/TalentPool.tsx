@@ -247,7 +247,7 @@ export default function TalentPool() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="relative">
+              <div data-tour="talent-search" className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar candidatos..."
@@ -265,6 +265,7 @@ export default function TalentPool() {
               {filteredCandidates.length !== 1 ? 's' : ''}
             </h2>
             <Button
+              data-tour="talent-export"
               variant="outline"
               size="sm"
               onClick={handleExportCSV}

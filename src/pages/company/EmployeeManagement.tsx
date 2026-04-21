@@ -89,7 +89,7 @@ export default function CompanyEmployeeManagement() {
               className="pl-10"
             />
           </div>
-          <Button onClick={() => navigate('/company/employees/new')}>
+          <Button data-tour="new-employee-btn" onClick={() => navigate('/company/employees/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Colaborador
           </Button>
