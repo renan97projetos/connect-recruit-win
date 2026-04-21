@@ -195,6 +195,11 @@ export function CompanyTopNav() {
                 >
                   <item.icon className="h-4 w-4 mr-2" />
                   {item.label}
+                  {item.proOnly && !isPro && (
+                    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
+                      PRO
+                    </span>
+                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -225,6 +230,11 @@ export function CompanyTopNav() {
                 >
                   <item.icon className="h-4 w-4 mr-2" />
                   {item.label}
+                  {item.proOnly && !isPro && (
+                    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
+                      PRO
+                    </span>
+                  )}
                 </DropdownMenuItem>
               ))}
           </DropdownMenuContent>
