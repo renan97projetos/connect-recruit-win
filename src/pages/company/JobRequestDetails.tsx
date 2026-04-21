@@ -608,6 +608,100 @@ export default function JobRequestDetails() {
             </CardContent>
           </Card>
         )}
+
+        {/* Fluxo de aprovação */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Fluxo de aprovação</CardTitle>
+              {isOwner && (
+                <Select onValueChange={addApprover} value="">
+                  <SelectTrigger className="w-56">
+                    <SelectValue placeholder="Adicionar aprovador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companyUsers
+                      .filter((cu) => !approvalActions.find((a) => a.approver_id === cu.user_id))
+                      .map((cu) => (
+                        <SelectItem key={cu.user_id} value={cu.user_id}>
+                          {cu.profiles?.name || cu.profiles?.email || cu.user_id}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {approvalActions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum aprovador adicionado</p>
+            ) : (
+              <div className="space-y-2">
+                {approvalActions.map((action) => (
+                  <div
+                    key={action.id}
+                    className="flex items-center justify-between gap-3 rounded-md border border-border p-3"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{action.approver_name}</span>
+                      {action.action !== 'pending' && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(action.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          action.action === 'approved' && 'border-green-500 text-green-600',
+                          action.action === 'rejected' && 'border-destructive text-destructive',
+                          action.action === 'pending' && 'border-amber-500 text-amber-600'
+                        )}
+                      >
+                        {action.action === 'approved'
+                          ? 'Aprovado'
+                          : action.action === 'rejected'
+                          ? 'Rejeitado'
+                          : 'Aguardando'}
+                      </Badge>
+                      {action.approver_id === user?.id && action.action === 'pending' && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApprovalAction(action.id, 'approved')}
+                          >
+                            Aprovar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApprovalAction(action.id, 'rejected')}
+                          >
+                            Rejeitar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {approvalActions.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
+                <span>
+                  {approvalActions.filter((a) => a.action === 'approved').length} aprovações
+                </span>
+                <span>·</span>
+                <span>
+                  {approvalActions.filter((a) => a.action === 'pending').length} pendentes
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </CompanyLayout>
   );
