@@ -394,6 +394,75 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pricing / Planos */}
+      <section className="py-20 border-y-3 border-foreground bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black mb-4">
+              Planos simples, resultado real
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Sem surpresas. Cancele quando quiser.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Starter */}
+            <div className="bg-background border-3 border-foreground rounded-2xl p-8 shadow-brutal">
+              <div className="inline-block bg-yellow text-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-foreground mb-4">
+                STARTER
+              </div>
+              <p className="text-muted-foreground mb-6 text-sm">
+                Substitua suas planilhas. Ideal para PMEs organizando o RH.
+              </p>
+              <div className="text-4xl font-black mb-1">
+                R$ XX<span className="text-lg font-normal text-muted-foreground">/mês</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-6">
+                até 2 usuários · até 5 vagas ativas
+              </p>
+              <ul className="space-y-2 mb-8 text-sm">
+                {["Pipeline Kanban de vagas", "Publicação de vagas", "Gestão de candidatos", "Score e notas", "Dashboard básico", "Career page pública"].map(f => (
+                  <li key={f} className="flex items-center gap-2">
+                    <span className="text-success font-bold">✓</span>{f}
+                  </li>
+                ))}
+              </ul>
+              <Button variant="outline" className="w-full border-3 border-foreground font-bold shadow-brutal">
+                Começar grátis →
+              </Button>
+            </div>
+            {/* Pro */}
+            <div className="bg-primary text-primary-foreground border-3 border-foreground rounded-2xl p-8 shadow-brutal-lg relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow text-foreground text-xs font-bold px-4 py-1 rounded-full border-2 border-foreground whitespace-nowrap">
+                ✦ MAIS POPULAR
+              </div>
+              <div className="inline-block bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-primary-foreground/30 mb-4">
+                PRO
+              </div>
+              <p className="text-primary-foreground/80 mb-6 text-sm">
+                Automação, IA e gestão completa para crescer.
+              </p>
+              <div className="text-4xl font-black mb-1">
+                R$ XX<span className="text-lg font-normal opacity-70">/mês</span>
+              </div>
+              <p className="text-xs opacity-70 mb-6">
+                usuários ilimitados · vagas ilimitadas
+              </p>
+              <ul className="space-y-2 mb-8 text-sm">
+                {["Tudo do Starter", "Workflow configurável por vaga", "IA para descrição e score", "Banco de talentos", "Permissões granulares", "Career page própria", "Analytics completo", "Suporte prioritário"].map(f => (
+                  <li key={f} className="flex items-center gap-2">
+                    <span className="text-yellow font-bold">✓</span>{f}
+                  </li>
+                ))}
+              </ul>
+              <Button className="w-full bg-yellow text-foreground border-3 border-foreground font-bold shadow-brutal hover:shadow-brutal-lg">
+                Começar com Pro →
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section className="bg-foreground text-background py-20 border-y-3 border-foreground">
         <div className="container mx-auto px-4">
@@ -408,27 +477,27 @@ export default function Home() {
               quote: "Preenchemos 3 vagas técnicas em menos de 10 dias. A automação economizou horas!",
               name: "João P.",
               role: "RH Lead",
-              color: "bg-yellow text-foreground"
+              accent: "border-yellow"
             }, {
               quote: "Interface intuitiva e dashboard incrível. Tomada de decisões muito mais fácil.",
               name: "Ana M.",
               role: "Recrutadora",
-              color: "bg-cyan text-foreground"
+              accent: "border-cyan"
             }, {
               quote: "A IA de recomendação é surreal. Encontra talentos que encaixam na cultura.",
               name: "Carlos R.",
               role: "Gerente",
-              color: "bg-pink text-foreground"
+              accent: "border-pink"
             }, {
               quote: "Como candidato, o processo é transparente. Recebi feedback super rápido!",
               name: "Marina S.",
               role: "Dev",
-              color: "bg-lime text-foreground"
-            }].map((testimonial, i) => <div key={i} className={`${testimonial.color} p-6 rounded-xl border-3 border-foreground shadow-brutal-lg`}>
-                  <Quote className="h-8 w-8 opacity-30 mb-4" />
+              accent: "border-lime"
+            }].map((testimonial, i) => <div key={i} className={`bg-primary/10 border-3 border-primary/30 ${testimonial.accent} border-t-4 p-6 rounded-xl shadow-brutal-lg`}>
+                  <Quote className="h-8 w-8 opacity-50 mb-4" />
                   <p className="text-lg font-semibold mb-6 leading-relaxed">"{testimonial.quote}"</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-foreground/20 flex items-center justify-center font-black">
+                    <div className="w-10 h-10 rounded-full bg-background/20 flex items-center justify-center font-black">
                       {testimonial.name[0]}
                     </div>
                     <div>
