@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BackofficeProtectedRoute } from "@/components/backoffice/BackofficeProtectedRoute";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import Home from "./pages/Home";
+import Features from "./pages/Features";
 import Login from "./pages/Login";
 
 import ForgotPassword from "./pages/ForgotPassword";
@@ -83,6 +84,7 @@ const App = () => {
               <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/funcionalidades" element={<Features />} />
               
               <Route path="/register" element={<Register />} />
               <Route path="/register-invitation" element={<RegisterInvitation />} />
