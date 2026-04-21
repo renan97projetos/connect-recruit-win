@@ -112,6 +112,24 @@ export default function CompanyProfile() {
 
       if (error) throw error;
 
+      // Sincroniza dados oficiais da empresa em tenants
+      const notes = [
+        data.address && `Endereço: ${data.address}`,
+        data.city && `Cidade: ${data.city}`,
+        data.state && `UF: ${data.state}`,
+      ].filter(Boolean).join(' | ');
+
+      await supabase
+        .from('tenants')
+        .update({
+          company_name: data.company_name || data.name,
+          cnpj: data.cnpj || null,
+          company_phone: data.phone || null,
+          notes: notes || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('company_id', user?.id);
+
       toast({
         title: 'Sucesso',
         description: 'Perfil atualizado com sucesso',
