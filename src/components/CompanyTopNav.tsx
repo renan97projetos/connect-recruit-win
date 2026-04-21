@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
+import { usePlanType } from '@/hooks/usePlanType';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,28 +40,29 @@ type NavItem = {
   icon: any;
   end?: boolean;
   ownerOnly?: boolean;
+  proOnly?: boolean;
 };
 
 const mainMenuItems: NavItem[] = [
   { path: '/company/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { path: '/company/job-requests', label: 'Requisições', icon: Briefcase },
   { path: '/company/job-history', label: 'Histórico', icon: Archive },
-  { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp },
+  { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp, proOnly: true },
 ];
 
 const hrMenuItems: NavItem[] = [
   { path: '/company/employee-dashboard', label: 'Dashboard RH', icon: BarChart3 },
   { path: '/company/employees', label: 'Colaboradores', icon: Users },
-  { path: '/company/assessments', label: 'Avaliações', icon: FileText },
+  { path: '/company/assessments', label: 'Avaliações', icon: FileText, proOnly: true },
   { path: '/company/employee-requests', label: 'Solicitações', icon: Clock },
 ];
 
 const configMenuItems: NavItem[] = [
   { path: '/company/profile', label: 'Minha Conta', icon: Settings },
-  { path: '/company/career-page', label: 'Career Page', icon: Globe, ownerOnly: true },
-  { path: '/company/email-templates', label: 'Templates de E-mail', icon: Mail, ownerOnly: true },
+  { path: '/company/career-page', label: 'Career Page', icon: Globe, ownerOnly: true, proOnly: true },
+  { path: '/company/email-templates', label: 'Templates de E-mail', icon: Mail, ownerOnly: true, proOnly: true },
   { path: '/company/permissions', label: 'Permissões', icon: Shield, ownerOnly: true },
-  { path: '/company/audit-log', label: 'Audit Log', icon: Shield, ownerOnly: true },
+  { path: '/company/audit-log', label: 'Audit Log', icon: Shield, ownerOnly: true, proOnly: true },
 ];
 
 export function CompanyTopNav() {
@@ -68,6 +70,7 @@ export function CompanyTopNav() {
   const navigate = useNavigate();
   const { user, signOut } = useSupabaseAuth();
   const { isOwner } = useCompanyRole();
+  const { isPro } = usePlanType();
   const [companyName, setCompanyName] = useState('');
   const [userName, setUserName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
