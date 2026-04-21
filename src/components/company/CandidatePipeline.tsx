@@ -53,6 +53,7 @@ interface ApplicationRow {
   score: number | null;
   applied_at: string;
   updated_at: string;
+  profiles?: { phone: string | null } | null;
 }
 
 const DEFAULT_STAGES: Stage[] = [
