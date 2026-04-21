@@ -70,7 +70,7 @@ export default function AdminDashboard() {
           </div>
           
           <Button asChild>
-            <Link to="/admin/jobs/new">
+            <Link to="/company/jobs/new">
               <Plus className="mr-2 h-4 w-4" />
               Nova Vaga
             </Link>
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
                     Nenhuma vaga criada ainda
                   </p>
                   <Button asChild>
-                    <Link to="/admin/jobs/new">
+                    <Link to="/company/jobs/new">
                       <Plus className="mr-2 h-4 w-4" />
                       Criar primeira vaga
                     </Link>
