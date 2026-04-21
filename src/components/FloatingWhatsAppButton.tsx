@@ -13,20 +13,16 @@ export function FloatingWhatsAppButton() {
 
   const fetchWhatsAppNumber = async () => {
     try {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('whatsapp_number')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc('get_public_settings');
 
       if (error) {
         console.error('Error fetching WhatsApp number:', error);
         return;
       }
 
-      if (data?.whatsapp_number) {
-        setWhatsappNumber(data.whatsapp_number);
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row?.whatsapp_number) {
+        setWhatsappNumber(row.whatsapp_number);
         setIsVisible(true);
       }
     } catch (error) {

@@ -14,16 +14,11 @@ export default function PrivacyPolicy() {
 
   const fetchContent = async () => {
     try {
-      // Busca o primeiro registro criado (o mais antigo)
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('privacy_policy_content')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc('get_public_settings');
 
       if (error) throw error;
-      setContent(data?.privacy_policy_content || `<h2>Política de Privacidade</h2>
+      const row = Array.isArray(data) ? data[0] : data;
+      setContent(row?.privacy_policy_content || `<h2>Política de Privacidade</h2>
         <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR')}</em></p>
         
         <h3>1. Informações que Coletamos</h3>

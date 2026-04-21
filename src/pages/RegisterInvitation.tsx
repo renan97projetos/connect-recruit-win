@@ -81,35 +81,16 @@ export default function RegisterInvitation() {
 
     const fetchInvitation = async () => {
       try {
-        // Fetch invitation details
-        const { data: invitationData, error: invitationError } = await supabase
-          .from('company_invitations')
-          .select('*')
-          .eq('token', token)
-          .maybeSingle();
+        // Fetch invitation by token via SECURITY DEFINER function (público sem login)
+        const { data: rows, error: invitationError } = await (supabase as any)
+          .rpc('get_invitation_by_token', { _token: token });
 
         if (invitationError) throw invitationError;
 
+        const invitationData = Array.isArray(rows) ? rows[0] : rows;
+
         if (!invitationData) {
-          setError('Convite não encontrado. O link pode estar incorreto ou o convite foi removido.');
-          setLoading(false);
-          return;
-        }
-
-        if (invitationData.status === 'accepted') {
-          setError('Este convite já foi utilizado. Faça login com sua conta.');
-          setLoading(false);
-          return;
-        }
-
-        if (invitationData.status === 'expired' || new Date(invitationData.expires_at) < new Date()) {
-          setError('Este convite expirou. Solicite um novo convite ao administrador da empresa.');
-          setLoading(false);
-          return;
-        }
-
-        if (invitationData.status === 'cancelled') {
-          setError('Este convite foi cancelado. Entre em contato com o administrador da empresa.');
+          setError('Convite não encontrado, expirado ou já utilizado. Verifique o link ou solicite um novo.');
           setLoading(false);
           return;
         }
