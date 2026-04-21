@@ -24,7 +24,11 @@ const loginSchema = z.object({
     .max(100, 'Senha muito longa'),
 });
 
-export default function Login() {
+interface LoginProps {
+  forcedRole?: 'candidate' | 'company';
+}
+
+export default function Login({ forcedRole }: LoginProps = {}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -34,7 +38,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const intendedRole = searchParams.get('as') as 'candidate' | 'company' | null;
+  const intendedRole = (forcedRole ?? (searchParams.get('as') as 'candidate' | 'company' | null)) || null;
 
   const areaLabel =
     intendedRole === 'candidate'
