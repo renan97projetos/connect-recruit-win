@@ -266,7 +266,17 @@ export default function JobForm() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="description">Descrição *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Descrição *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setAiSheetOpen(true)}
+                      className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Gerar com IA
+                    </button>
+                  </div>
                   <Textarea
                     id="description"
                     rows={6}
