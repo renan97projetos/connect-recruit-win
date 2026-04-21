@@ -165,6 +165,11 @@ export function CompanyTopNav() {
             >
               <item.icon className="h-3.5 w-3.5" />
               {item.label}
+              {item.proOnly && !isPro && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
+                  PRO
+                </span>
+              )}
             </Link>
           );
         })}
