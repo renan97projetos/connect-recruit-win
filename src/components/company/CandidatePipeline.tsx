@@ -35,6 +35,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ProFeatureGate } from '@/components/ProFeatureGate';
 
 interface PipelineProps {
   jobId: string;
@@ -539,22 +540,24 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                             selectedForCompare.has(app.id) && 'ring-2 ring-primary'
                           )}
                         >
-                          <input
-                            type="checkbox"
-                            checked={selectedForCompare.has(app.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              setSelectedForCompare((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(app.id)) next.delete(app.id);
-                                else if (next.size < 4) next.add(app.id);
-                                return next;
-                              });
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label="Selecionar para comparar"
-                            className="absolute top-2 left-2 z-10 h-3.5 w-3.5 accent-primary cursor-pointer"
-                          />
+                          <ProFeatureGate compact featureName="Comparar">
+                            <input
+                              type="checkbox"
+                              checked={selectedForCompare.has(app.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                setSelectedForCompare((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(app.id)) next.delete(app.id);
+                                  else if (next.size < 4) next.add(app.id);
+                                  return next;
+                                });
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              aria-label="Selecionar para comparar"
+                              className="absolute top-2 left-2 z-10 h-3.5 w-3.5 accent-primary cursor-pointer"
+                            />
+                          </ProFeatureGate>
                           <CardContent className="p-3 space-y-3">
                             <div className="flex items-start gap-3 pl-5">
                               <Avatar className="h-10 w-10 flex-shrink-0">
@@ -630,16 +633,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                                 <Eye className="h-3.5 w-3.5 mr-1" /> Ver
                               </Button>
                               {getStageBucket(app) === 'approved' && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-500/10"
-                                  onClick={() => openOfferDialog(app)}
-                                  aria-label="Fazer proposta"
-                                  title="Fazer proposta"
-                                >
-                                  <DollarSign className="h-3.5 w-3.5" />
-                                </Button>
+                                <ProFeatureGate compact featureName="Proposta">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-500/10"
+                                    onClick={() => openOfferDialog(app)}
+                                    aria-label="Fazer proposta"
+                                    title="Fazer proposta"
+                                  >
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                  </Button>
+                                </ProFeatureGate>
                               )}
                               <Button
                                 size="sm"
@@ -677,6 +682,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     </DragDropContext>
 
     {selectedForCompare.size >= 2 && (
+      <ProFeatureGate featureName="Comparar candidatos">
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background rounded-full px-5 py-2.5 shadow-lg flex items-center gap-3 text-sm">
         <span>{selectedForCompare.size} candidatos selecionados</span>
         <button
@@ -693,6 +699,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
           <X className="h-4 w-4" />
         </button>
       </div>
+      </ProFeatureGate>
     )}
 
     <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
