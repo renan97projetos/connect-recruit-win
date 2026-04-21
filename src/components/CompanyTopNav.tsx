@@ -220,16 +220,24 @@ export function CompanyTopNav() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Avatar + sair */}
+        {/* Avatar + nome do usuário + sair */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex-shrink-0">
+            <button className="flex items-center gap-2 flex-shrink-0 px-1.5 py-1 rounded-md hover:bg-gray-100 transition-colors">
               <Avatar className="h-7 w-7 cursor-pointer">
                 {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
                 <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-semibold">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
+              <div className="hidden lg:flex flex-col items-start leading-tight">
+                <span className="text-xs font-medium text-gray-700 max-w-[120px] truncate">
+                  {userName || user?.email?.split('@')[0]}
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  {isOwner ? 'Administrador' : 'Colaborador'}
+                </span>
+              </div>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 shadow-lg border border-gray-200">
