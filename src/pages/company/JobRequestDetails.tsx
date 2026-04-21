@@ -288,6 +288,7 @@ export default function JobRequestDetails() {
 
       if (updateError) throw updateError;
 
+      await notifyCreator('published');
       toast.success('Vaga aprovada e publicada com sucesso!');
       navigate('/company');
     } catch (error: any) {
