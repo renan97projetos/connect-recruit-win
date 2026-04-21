@@ -123,6 +123,20 @@ export default function JobForm() {
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
           setBenefits(job.benefits?.length > 0 ? job.benefits : ['']);
         }
+        const { data: qs } = await supabase
+          .from('screening_questions')
+          .select('question, question_type, required, order_position')
+          .eq('job_id', id)
+          .order('order_position');
+        if (qs && qs.length > 0) {
+          setQuestions(
+            qs.map((q: any) => ({
+              question: q.question,
+              question_type: (q.question_type === 'yes_no' ? 'yes_no' : 'text') as 'text' | 'yes_no',
+              required: !!q.required,
+            })),
+          );
+        }
       }
     };
     load();
