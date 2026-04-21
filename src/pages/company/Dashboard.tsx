@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,12 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Users, MapPin, Clock } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Users, MapPin, Clock, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { JobStagePanel } from '@/components/company/JobStagePanel';
+import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type PipelineStageId =
   | 'aberta'
@@ -60,6 +63,32 @@ export default function CompanyDashboard() {
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
+  const metricsRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  const handleExportPDF = async () => {
+    if (!metricsRef.current) return;
+    try {
+      const canvas = await html2canvas(metricsRef.current, {
+        scale: 1.5,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 1.5, canvas.height / 1.5],
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 1.5, canvas.height / 1.5);
+      pdf.save(
+        `relatorio-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`
+      );
+    } catch (err) {
+      toast({ title: 'Erro ao exportar PDF', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     if (!user || !companyId || roleLoading) return;
