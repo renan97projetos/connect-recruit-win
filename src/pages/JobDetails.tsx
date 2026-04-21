@@ -233,6 +233,52 @@ export default function JobDetails() {
 
       setHasApplied(true);
 
+      // Disparar emails (não bloqueia o fluxo se falhar)
+      try {
+        // 1) Confirmação ao candidato
+        supabase.functions.invoke('send-application-confirmation', {
+          body: {
+            candidateName: profile?.name || user.email,
+            candidateEmail: user.email,
+            jobTitle: job.title,
+            companyName: job.company_name,
+          },
+        });
+
+        // 2) Notificação à empresa (busca email do dono da vaga)
+        if (job.company_id) {
+          const { data: companyProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', job.company_id)
+            .single();
+          if (companyProfile?.id) {
+            const { data: companyAuth } = await supabase.auth.admin?.getUserById?.(companyProfile.id) ?? { data: null };
+            // fallback: buscar via tenants.company_email
+            const { data: tenant } = await supabase
+              .from('tenants')
+              .select('company_email')
+              .eq('company_id', job.company_id)
+              .maybeSingle();
+            const companyEmail = tenant?.company_email || companyAuth?.user?.email;
+            if (companyEmail) {
+              supabase.functions.invoke('send-new-application-notification', {
+                body: {
+                  companyEmail,
+                  jobTitle: job.title,
+                  jobId: job.id,
+                  candidateName: profile?.name || user.email,
+                  candidateEmail: user.email,
+                  score: finalScore,
+                },
+              });
+            }
+          }
+        }
+      } catch (emailErr) {
+        console.error('Erro ao disparar emails de candidatura:', emailErr);
+      }
+
       toast({
         title: 'Candidatura enviada!',
         description: 'Acompanhe o status no seu painel',
