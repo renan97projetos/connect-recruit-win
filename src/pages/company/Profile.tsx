@@ -381,6 +381,8 @@ export default function CompanyProfile() {
           </CardContent>
         </Card>
 
+        <PlanSection />
+
         <Card>
           <CardHeader>
             <CardTitle>Informações da Conta</CardTitle>
