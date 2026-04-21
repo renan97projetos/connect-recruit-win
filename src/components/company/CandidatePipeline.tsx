@@ -283,6 +283,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   }
 
   return (
+    <>
     <DragDropContext onDragEnd={onDragEnd}>
       {/* Bloco B — Faixa de contadores de etapa */}
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1">
