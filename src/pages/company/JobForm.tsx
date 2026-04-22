@@ -20,6 +20,7 @@ import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 import { ProFeatureGate } from '@/components/ProFeatureGate';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
+import { REQUIREMENT_CATEGORIES } from '@/lib/jobRequirements';
 
 interface FormErrors {
   title?: string;
