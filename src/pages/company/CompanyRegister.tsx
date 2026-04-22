@@ -219,8 +219,18 @@ export default function CompanyRegister() {
       toast({ title: 'Cadastro realizado!', description: 'Enviamos um e-mail de boas-vindas com os dados de acesso.' });
       setTimeout(() => navigate('/empresa/acesso'), 1400);
     } catch (err: any) {
-      toast({ title: 'Falha no cadastro', description: err?.message || 'Tente novamente em instantes.', variant: 'destructive' });
-    } finally {
+      let description = err?.message || 'Tente novamente em instantes.';
+
+      if (description === 'Edge Function returned a non-2xx status code' && typeof err?.context?.json === 'function') {
+        try {
+          const payload = await err.context.json();
+          description = payload?.error || payload?.message || description;
+        } catch {
+          // mantém a mensagem padrão se não conseguir ler o corpo
+        }
+      }
+
+      toast({ title: 'Falha no cadastro', description, variant: 'destructive' });
       setSubmitting(false);
     }
   };
