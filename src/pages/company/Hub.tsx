@@ -7,11 +7,13 @@ import { usePlanType } from '@/hooks/usePlanType';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { checkOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding';
+import { useUpgradeModal } from '@/contexts/UpgradeModalContext';
 
 export default function CompanyHub() {
   const navigate = useNavigate();
   const { isOwner, loading: roleLoading } = useCompanyRole();
   const { isPro } = usePlanType();
+  const { openUpgradeModal } = useUpgradeModal();
   const { user } = useSupabaseAuth();
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
 
@@ -123,7 +125,11 @@ export default function CompanyHub() {
             {/* Gestão RH Interna - apenas para owner; bloqueado no plano Starter */}
             {!roleLoading && isOwner && (
               <button
-                onClick={() => navigate(isPro ? '/company/employee-dashboard' : '/company/profile')}
+                onClick={() =>
+                  isPro
+                    ? navigate('/company/employee-dashboard')
+                    : openUpgradeModal({ featureName: 'Gestão RH Interna' })
+                }
                 className={`group relative text-left bg-white border border-gray-200 rounded-2xl p-8 transition-all ${
                   isPro ? 'hover:border-primary/40 hover:shadow-md' : 'hover:border-violet-300'
                 }`}
