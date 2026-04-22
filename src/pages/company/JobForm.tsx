@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 import { ProFeatureGate } from '@/components/ProFeatureGate';
+import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 
 interface FormErrors {
   title?: string;
