@@ -299,6 +299,28 @@ export default function CandidateProfile() {
     staleTime: 30000,
   });
 
+  // Carrega cidades sempre que o estado do perfil mudar
+  useEffect(() => {
+    const uf = profile?.state;
+    if (!uf) {
+      setCities([]);
+      setCurrentStateLoaded('');
+      return;
+    }
+    if (uf === currentStateLoaded) return;
+    let cancelled = false;
+    setLoadingCities(true);
+    fetchCitiesByState(uf)
+      .then((list) => {
+        if (!cancelled) {
+          setCities(list);
+          setCurrentStateLoaded(uf);
+        }
+      })
+      .finally(() => { if (!cancelled) setLoadingCities(false); });
+    return () => { cancelled = true; };
+  }, [profile?.state, currentStateLoaded]);
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: Partial<ProfileData>) => {
