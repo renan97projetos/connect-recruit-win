@@ -40,7 +40,7 @@ import JobRequestDetails from "./pages/company/JobRequestDetails";
 import Permissions from "./pages/company/Permissions";
 import AuditLog from "./pages/company/AuditLog";
 import UploadDocuments from "./pages/UploadDocuments";
-import AdminAuth from "./pages/admin/Auth";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import SystemSettings from "./pages/admin/SystemSettings";
 import ContentManagement from "./pages/admin/ContentManagement";
@@ -127,7 +127,7 @@ const App = () => {
               <Route path="/company/career-page" element={<ProtectedRoute requiredRole="company"><CareerPageConfig /></ProtectedRoute>} />
               <Route path="/company/email-templates" element={<ProtectedRoute requiredRole="company"><EmailTemplates /></ProtectedRoute>} />
               <Route path="/careers/:slug" element={<CareerPage />} />
-              <Route path="/admin/auth" element={<AdminAuth />} />
+              
               <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><SystemSettings /></ProtectedRoute>} />
               <Route path="/admin/content" element={<ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>} />
