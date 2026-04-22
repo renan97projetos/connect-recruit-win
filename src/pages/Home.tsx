@@ -22,7 +22,7 @@ export default function Home() {
   } = useSupabaseAuth();
   const [filters, setFilters] = useState<JobFilters>({
     keyword: '',
-    city: '',
+    cities: [],
     state: '',
     jobType: 'all',
     salaryRange: [0, 50000],
@@ -64,11 +64,12 @@ export default function Home() {
       const keyword = filters.keyword.toLowerCase();
       filtered = filtered.filter(job => job.title.toLowerCase().includes(keyword) || job.description.toLowerCase().includes(keyword) || job.company_name.toLowerCase().includes(keyword));
     }
-    if (filters.city) {
-      filtered = filtered.filter(job => job.city?.toLowerCase().includes(filters.city.toLowerCase()));
+    if (filters.cities && filters.cities.length > 0) {
+      const lower = filters.cities.map((c) => c.toLowerCase());
+      filtered = filtered.filter((job) => job.city && lower.includes(job.city.toLowerCase()));
     }
     if (filters.state) {
-      filtered = filtered.filter(job => job.state?.toLowerCase().includes(filters.state.toLowerCase()));
+      filtered = filtered.filter((job) => job.state?.toLowerCase() === filters.state.toLowerCase());
     }
     if (filters.jobType && filters.jobType !== 'all') {
       filtered = filtered.filter(job => job.job_type === filters.jobType);
@@ -108,7 +109,7 @@ export default function Home() {
   const resetFilters = () => {
     setFilters({
       keyword: '',
-      city: '',
+      cities: [],
       state: '',
       jobType: 'all',
       salaryRange: [0, 50000],
