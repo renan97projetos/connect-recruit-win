@@ -41,7 +41,7 @@ export function JobFiltersComponent({
       [key]: value
     });
   };
-  const FilterContent = () => <div className="space-y-6">
+  const filterContent = <div className="space-y-6">
       {/* Filtros principais sempre visíveis */}
       <div className="space-y-2">
         <Label htmlFor="keyword">Palavra-chave / Cargo</Label>
