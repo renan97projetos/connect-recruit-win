@@ -199,6 +199,7 @@ export default function CandidateProfile() {
   // Cities by selected state
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [currentStateLoaded, setCurrentStateLoaded] = useState<string>('');
 
   // Helper to normalize skills (handles string[], JSON strings, and Skill[] formats)
   const normalizeSkills = (skills: any[] | null): Skill[] => {
