@@ -76,6 +76,7 @@ export function CompanyTopNav() {
   const [companyName, setCompanyName] = useState('');
   const [userName, setUserName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -83,13 +84,15 @@ export function CompanyTopNav() {
       if (!user?.id) return;
       const { data } = await supabase
         .from('profiles')
-        .select('company_name, name, avatar_url')
+        .select('company_name, name, avatar_url, company_logo_url')
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
-        setCompanyName(data.company_name || data.name || 'Empresa');
-        setUserName(data.name || user.email || '');
-        setAvatarUrl(data.avatar_url ?? null);
+        const row = data as any;
+        setCompanyName(row.company_name || row.name || 'Empresa');
+        setUserName(row.name || user.email || '');
+        setAvatarUrl(row.avatar_url ?? null);
+        setCompanyLogoUrl(row.company_logo_url ?? null);
       }
     };
     fetchProfile();
@@ -105,6 +108,7 @@ export function CompanyTopNav() {
           setCompanyName(row.company_name || row.name || 'Empresa');
           setUserName(row.name || user.email || '');
           setAvatarUrl(row.avatar_url ?? null);
+          setCompanyLogoUrl(row.company_logo_url ?? null);
         }
       )
       .subscribe();
