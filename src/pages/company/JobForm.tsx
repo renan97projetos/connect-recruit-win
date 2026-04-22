@@ -58,6 +58,7 @@ export default function JobForm() {
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
   const [benefits, setBenefits] = useState<string[]>(['']);
   const [benefitInput, setBenefitInput] = useState('');
+  const [selectedReqCategory, setSelectedReqCategory] = useState<string>('');
 
   type ScreeningQuestion = {
     question: string;
@@ -613,24 +614,73 @@ export default function JobForm() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="space-y-2 pt-2">
-                        {requirements.map((req, i) => (
-                          <div key={i} className="flex gap-2">
-                            <Input
-                              value={req}
-                              onChange={(e) => updateList(setRequirements, i, e.target.value)}
-                              placeholder="Ex: 3+ anos de experiência com React"
-                            />
-                            {requirements.length > 1 && (
-                              <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(setRequirements, i)}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
+                      <div className="space-y-3 pt-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Categoria do requisito</Label>
+                          <Select value={selectedReqCategory} onValueChange={setSelectedReqCategory}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Escolha uma categoria para ver as sugestões" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {REQUIREMENT_CATEGORIES.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {selectedReqCategory && (
+                          <div className="rounded-md border bg-muted/30 p-3">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Clique para adicionar:
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {REQUIREMENT_CATEGORIES.find((c) => c.id === selectedReqCategory)?.items
+                                .filter((item) => !requirements.map((r) => r.trim()).includes(item))
+                                .map((item) => (
+                                  <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() =>
+                                      setRequirements((prev) => [...prev.filter((r) => r.trim()), item])
+                                    }
+                                    className="text-xs px-2 py-1 rounded-full border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                                  >
+                                    + {item}
+                                  </button>
+                                ))}
+                              {REQUIREMENT_CATEGORIES.find((c) => c.id === selectedReqCategory)?.items
+                                .filter((item) => !requirements.map((r) => r.trim()).includes(item)).length === 0 && (
+                                <p className="text-xs text-muted-foreground italic">
+                                  Todos os requisitos desta categoria já foram adicionados.
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        ))}
-                        <Button type="button" variant="outline" size="sm" onClick={() => addItem(setRequirements)}>
-                          <Plus className="mr-2 h-4 w-4" /> Adicionar requisito
-                        </Button>
+                        )}
+
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Requisitos adicionados</Label>
+                          {requirements.map((req, i) => (
+                            <div key={i} className="flex gap-2">
+                              <Input
+                                value={req}
+                                onChange={(e) => updateList(setRequirements, i, e.target.value)}
+                                placeholder="Ex: 3+ anos de experiência com React"
+                              />
+                              {requirements.length > 1 && (
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(setRequirements, i)}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                          <Button type="button" variant="outline" size="sm" onClick={() => addItem(setRequirements)}>
+                            <Plus className="mr-2 h-4 w-4" /> Adicionar requisito personalizado
+                          </Button>
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
