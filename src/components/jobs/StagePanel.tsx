@@ -359,7 +359,7 @@ function RequestStageDialog({
   };
 
   const handleEdit = () => {
-    navigate(`/company/job-requests/${itemId}`);
+    navigate('/company/dashboard');
     onClose();
   };
 
