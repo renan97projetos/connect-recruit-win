@@ -261,9 +261,6 @@ export default function Features() {
           <h2 className="text-3xl md:text-5xl font-black mb-4">
             Pronto para transformar seu RH?
           </h2>
-          <p className="text-lg opacity-80 mb-8">
-            Comece grátis no Starter ou fale com a gente para conhecer o Pro.
-          </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Button
               asChild
