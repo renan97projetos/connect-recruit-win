@@ -41,7 +41,7 @@ export function CompanyHeader({ showHubLink = true }: CompanyHeaderProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-3 border-foreground bg-background">
+    <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
       <div className="container mx-auto px-4">
         <div className="h-16 flex items-center justify-between gap-4">
           {/* Logo SaaS */}

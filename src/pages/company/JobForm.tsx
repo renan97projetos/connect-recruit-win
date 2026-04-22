@@ -501,7 +501,7 @@ export default function JobForm() {
                                 <button
                                   type="button"
                                   onClick={() => removeBenefitTag(b)}
-                                  className="ml-0.5 rounded-full p-0.5 hover:bg-background"
+                                  className="ml-0.5 rounded-full p-0.5 hover:bg-gray-100"
                                   aria-label={`Remover ${b}`}
                                 >
                                   <X className="h-3 w-3" />
@@ -673,7 +673,7 @@ export default function JobForm() {
             </ProFeatureGate>
 
             {/* Rodapé sticky com 2 CTAs */}
-            <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t bg-background/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
+            <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
               <Button
                 type="button"
                 variant="outline"

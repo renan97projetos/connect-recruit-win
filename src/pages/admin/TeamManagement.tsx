@@ -299,7 +299,7 @@ export default function TeamManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                      <Avatar className="h-12 w-12 border-2 border-foreground">
+                      <Avatar className="h-12 w-12 border border-gray-200">
                         <AvatarImage src={member.photo_url || undefined} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           {getInitials(member.name)}
