@@ -29,7 +29,7 @@ export default function CompanyHub() {
   const doneCount = checklist.filter((c) => c.done).length;
 
   return (
-    <div className="min-h-screen bg-[#f8f8f6]">
+    <div className="min-h-screen bg-[#f8f8f6] app-internal">
       <CompanyHeader showHubLink={false} />
 
       <main className="container mx-auto px-4 py-12 md:py-20">
