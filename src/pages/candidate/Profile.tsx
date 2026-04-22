@@ -795,6 +795,7 @@ export default function CandidateProfile() {
     }
   };
 
+  if (isLoading) {
     return (
       <CandidateLayout title="Meu Perfil" description="Carregando...">
         <div className="flex justify-center py-12">
