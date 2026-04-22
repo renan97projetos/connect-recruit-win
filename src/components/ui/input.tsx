@@ -3,7 +3,25 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onKeyDown, ...props }, ref) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Run the consumer's handler first so it can opt-in to custom Enter behavior
+      onKeyDown?.(e);
+
+      // Global rule: Enter on a single-line input must NEVER submit the parent form.
+      // It only acts within the active field (handled by the consumer's onKeyDown above).
+      // Multiline inputs use <textarea>, so this only affects <input>.
+      if (
+        e.key === "Enter" &&
+        !e.defaultPrevented &&
+        // Allow Enter to trigger explicit submit buttons via keyboard activation
+        type !== "submit" &&
+        type !== "button"
+      ) {
+        e.preventDefault();
+      }
+    };
+
     return (
       <input
         type={type}
@@ -12,6 +30,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     );
