@@ -111,6 +111,10 @@ function formatDateToIso(dateStr: string) {
   return `${year}-${month}-${day}`;
 }
 
+function pickFallbackValue(...values: Array<string | null | undefined>) {
+  return values.find((value) => typeof value === 'string' && value.trim().length > 0) || '';
+}
+
 interface Experience {
   id: string;
   company: string;
@@ -268,6 +272,7 @@ export default function CandidateProfile() {
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [currentStateLoaded, setCurrentStateLoaded] = useState<string>('');
+  const [birthDateInput, setBirthDateInput] = useState('');
 
   // Helper to normalize skills (handles string[], JSON strings, and Skill[] formats)
   const normalizeSkills = (skills: any[] | null): Skill[] => {
