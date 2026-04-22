@@ -18,8 +18,6 @@ import {
 export function Navbar() {
   const { user, userRole, signOut, isAuthenticated, loading } = useSupabaseAuth();
   const navigate = useNavigate();
-  const [logoClickCount, setLogoClickCount] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -50,22 +48,6 @@ export function Navbar() {
     navigate('/');
   };
 
-  const handleLogoClick = (e: React.MouseEvent) => {
-    const now = Date.now();
-
-    if (now - lastClickTime > 2000) {
-      setLogoClickCount(1);
-    } else {
-      setLogoClickCount(prev => prev + 1);
-    }
-    setLastClickTime(now);
-
-    if (logoClickCount + 1 >= 5) {
-      e.preventDefault();
-      navigate('/admin/auth');
-      setLogoClickCount(0);
-    }
-  };
 
   const getDashboardRoute = () => {
     if (!userRole) return '/';
@@ -121,8 +103,7 @@ export function Navbar() {
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center gap-3 group" 
-            onClick={handleLogoClick}
+            className="flex items-center gap-3 group"
           >
             <span className="font-bold text-xl tracking-tight hidden sm:block">SinapseRH</span>
           </Link>
