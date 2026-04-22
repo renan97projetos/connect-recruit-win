@@ -75,6 +75,7 @@ interface ProfileData {
   state: string;
   zip_code: string;
   summary: string;
+  desired_role: string;
   linkedin_url: string;
   portfolio_url: string;
   experiences: Experience[];
@@ -376,6 +377,7 @@ export default function CandidateProfile() {
       state: profile.state,
       zip_code: profile.zip_code,
       summary: profile.summary,
+      desired_role: profile.desired_role,
       linkedin_url: profile.linkedin_url,
       portfolio_url: profile.portfolio_url,
     });
@@ -780,6 +782,21 @@ export default function CandidateProfile() {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="desired_role">Cargo ou área de interesse</Label>
+                <Input
+                  id="desired_role"
+                  placeholder="Ex: Desenvolvedor Front-end, Vendas, RH..."
+                  value={profile.desired_role || ''}
+                  onChange={(e) => {
+                    queryClient.setQueryData(['candidate-profile', user?.id], {
+                      ...profile,
+                      desired_role: e.target.value
+                    });
+                  }}
+                />
               </div>
 
               <div className="space-y-2">
