@@ -625,6 +625,7 @@ export default function JobForm() {
                               'Excel Intermediário',
                               'Excel Avançado',
                               'Pacote Office Completo',
+                              'Power BI',
                               'ERP',
                               'Ensino Médio Completo',
                               'Superior Completo',
