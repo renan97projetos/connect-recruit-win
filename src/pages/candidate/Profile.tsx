@@ -75,6 +75,7 @@ interface ProfileData {
   state: string;
   zip_code: string;
   summary: string;
+  desired_role: string;
   linkedin_url: string;
   portfolio_url: string;
   experiences: Experience[];
@@ -376,6 +377,7 @@ export default function CandidateProfile() {
       state: profile.state,
       zip_code: profile.zip_code,
       summary: profile.summary,
+      desired_role: profile.desired_role,
       linkedin_url: profile.linkedin_url,
       portfolio_url: profile.portfolio_url,
     });
