@@ -141,7 +141,7 @@ export default function JobRequests() {
             <div className="space-y-8">
               <section>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <div className="h-2 w-2 rounded-full bg-primary" />
                   <h3 className="text-base font-semibold">Vagas Ativas</h3>
                   <span className="text-sm text-muted-foreground">({activeJobs.length})</span>
                 </div>
@@ -173,7 +173,7 @@ export default function JobRequests() {
 
               <section>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 rounded-full bg-slate-400" />
+                  <div className="h-2 w-2 rounded-full bg-muted-foreground" />
                   <h3 className="text-base font-semibold">Vagas em Rascunho</h3>
                   <span className="text-sm text-muted-foreground">({draftJobs.length})</span>
                 </div>
