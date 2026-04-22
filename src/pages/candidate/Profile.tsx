@@ -317,10 +317,12 @@ export default function CandidateProfile() {
     queryFn: async () => {
       if (!user) return null;
       const metadata = user.user_metadata || {};
+      const preregistrationData = getCandidatePreregistration(user.email);
       const fallbackProfileFields = {
-        city: typeof metadata.city === 'string' ? metadata.city : '',
-        state: typeof metadata.state === 'string' ? metadata.state : '',
-        desired_role: typeof metadata.desired_role === 'string' ? metadata.desired_role : '',
+        city: typeof metadata.city === 'string' ? metadata.city : preregistrationData?.city || '',
+        state: typeof metadata.state === 'string' ? metadata.state : preregistrationData?.state || '',
+        desired_role: typeof metadata.desired_role === 'string' ? metadata.desired_role : preregistrationData?.desired_role || '',
+        cv_url: typeof metadata.cv_url === 'string' ? metadata.cv_url : preregistrationData?.cv_url || '',
       };
       
       // First try to get existing profile
@@ -358,12 +360,14 @@ export default function CandidateProfile() {
           city: createdProfile.city || fallbackProfileFields.city,
           state: createdProfile.state || fallbackProfileFields.state,
           desired_role: createdProfile.desired_role || fallbackProfileFields.desired_role,
+          cv_url: createdProfile.cv_url || fallbackProfileFields.cv_url,
         };
 
         if (
           (!createdProfile.city && fallbackProfileFields.city) ||
           (!createdProfile.state && fallbackProfileFields.state) ||
-          (!createdProfile.desired_role && fallbackProfileFields.desired_role)
+          (!createdProfile.desired_role && fallbackProfileFields.desired_role) ||
+          (!createdProfile.cv_url && fallbackProfileFields.cv_url)
         ) {
           await supabase
             .from('profiles')
@@ -371,6 +375,7 @@ export default function CandidateProfile() {
               city: mergedCreatedProfile.city,
               state: mergedCreatedProfile.state,
               desired_role: mergedCreatedProfile.desired_role,
+              cv_url: mergedCreatedProfile.cv_url,
             })
             .eq('id', user.id);
         }
@@ -388,12 +393,14 @@ export default function CandidateProfile() {
         city: data.city || fallbackProfileFields.city,
         state: data.state || fallbackProfileFields.state,
         desired_role: data.desired_role || fallbackProfileFields.desired_role,
+        cv_url: data.cv_url || fallbackProfileFields.cv_url,
       };
 
       if (
         (!data.city && fallbackProfileFields.city) ||
         (!data.state && fallbackProfileFields.state) ||
-        (!data.desired_role && fallbackProfileFields.desired_role)
+        (!data.desired_role && fallbackProfileFields.desired_role) ||
+        (!data.cv_url && fallbackProfileFields.cv_url)
       ) {
         await supabase
           .from('profiles')
@@ -401,6 +408,7 @@ export default function CandidateProfile() {
             city: mergedProfile.city,
             state: mergedProfile.state,
             desired_role: mergedProfile.desired_role,
+            cv_url: mergedProfile.cv_url,
           })
           .eq('id', user.id);
       }
