@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
-import { Briefcase, User, Home, LogOut } from 'lucide-react';
+import { Briefcase, User, Search, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
@@ -13,21 +13,13 @@ interface CandidateLayoutProps {
 
 const menuItems = [
   { path: '/candidate', label: 'Minhas Candidaturas', icon: Briefcase },
+  { path: '/candidate/jobs', label: 'Ver Vagas', icon: Search },
   { path: '/candidate/profile', label: 'Meu Perfil', icon: User },
 ];
 
 export function CandidateLayout({ children, title, description }: CandidateLayoutProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { signOut } = useSupabaseAuth();
-
-  const handleViewJobs = () => {
-    navigate('/#vagas');
-    setTimeout(() => {
-      const element = document.getElementById('vagas');
-      if (element) element.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
 
   return (
     <div className="min-h-screen bg-[#f8f8f6] app-internal">
@@ -66,14 +58,6 @@ export function CandidateLayout({ children, title, description }: CandidateLayou
                 </Link>
               );
             })}
-
-            <button
-              onClick={handleViewJobs}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">Ver Vagas</span>
-            </button>
 
             <button
               onClick={() => signOut()}
