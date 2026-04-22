@@ -683,7 +683,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
 
     {selectedForCompare.size >= 2 && (
       <ProFeatureGate featureName="Comparar candidatos">
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background rounded-full px-5 py-2.5 shadow-lg flex items-center gap-3 text-sm">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white rounded-full px-5 py-2.5 shadow-xl flex items-center gap-3 text-sm">
         <span>{selectedForCompare.size} candidatos selecionados</span>
         <button
           onClick={() => setCompareOpen(true)}
