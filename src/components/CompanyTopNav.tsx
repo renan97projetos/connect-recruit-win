@@ -46,7 +46,6 @@ type NavItem = {
 
 const mainMenuItems: NavItem[] = [
   { path: '/company/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { path: '/company/job-requests', label: 'Requisições', icon: Briefcase },
   { path: '/company/job-history', label: 'Histórico', icon: Archive },
   { path: '/company/talent-pool', label: 'Banco de Talentos', icon: TrendingUp, proOnly: true },
 ];
