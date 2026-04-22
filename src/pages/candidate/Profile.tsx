@@ -41,6 +41,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PhoneInput } from '@/components/PhoneInput';
+import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 
 interface Experience {
   id: string;
