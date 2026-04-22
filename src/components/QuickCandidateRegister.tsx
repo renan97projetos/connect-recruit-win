@@ -100,7 +100,11 @@ export function QuickCandidateRegister() {
       console.error('Falha ao verificar email:', err);
     }
 
-    const { error } = await signUp(email, password, name, 'candidate');
+    const { error } = await signUp(email, password, name, 'candidate', {
+      city,
+      state,
+      desired_role: desiredRole,
+    });
 
     if (error) {
       let msg = 'Tente novamente';

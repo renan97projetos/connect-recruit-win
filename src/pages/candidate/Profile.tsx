@@ -248,6 +248,12 @@ export default function CandidateProfile() {
     queryKey: ['candidate-profile', user?.id],
     queryFn: async () => {
       if (!user) return null;
+      const metadata = user.user_metadata || {};
+      const fallbackProfileFields = {
+        city: typeof metadata.city === 'string' ? metadata.city : '',
+        state: typeof metadata.state === 'string' ? metadata.state : '',
+        desired_role: typeof metadata.desired_role === 'string' ? metadata.desired_role : '',
+      };
       
       // First try to get existing profile
       const { data, error } = await supabase
@@ -278,17 +284,61 @@ export default function CandidateProfile() {
           console.error('Profile create error:', createError);
           throw createError;
         }
+
+        const mergedCreatedProfile = {
+          ...createdProfile,
+          city: createdProfile.city || fallbackProfileFields.city,
+          state: createdProfile.state || fallbackProfileFields.state,
+          desired_role: createdProfile.desired_role || fallbackProfileFields.desired_role,
+        };
+
+        if (
+          (!createdProfile.city && fallbackProfileFields.city) ||
+          (!createdProfile.state && fallbackProfileFields.state) ||
+          (!createdProfile.desired_role && fallbackProfileFields.desired_role)
+        ) {
+          await supabase
+            .from('profiles')
+            .update({
+              city: mergedCreatedProfile.city,
+              state: mergedCreatedProfile.state,
+              desired_role: mergedCreatedProfile.desired_role,
+            })
+            .eq('id', user.id);
+        }
         
         return {
-          ...createdProfile,
+          ...mergedCreatedProfile,
           experiences: [],
           educations: [],
           skills: [],
         } as ProfileData;
       }
+
+      const mergedProfile = {
+        ...data,
+        city: data.city || fallbackProfileFields.city,
+        state: data.state || fallbackProfileFields.state,
+        desired_role: data.desired_role || fallbackProfileFields.desired_role,
+      };
+
+      if (
+        (!data.city && fallbackProfileFields.city) ||
+        (!data.state && fallbackProfileFields.state) ||
+        (!data.desired_role && fallbackProfileFields.desired_role)
+      ) {
+        await supabase
+          .from('profiles')
+          .update({
+            city: mergedProfile.city,
+            state: mergedProfile.state,
+            desired_role: mergedProfile.desired_role,
+          })
+          .eq('id', user.id);
+      }
       
       return {
-        ...data,
+        ...mergedProfile,
         experiences: (data.experiences as any as Experience[]) || [],
         educations: (data.educations as any as Education[]) || [],
         skills: data.skills || [],
