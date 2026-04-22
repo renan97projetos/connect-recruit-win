@@ -324,10 +324,10 @@ export default function CandidateProfile() {
       const metadata = user.user_metadata || {};
       const preregistrationData = getCandidatePreregistration(user.email);
       const fallbackProfileFields = {
-        city: typeof metadata.city === 'string' ? metadata.city : preregistrationData?.city || '',
-        state: typeof metadata.state === 'string' ? metadata.state : preregistrationData?.state || '',
-        desired_role: typeof metadata.desired_role === 'string' ? metadata.desired_role : preregistrationData?.desired_role || '',
-        cv_url: typeof metadata.cv_url === 'string' ? metadata.cv_url : preregistrationData?.cv_url || '',
+        city: pickFallbackValue(typeof metadata.city === 'string' ? metadata.city : '', preregistrationData?.city),
+        state: pickFallbackValue(typeof metadata.state === 'string' ? metadata.state : '', preregistrationData?.state),
+        desired_role: pickFallbackValue(typeof metadata.desired_role === 'string' ? metadata.desired_role : '', preregistrationData?.desired_role),
+        cv_url: pickFallbackValue(typeof metadata.cv_url === 'string' ? metadata.cv_url : '', preregistrationData?.cv_url),
       };
       
       // First try to get existing profile
