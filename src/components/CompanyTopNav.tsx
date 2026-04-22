@@ -175,10 +175,17 @@ export function CompanyTopNav() {
           .filter((item) => !item.ownerOnly || isOwner)
           .map((item) => {
             const active = item.end ? location.pathname === item.path : isActive(item.path);
+            const locked = item.proOnly && !isPro;
             return (
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={(e) => {
+                  if (locked) {
+                    e.preventDefault();
+                    openUpgradeModal({ featureName: item.label });
+                  }
+                }}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
                   active
@@ -188,7 +195,7 @@ export function CompanyTopNav() {
               >
                 <item.icon className="h-3.5 w-3.5" />
                 {item.label}
-                {item.proOnly && !isPro && (
+                {locked && (
                   <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
                     PRO
                   </span>
