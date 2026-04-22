@@ -96,6 +96,11 @@ export default function Home() {
       };
       const kws = levelKeywords[filters.experienceLevel] || [];
       filtered = filtered.filter(job => {
+        // 1) Match exato pelo campo dedicado da vaga (preferencial)
+        if (job.experience_level) {
+          return job.experience_level === filters.experienceLevel;
+        }
+        // 2) Fallback: heurística por palavras-chave em título/descrição (vagas antigas sem o campo)
         const haystack = `${job.title || ''} ${job.description || ''}`.toLowerCase();
         return kws.some(k => haystack.includes(k));
       });

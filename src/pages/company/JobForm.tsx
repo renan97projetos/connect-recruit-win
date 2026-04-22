@@ -51,6 +51,7 @@ export default function JobForm() {
     state: '',
     salaryMin: '',
     salaryMax: '',
+    experienceLevel: '',
     isActive: true,
   });
 
@@ -160,6 +161,7 @@ export default function JobForm() {
             state: job.state || '',
             salaryMin: job.salary_min?.toString() || '',
             salaryMax: job.salary_max?.toString() || '',
+            experienceLevel: (job as any).experience_level || '',
             isActive: job.is_active,
           });
           setRequirements(job.requirements?.length > 0 ? job.requirements : ['']);
@@ -247,6 +249,7 @@ export default function JobForm() {
         salary_max: formData.salaryMax ? parseFloat(formData.salaryMax) : null,
         salary_currency: 'BRL',
         benefits: filteredBenefits,
+        experience_level: formData.experienceLevel || null,
         is_active: mode === 'publish',
       };
 
@@ -421,6 +424,28 @@ export default function JobForm() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="experienceLevel">Nível de Experiência</Label>
+                  <Select
+                    value={formData.experienceLevel || 'none'}
+                    onValueChange={(v) => setFormData({ ...formData, experienceLevel: v === 'none' ? '' : v })}
+                  >
+                    <SelectTrigger id="experienceLevel">
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não especificado</SelectItem>
+                      <SelectItem value="junior">Júnior</SelectItem>
+                      <SelectItem value="pleno">Pleno</SelectItem>
+                      <SelectItem value="senior">Sênior</SelectItem>
+                      <SelectItem value="especialista">Especialista</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Define como a vaga aparece no filtro "Nível de Experiência" da página inicial.
+                  </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
