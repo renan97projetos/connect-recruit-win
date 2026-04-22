@@ -69,6 +69,36 @@ export function QuickCandidateRegister() {
     }
 
     setLoading(true);
+
+    // Bloqueia se o email já estiver cadastrado em outra área (ex: empresa)
+    try {
+      const { data: check } = await supabase.functions.invoke('check-email-availability', {
+        body: { email },
+      });
+      if (check?.exists) {
+        const role = check.role;
+        if (role && role !== 'candidate') {
+          const label = role === 'company' ? 'empresa' : role === 'super_admin' ? 'super admin' : role;
+          toast({
+            title: 'Email já cadastrado',
+            description: `Este email já está em uso em uma conta de ${label}. Use outro email para criar sua conta de candidato.`,
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        toast({
+          title: 'Email já cadastrado',
+          description: 'Já existe uma conta de candidato com este email. Faça login para continuar.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Falha ao verificar email:', err);
+    }
+
     const { error } = await signUp(email, password, name, 'candidate');
 
     if (error) {

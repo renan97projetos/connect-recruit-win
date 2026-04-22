@@ -177,6 +177,29 @@ export default function CompanyRegister() {
       return;
     }
     setSubmitting(true);
+
+    // Bloqueia se o email já estiver cadastrado em outra área (ex: candidato)
+    try {
+      const { data: check } = await supabase.functions.invoke('check-email-availability', {
+        body: { email: form.company_email },
+      });
+      if ((check as any)?.exists) {
+        const role = (check as any).role;
+        const label = role === 'candidate' ? 'candidato' : role === 'company' ? 'empresa' : role === 'super_admin' ? 'super admin' : 'outro tipo';
+        toast({
+          title: 'Email já cadastrado',
+          description: role === 'company'
+            ? 'Já existe uma empresa cadastrada com este email. Faça login para continuar.'
+            : `Este email já está em uso em uma conta de ${label}. Use outro email para cadastrar a empresa.`,
+          variant: 'destructive',
+        });
+        setSubmitting(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Falha ao verificar email:', err);
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('create-tenant-user', {
         body: {
