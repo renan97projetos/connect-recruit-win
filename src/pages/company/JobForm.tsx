@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
