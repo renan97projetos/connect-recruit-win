@@ -476,7 +476,18 @@ export default function CandidateProfile() {
   }, [profile?.state, currentStateLoaded]);
 
   useEffect(() => {
-    setBirthDateInput(formatDateForDisplay(profile?.birth_date || ''));
+    const formatted = formatDateForDisplay(profile?.birth_date || '');
+    // Só sincroniza com o profile se o input atual NÃO corresponde ao mesmo valor ISO.
+    // Isso evita reescrever o que o usuário está digitando (ex.: ao digitar o ano).
+    setBirthDateInput((current) => {
+      const currentIso = formatDateToIso(current);
+      const profileIso = profile?.birth_date || '';
+      if (currentIso && currentIso === profileIso) return current;
+      // Se o usuário está no meio da digitação (texto não vazio sem ISO válido),
+      // preserva o que ele digitou e não sobrescreve com o valor do profile.
+      if (current && !currentIso && !profileIso) return current;
+      return formatted;
+    });
   }, [profile?.birth_date]);
 
   // Update profile mutation
