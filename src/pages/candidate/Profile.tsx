@@ -743,7 +743,58 @@ export default function CandidateProfile() {
     }
   };
 
-  if (isLoading) {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Arquivo inválido',
+        description: 'Selecione uma imagem (JPG, PNG, etc).',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Imagem muito grande',
+        description: 'A foto deve ter no máximo 5 MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      updateProfileMutation.mutate({ avatar_url: publicUrl });
+
+      toast({
+        title: 'Foto atualizada!',
+        description: 'Sua foto de perfil foi salva com sucesso.',
+      });
+    } catch (error) {
+      console.error('Erro no upload da foto:', error);
+      toast({
+        title: 'Erro ao enviar foto',
+        description: 'Não foi possível fazer o upload da imagem.',
+        variant: 'destructive',
+      });
+    }
+  };
+
     return (
       <CandidateLayout title="Meu Perfil" description="Carregando...">
         <div className="flex justify-center py-12">
