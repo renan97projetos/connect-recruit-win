@@ -176,7 +176,7 @@ export default function Features() {
             <div className="flex items-center gap-2">
               <span className="inline-block w-4 h-4 rounded-full bg-muted border-2 border-foreground" />
               <span className="font-bold">STARTER</span>
-              <span className="text-muted-foreground">— Organizando o RH</span>
+              <span className="text-muted-foreground">— organizando o RH</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-block w-4 h-4 rounded-full bg-primary border-2 border-foreground" />
