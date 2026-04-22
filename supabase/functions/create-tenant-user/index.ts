@@ -210,8 +210,10 @@ Deno.serve(async (req) => {
 
     if (tenantErr) {
       console.error("tenant insert error:", tenantErr);
-      // Rollback user
-      await adminClient.auth.admin.deleteUser(userId);
+      // Rollback user only if it was newly created in this call
+      if (created?.user) {
+        await adminClient.auth.admin.deleteUser(userId);
+      }
       return new Response(
         JSON.stringify({ error: tenantErr.message }),
         {
