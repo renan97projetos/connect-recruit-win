@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('id', companyId)
       .single();
 
-    const companyName = profile?.company_name || profile?.name || 'Sinapse RH';
+    const companyName = profile?.company_name || profile?.name || 'SinapseRH';
     const loginUrl = `https://www.sinapserh.com.br/login`;
 
     // Format permissions list
@@ -142,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="footer">
                 <p>Este é um email automático, por favor não responda.</p>
-                <p>© ${new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.</p>
+                <p>© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
               </div>
             </div>
           </body>

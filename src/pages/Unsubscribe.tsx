@@ -79,7 +79,7 @@ export default function Unsubscribe() {
           <div className="text-center">
             <h1 className="text-xl font-bold mb-2">Cancelar inscrição de emails?</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Você não receberá mais emails da Sinapse RH neste endereço.
+              Você não receberá mais emails da SinapseRH neste endereço.
             </p>
             <Button onClick={handleConfirm} className="w-full" size="lg">
               Confirmar cancelamento

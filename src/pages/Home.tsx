@@ -40,7 +40,7 @@ export default function Home() {
   }, []);
   const handleCompanyWhatsApp = () => {
     if (!whatsappNumber) return;
-    const msg = encodeURIComponent('Olá! Sou de uma empresa e gostaria de saber mais sobre o Sinapse RH.');
+    const msg = encodeURIComponent('Olá! Sou de uma empresa e gostaria de saber mais sobre o SinapseRH.');
     window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, '_blank');
   };
   useEffect(() => {

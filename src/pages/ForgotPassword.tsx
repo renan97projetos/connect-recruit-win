@@ -78,7 +78,7 @@ export default function ForgotPassword() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <Link to="/" className="inline-block">
-            <img src={srhLogo} alt="Sinapse RH" className="h-16 mx-auto" />
+            <img src={srhLogo} alt="SinapseRH" className="h-16 mx-auto" />
           </Link>
         </div>
 

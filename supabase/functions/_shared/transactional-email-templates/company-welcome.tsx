@@ -14,7 +14,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'Sinapse RH'
+const SITE_NAME = 'SinapseRH'
 const CONTACT_URL = 'https://sinapserh.com.br/contact'
 const COMPANY_LOGIN_URL = 'https://sinapserh.com.br/empresa/acesso'
 
@@ -141,7 +141,7 @@ const CompanyWelcomeEmail = ({
 
 export const template = {
   component: CompanyWelcomeEmail,
-  subject: 'Bem-vindo(a) à Sinapse RH! 🚀 Seus dados de acesso',
+  subject: 'Bem-vindo(a) à SinapseRH! 🚀 Seus dados de acesso',
   displayName: 'Boas-vindas à empresa',
   previewData: {
     name: 'Maria',

@@ -177,7 +177,7 @@ export default function RegisterInvitation() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src={srhLogo} alt="Sinapse RH" className="h-12" />
+              <img src={srhLogo} alt="SinapseRH" className="h-12" />
             </div>
             <XCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
             <CardTitle className="text-destructive">Convite Inválido</CardTitle>
@@ -203,7 +203,7 @@ export default function RegisterInvitation() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src={srhLogo} alt="Sinapse RH" className="h-12" />
+              <img src={srhLogo} alt="SinapseRH" className="h-12" />
             </div>
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <CardTitle className="text-green-600">Conta Criada!</CardTitle>
@@ -228,7 +228,7 @@ export default function RegisterInvitation() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={srhLogo} alt="Sinapse RH" className="h-12" />
+            <img src={srhLogo} alt="SinapseRH" className="h-12" />
           </div>
           <div>
             <CardTitle className="text-2xl">Criar sua conta</CardTitle>

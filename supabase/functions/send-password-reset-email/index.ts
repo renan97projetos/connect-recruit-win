@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
     await client.send({
       from: GMAIL_USER!,
       to: email,
-      subject: `Recuperação de Senha - Sinapse RH`,
+      subject: `Recuperação de Senha - SinapseRH`,
       content: "auto",
       html: `
         <!DOCTYPE html>
@@ -118,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="content">
                 <p>Olá <strong>${userName}</strong>,</p>
                 
-                <p>Recebemos uma solicitação para redefinir a senha da sua conta no sistema Sinapse RH.</p>
+                <p>Recebemos uma solicitação para redefinir a senha da sua conta no sistema SinapseRH.</p>
                 
                 <p style="text-align: center;">
                   <a href="${resetLink}" class="button">🔑 Redefinir Senha</a>
@@ -142,12 +142,12 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <p style="margin-top: 30px;">
                   Atenciosamente,<br>
-                  <strong>Equipe Sinapse RH</strong>
+                  <strong>Equipe SinapseRH</strong>
                 </p>
               </div>
               <div class="footer">
                 <p>Este é um email automático, por favor não responda.</p>
-                <p>© ${new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.</p>
+                <p>© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
               </div>
             </div>
           </body>

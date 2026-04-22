@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin-top:24px;">
                 <a href="${url}" style="background:#7C3AED; color:#fff; padding:12px 22px; border:2px solid #0D0D0D; border-radius:8px; box-shadow:4px 4px 0 #0D0D0D; text-decoration:none; font-weight:bold;">Ver requisição</a>
               </p>
-              <p style="font-size:12px; color:#737373; margin-top:32px;">Sinapse RH — notificação automática.</p>
+              <p style="font-size:12px; color:#737373; margin-top:32px;">SinapseRH — notificação automática.</p>
             </div>
           </body>
         </html>

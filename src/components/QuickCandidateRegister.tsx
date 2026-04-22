@@ -137,7 +137,7 @@ export function QuickCandidateRegister() {
 
     toast({
       title: 'Cadastro realizado!',
-      description: 'Bem-vindo ao Sinapse RH',
+      description: 'Bem-vindo ao SinapseRH',
     });
     setTimeout(() => navigate('/candidate'), 500);
   };

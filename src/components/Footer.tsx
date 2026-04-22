@@ -89,7 +89,7 @@ export function Footer() {
         <div className="border-t border-background/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm opacity-60">
-              © {new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.
+              © {new Date().getFullYear()} SinapseRH. Todos os direitos reservados.
             </p>
             
           </div>
