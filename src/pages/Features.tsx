@@ -159,7 +159,7 @@ export default function Features() {
               FUNCIONALIDADES COMPLETAS
             </Badge>
             <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight">
-              Tudo que você pode fazer com o Sinapse RH
+              Tudo que você pode fazer com o SinapseRH
             </h1>
             <p className="text-lg md:text-xl font-medium opacity-80">
               Compare recursos por categoria e veja o que cada plano entrega.

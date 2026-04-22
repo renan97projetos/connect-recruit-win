@@ -340,7 +340,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
         .eq('id', jobId)
         .maybeSingle()
         .then(async ({ data: jobData }) => {
-          const companyName = jobData?.company_name || 'Sinapse RH';
+          const companyName = jobData?.company_name || 'SinapseRH';
           const ownerId = jobData?.company_id || user?.id;
 
           // Buscar template customizado da empresa para esta etapa

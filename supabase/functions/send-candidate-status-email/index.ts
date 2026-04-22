@@ -93,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
         <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5;margin:0;padding:0;">
           <div style="max-width:600px;margin:0 auto;background:white;">
             <div style="background:linear-gradient(135deg,hsl(222.2 47.4% 11.2%) 0%,hsl(222.2 47.4% 20%) 100%);color:white;padding:30px;text-align:center;">
-              <h1 style="margin:0;font-size:24px;">Sinapse RH</h1>
+              <h1 style="margin:0;font-size:24px;">SinapseRH</h1>
             </div>
             <div style="padding:30px;">
               <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Olá, ${candidateName}</h2>
@@ -104,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <p style="margin:4px 0;font-size:14px;"><strong>Empresa:</strong> ${companyName}</p>
               </div>
               <p style="font-size:13px;color:#888;margin-top:30px;text-align:center;">
-                Este é um e-mail automático da plataforma Sinapse RH.
+                Este é um e-mail automático da plataforma SinapseRH.
               </p>
             </div>
           </div>

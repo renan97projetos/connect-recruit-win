@@ -61,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('id', invitation.company_id)
       .single();
 
-    const companyName = profile?.company_name || profile?.name || 'Sinapse RH';
+    const companyName = profile?.company_name || profile?.name || 'SinapseRH';
     
     // Build the registration URL with token
     const registerUrl = `https://www.sinapserh.com.br/register-invitation?token=${invitation.token}`;
@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: "Sinapse RH <onboarding@resend.dev>",
+        from: "SinapseRH <onboarding@resend.dev>",
         to: [invitation.email],
         subject: `Você foi convidado para ${companyName}`,
         html: `
@@ -142,12 +142,12 @@ const handler = async (req: Request): Promise<Response> => {
                   
                   <p style="margin-top: 30px;">
                     Atenciosamente,<br>
-                    <strong>Equipe Sinapse RH</strong>
+                    <strong>Equipe SinapseRH</strong>
                   </p>
                 </div>
                 <div style="text-align: center; padding: 25px; color: #666; font-size: 13px; background: #f9f9f9; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0; border-top: none;">
                   <p style="margin: 0;">Este é um email automático, por favor não responda.</p>
-                  <p style="margin: 10px 0 0 0;">© ${new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.</p>
+                  <p style="margin: 10px 0 0 0;">© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
                 </div>
               </div>
             </body>

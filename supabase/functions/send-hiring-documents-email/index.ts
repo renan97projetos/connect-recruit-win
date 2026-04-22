@@ -107,12 +107,12 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <p style="margin-top: 30px;">
                   Atenciosamente,<br>
-                  <strong>Equipe Sinapse RH</strong>
+                  <strong>Equipe SinapseRH</strong>
                 </p>
               </div>
               <div class="footer">
                 <p>Este é um email automático, por favor não responda.</p>
-                <p>© ${new Date().getFullYear()} Sinapse RH. Todos os direitos reservados.</p>
+                <p>© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
               </div>
             </div>
           </body>

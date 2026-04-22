@@ -179,7 +179,7 @@ export default function RegisterCompany() {
 
 
   useEffect(() => {
-    document.title = 'Cadastro de Empresa | Sinapse RH';
+    document.title = 'Cadastro de Empresa | SinapseRH';
     (async () => {
       const { data, error } = await supabase
         .from('platform_plans')

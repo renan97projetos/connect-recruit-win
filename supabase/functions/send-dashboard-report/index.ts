@@ -283,7 +283,7 @@ const handler = async (req: Request): Promise<Response> => {
         <!-- Footer -->
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border-top: 1px solid #e5e7eb;">
           <p style="color: #6b7280; margin: 0; font-size: 14px;">
-            📧 Este relatório foi gerado automaticamente pelo sistema Sinapse RH<br>
+            📧 Este relatório foi gerado automaticamente pelo sistema SinapseRH<br>
             Para acessar informações detalhadas, faça login no sistema
           </p>
         </div>

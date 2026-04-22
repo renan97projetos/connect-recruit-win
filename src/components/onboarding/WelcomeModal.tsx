@@ -24,7 +24,7 @@ export function WelcomeModal() {
         <DialogHeader>
           <div className="flex items-center gap-2 text-primary mb-2">
             <Sparkles className="h-5 w-5" />
-            <span className="text-xs font-semibold uppercase tracking-wider">Bem-vindo à Sinapse RH</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Bem-vindo à SinapseRH</span>
           </div>
           <DialogTitle className="text-2xl">
             Vamos te mostrar como tudo funciona
