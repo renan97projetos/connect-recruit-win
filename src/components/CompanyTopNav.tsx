@@ -220,21 +220,28 @@ export function CompanyTopNav() {
           <DropdownMenuContent align="end" className="w-48 shadow-lg border border-gray-200">
             {configMenuItems
               .filter((item) => !item.ownerOnly || isOwner)
-              .map((item) => (
-                <DropdownMenuItem
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="cursor-pointer"
-                >
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
-                  {item.proOnly && !isPro && (
-                    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
-                      PRO
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              ))}
+              .map((item) => {
+                const locked = item.proOnly && !isPro;
+                return (
+                  <DropdownMenuItem
+                    key={item.path}
+                    onClick={() =>
+                      locked
+                        ? openUpgradeModal({ featureName: item.label })
+                        : navigate(item.path)
+                    }
+                    className="cursor-pointer"
+                  >
+                    <item.icon className="h-4 w-4 mr-2" />
+                    {item.label}
+                    {locked && (
+                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
+                        PRO
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -299,11 +306,18 @@ export function CompanyTopNav() {
                       const active = item.end
                         ? location.pathname === item.path
                         : isActive(item.path);
+                      const locked = item.proOnly && !isPro;
                       return (
                         <Link
                           key={item.path}
                           to={item.path}
-                          onClick={() => setMobileOpen(false)}
+                          onClick={(e) => {
+                            if (locked) {
+                              e.preventDefault();
+                              openUpgradeModal({ featureName: item.label });
+                            }
+                            setMobileOpen(false);
+                          }}
                           className={cn(
                             'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                             active
@@ -313,6 +327,11 @@ export function CompanyTopNav() {
                         >
                           <item.icon className="h-4 w-4" />
                           {item.label}
+                          {locked && (
+                            <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
+                              PRO
+                            </span>
+                          )}
                         </Link>
                       );
                     })}
