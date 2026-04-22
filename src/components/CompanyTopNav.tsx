@@ -159,7 +159,9 @@ export function CompanyTopNav() {
       {/* Logo + nome empresa */}
       <Link to="/company" data-tour="company-logo" className="flex items-center gap-2 mr-2 min-w-0 flex-shrink-0">
         <Avatar className="h-7 w-7 rounded-md">
-          {companyLogoUrl && <AvatarImage src={companyLogoUrl} alt={companyName} className="object-contain" />}
+          {companyLogoUrl && (
+            <AvatarImage key={companyLogoUrl} src={companyLogoUrl} alt={companyName} className="object-contain" />
+          )}
           <AvatarFallback className="bg-primary text-primary-foreground text-xs rounded-md font-semibold">
             {companyInitials}
           </AvatarFallback>
