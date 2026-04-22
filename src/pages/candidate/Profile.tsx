@@ -853,6 +853,58 @@ export default function CandidateProfile() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Avatar Upload */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 pb-2">
+                <div className="relative">
+                  <div className="h-24 w-24 rounded-full border-2 border-border bg-muted overflow-hidden flex items-center justify-center">
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt="Foto de perfil"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-10 w-10 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <Label htmlFor="avatar-upload" className="text-base">Foto de perfil</Label>
+                  <p className="text-xs text-muted-foreground">
+                    JPG ou PNG, até 5 MB. Sua foto aparecerá no menu e nas candidaturas.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {profile.avatar_url ? 'Trocar foto' : 'Enviar foto'}
+                    </Button>
+                    {profile.avatar_url && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateProfileMutation.mutate({ avatar_url: null as any })}
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Remover
+                      </Button>
+                    )}
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo *</Label>
