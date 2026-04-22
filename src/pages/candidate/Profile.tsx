@@ -1264,11 +1264,19 @@ export default function CandidateProfile() {
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Digite uma habilidade..."
+                    placeholder="Digite uma habilidade e pressione Enter..."
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newSkill.trim()) {
+                        e.preventDefault();
+                        handleAddSkill();
+                        // Mantém o foco para permitir adicionar várias em sequência
+                        e.currentTarget.focus();
+                      }
+                    }}
                     className="flex-1"
+                    autoComplete="off"
                   />
                   <Select value={newSkillLevel} onValueChange={(v) => setNewSkillLevel(v as any)}>
                     <SelectTrigger className="w-40">
