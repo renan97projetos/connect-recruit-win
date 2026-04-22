@@ -810,7 +810,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
       // Ações de Requisição
       case 'edit_request':
       case 'view_request':
-        navigate(`/company/job-requests/${itemId}`);
+        navigate(`/company/dashboard`);
         break;
       case 'submit_approval':
         handleStatusChange(item as JobRequest, 'pending_approval');
@@ -823,16 +823,16 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
         break;
       case 'reject_request':
         toast.info('Rejeição via página de detalhes');
-        navigate(`/company/job-requests/${itemId}`);
+        navigate(`/company/dashboard`);
         break;
       case 'start_creation':
         handleStatusChange(item as JobRequest, 'in_creation');
         break;
       case 'edit_job_description':
-        navigate(`/company/job-requests/${itemId}/edit`);
+        navigate(`/company/dashboard`);
         break;
       case 'preview_job':
-        navigate(`/company/job-requests/${itemId}`);
+        navigate(`/company/dashboard`);
         break;
       case 'submit_review':
         handleStatusChange(item as JobRequest, 'pending_review');
@@ -840,7 +840,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
       case 'review_job':
       case 'publish_job':
       case 'request_changes':
-        navigate(`/company/job-requests/${itemId}`);
+        navigate(`/company/dashboard`);
         break;
       
       // Ações de Recrutamento
