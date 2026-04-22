@@ -338,7 +338,7 @@ export default function JobDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft">
+    <div className="min-h-screen bg-white app-internal">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
