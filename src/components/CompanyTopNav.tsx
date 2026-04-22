@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { usePlanType } from '@/hooks/usePlanType';
+import { useUpgradeModal } from '@/contexts/UpgradeModalContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,7 @@ export function CompanyTopNav() {
   const { user, signOut } = useSupabaseAuth();
   const { isOwner } = useCompanyRole();
   const { isPro } = usePlanType();
+  const { openUpgradeModal } = useUpgradeModal();
   const [companyName, setCompanyName] = useState('');
   const [userName, setUserName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
