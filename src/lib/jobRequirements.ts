@@ -93,25 +93,6 @@ export const REQUIREMENT_CATEGORIES: RequirementCategory[] = [
     ],
   },
   {
-    id: 'experiencia',
-    label: 'Experiência Profissional',
-    items: [
-      'Experiência com Vendas',
-      'Experiência com Atendimento ao Cliente',
-      'Experiência com Liderança de Equipes',
-      'Experiência com Gestão de Projetos',
-      'Experiência com Logística',
-      'Experiência com RH',
-      'Experiência com Financeiro / Contabilidade',
-      'Experiência com Compras / Suprimentos',
-      'Experiência com Marketing Digital',
-      'Experiência com Produção / Manufatura',
-      'Experiência com Manutenção Industrial',
-      'Experiência com TI / Suporte Técnico',
-      'Experiência com Obras / Construção Civil',
-    ],
-  },
-  {
     id: 'soft-skills',
     label: 'Habilidades Comportamentais (Soft Skills)',
     items: [
