@@ -615,8 +615,46 @@ export default function JobForm() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-3 pt-2">
+                        <div className="rounded-md border bg-primary/5 p-3">
+                          <p className="text-xs font-medium text-foreground mb-2">
+                            ⚡ Requisitos rápidos (mais usados):
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              'Excel Básico',
+                              'Excel Intermediário',
+                              'Excel Avançado',
+                              'Pacote Office Completo',
+                              'ERP',
+                              'Ensino Médio Completo',
+                              'Superior Completo',
+                              'Cursando Superior',
+                              'CNH B (Carro)',
+                              'Inglês Intermediário',
+                              'Inglês Avançado',
+                              'Comunicação Clara',
+                              'Trabalho em Equipe',
+                              'Proatividade',
+                              'Disponibilidade Imediata',
+                            ]
+                              .filter((item) => !requirements.map((r) => r.trim()).includes(item))
+                              .map((item) => (
+                                <button
+                                  key={item}
+                                  type="button"
+                                  onClick={() =>
+                                    setRequirements((prev) => [...prev.filter((r) => r.trim()), item])
+                                  }
+                                  className="text-xs px-2 py-1 rounded-full border border-primary/30 bg-background hover:bg-primary hover:text-primary-foreground transition-colors"
+                                >
+                                  + {item}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">Categoria do requisito</Label>
+                          <Label className="text-xs text-muted-foreground">Buscar mais requisitos por categoria</Label>
                           <Select value={selectedReqCategory} onValueChange={setSelectedReqCategory}>
                             <SelectTrigger>
                               <SelectValue placeholder="Escolha uma categoria para ver as sugestões" />
