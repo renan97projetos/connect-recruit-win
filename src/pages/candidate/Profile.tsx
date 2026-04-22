@@ -196,6 +196,10 @@ export default function CandidateProfile() {
   const [newSkill, setNewSkill] = useState('');
   const [newSkillLevel, setNewSkillLevel] = useState<'basico' | 'intermediario' | 'avancado'>('intermediario');
 
+  // Cities by selected state
+  const [cities, setCities] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+
   // Helper to normalize skills (handles string[], JSON strings, and Skill[] formats)
   const normalizeSkills = (skills: any[] | null): Skill[] => {
     if (!skills || skills.length === 0) return [];
