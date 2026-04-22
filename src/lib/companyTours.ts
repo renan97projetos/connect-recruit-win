@@ -81,39 +81,6 @@ export const COMPANY_TOURS: TourMeta[] = [
     ],
   },
   {
-    id: 'job-requests',
-    label: 'Requisições de Vaga',
-    route: '/company/job-requests',
-    steps: [
-      {
-        popover: {
-          title: 'Requisições de Vaga',
-          description:
-            'Aqui colaboradores e gestores criam <b>solicitações de abertura de vaga</b>. Elas passam por um fluxo de aprovação antes de serem publicadas.',
-          ...popoverBase,
-        },
-      },
-      {
-        element: '[data-tour="new-request-btn"]',
-        popover: {
-          title: 'Nova Requisição',
-          description:
-            'Crie uma nova requisição informando: motivo da abertura, perfil desejado, faixa salarial, requisitos e responsabilidades.',
-          ...popoverBase,
-        },
-      },
-      {
-        element: '[data-tour="requests-list"]',
-        popover: {
-          title: 'Lista de Requisições',
-          description:
-            'Acompanhe o status de cada requisição: <b>Rascunho</b>, <b>Aguardando aprovação</b>, <b>Aprovada</b>, <b>Em criação</b>, <b>Em revisão</b> ou <b>Publicada</b>.',
-          ...popoverBase,
-        },
-      },
-    ],
-  },
-  {
     id: 'job-history',
     label: 'Histórico de Vagas',
     route: '/company/job-history',

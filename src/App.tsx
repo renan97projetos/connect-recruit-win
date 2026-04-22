@@ -36,9 +36,6 @@ import CompanyEmployeeDetails from "./pages/company/EmployeeDetails";
 import EmployeeDashboard from "./pages/company/EmployeeDashboard";
 import EmployeeRequests from "./pages/company/EmployeeRequests";
 import CompanyProfile from "./pages/company/Profile";
-import JobRequests from "./pages/company/JobRequests";
-import JobRequestForm from "./pages/company/JobRequestForm";
-import JobRequestDetails from "./pages/company/JobRequestDetails";
 import Permissions from "./pages/company/Permissions";
 import AuditLog from "./pages/company/AuditLog";
 import UploadDocuments from "./pages/UploadDocuments";
@@ -121,9 +118,6 @@ const App = () => {
               <Route path="/company/employees/:id/edit" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><CompanyEmployeeForm /></ProRouteGuard></ProtectedRoute>} />
               <Route path="/company/employee-dashboard" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><EmployeeDashboard /></ProRouteGuard></ProtectedRoute>} />
               <Route path="/company/employee-requests" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><EmployeeRequests /></ProRouteGuard></ProtectedRoute>} />
-              <Route path="/company/job-requests" element={<ProtectedRoute requiredRole="company"><JobRequests /></ProtectedRoute>} />
-              <Route path="/company/job-requests/new" element={<ProtectedRoute requiredRole="company"><JobRequestForm /></ProtectedRoute>} />
-              <Route path="/company/job-requests/:id" element={<ProtectedRoute requiredRole="company"><JobRequestDetails /></ProtectedRoute>} />
               <Route path="/company/permissions" element={<ProtectedRoute requiredRole="company"><Permissions /></ProtectedRoute>} />
               <Route path="/company/audit-log" element={<ProtectedRoute requiredRole="company"><AuditLog /></ProtectedRoute>} />
               <Route path="/company/profile" element={<ProtectedRoute requiredRole="company"><CompanyProfile /></ProtectedRoute>} />

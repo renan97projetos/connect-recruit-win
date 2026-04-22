@@ -32,7 +32,7 @@ const ctaToRoute = (cta: string): string => {
   const c = cta.toLowerCase();
   if (c.includes('vaga')) return '/company/dashboard';
   if (c.includes('candidato')) return '/company/talent-pool';
-  if (c.includes('requisi')) return '/company/job-requests';
+  if (c.includes('requisi')) return '/company/dashboard';
   if (c.includes('proposta')) return '/company/dashboard';
   return '/company/dashboard';
 };
