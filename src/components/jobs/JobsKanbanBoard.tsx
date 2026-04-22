@@ -1063,7 +1063,10 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
             )}
           >
             <Card 
-              className="border hover:shadow-md transition-all bg-background cursor-pointer group"
+              className={cn(
+                "border hover:shadow-md transition-all bg-background cursor-pointer group",
+                isPaused && "border-dashed border-muted-foreground/40 bg-muted/30"
+              )}
               onClick={handleCardClick}
             >
               <CardHeader className="p-3 pb-2">
@@ -1142,9 +1145,9 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                   </div>
                   <div className="flex items-center gap-1.5">
                     {isPaused && (
-                      <Badge variant="outline" className="text-xs px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                        <Pause className="h-3 w-3 mr-1" />
-                        Pausada
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 bg-muted text-muted-foreground border-muted-foreground/30">
+                        <FileText className="h-3 w-3 mr-1" />
+                        Rascunho
                       </Badge>
                     )}
                     {!isRequest && appCount > 0 && (
