@@ -707,6 +707,12 @@ export default function JobForm() {
                               <Input
                                 value={req}
                                 onChange={(e) => updateList(setRequirements, i, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (req.trim()) addItem(setRequirements);
+                                  }
+                                }}
                                 placeholder="Ex: 3+ anos de experiência com React"
                               />
                               {requirements.length > 1 && (
@@ -743,6 +749,12 @@ export default function JobForm() {
                             <Input
                               value={resp}
                               onChange={(e) => updateList(setResponsibilities, i, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (resp.trim()) addItem(setResponsibilities);
+                                }
+                              }}
                               placeholder="Ex: Desenvolver novas features no produto"
                             />
                             {responsibilities.length > 1 && (
@@ -806,6 +818,17 @@ export default function JobForm() {
                               ),
                             )
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (q.question.trim()) {
+                                setQuestions(prev => [
+                                  ...prev,
+                                  { question: '', question_type: 'text', required: true },
+                                ]);
+                              }
+                            }
+                          }}
                           className="flex-1 text-sm"
                         />
                         <Select
