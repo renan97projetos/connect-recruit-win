@@ -37,6 +37,13 @@ export default function CompanyProfile() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  // Arquivos selecionados aguardando "Salvar"
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
+  const [pendingLogo, setPendingLogo] = useState<File | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  const [pendingLogoPreview, setPendingLogoPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
