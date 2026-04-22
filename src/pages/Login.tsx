@@ -236,6 +236,20 @@ export default function Login({ forcedRole }: LoginProps = {}) {
 
           </form>
 
+          {intendedRole === 'candidate' && (
+            <div className="pt-4 border-t-3 border-foreground">
+              <p className="text-center text-sm text-muted-foreground mb-3">
+                Ainda não tem uma conta de candidato?
+              </p>
+              <Button asChild variant="yellow" size="lg" className="w-full">
+                <Link to="/register">
+                  Cadastre-se grátis
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          )}
+
           <div className="text-center space-y-2">
             <Link
               to="/"
