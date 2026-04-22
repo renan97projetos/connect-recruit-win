@@ -760,32 +760,64 @@ export default function CandidateProfile() {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="city">Cidade</Label>
-                    <Input
-                      id="city"
-                      value={profile.city || ''}
-                      onChange={(e) => {
+                    <Label htmlFor="state">Estado</Label>
+                    <Select
+                      value={profile.state || ''}
+                      onValueChange={(v) => {
                         queryClient.setQueryData(['candidate-profile', user?.id], {
                           ...profile,
-                          city: e.target.value
+                          state: v,
+                          city: '',
                         });
                       }}
-                    />
+                    >
+                      <SelectTrigger id="state">
+                        <SelectValue placeholder="Selecione o estado" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {BRAZIL_STATES.map((s) => (
+                          <SelectItem key={s.uf} value={s.uf}>{s.uf} - {s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">Estado</Label>
-                    <Input
-                      id="state"
-                      maxLength={2}
-                      placeholder="UF"
-                      value={profile.state || ''}
-                      onChange={(e) => {
+                    <Label htmlFor="city">Cidade</Label>
+                    <Select
+                      value={profile.city || ''}
+                      onValueChange={(v) => {
                         queryClient.setQueryData(['candidate-profile', user?.id], {
                           ...profile,
-                          state: e.target.value.toUpperCase()
+                          city: v,
                         });
                       }}
-                    />
+                      disabled={!profile.state || loadingCities}
+                    >
+                      <SelectTrigger id="city">
+                        <SelectValue placeholder={
+                          !profile.state ? 'Selecione o estado primeiro'
+                          : loadingCities ? 'Carregando cidades...'
+                          : 'Selecione a cidade'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {loadingCities ? (
+                          <div className="flex items-center justify-center py-3 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Carregando...
+                          </div>
+                        ) : (
+                          <>
+                            {/* Mantém a cidade atual mesmo se ainda não estiver na lista carregada */}
+                            {profile.city && !cities.includes(profile.city) && (
+                              <SelectItem value={profile.city}>{profile.city}</SelectItem>
+                            )}
+                            {cities.map((c) => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
