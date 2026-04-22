@@ -21,6 +21,7 @@ const schema = z.object({
 });
 
 export function QuickCandidateRegister() {
+  const preregistrationStorageKey = 'candidate_preregistration';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -125,6 +126,18 @@ export function QuickCandidateRegister() {
       return;
     }
 
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(
+        preregistrationStorageKey,
+        JSON.stringify({
+          email,
+          city,
+          state,
+          desired_role: desiredRole,
+        }),
+      );
+    }
+
     // Aguarda criação do perfil pelo trigger e atualiza com dados extras
     try {
       // Faz login imediato para obter o user.id e poder atualizar o profile + upload
@@ -153,6 +166,19 @@ export function QuickCandidateRegister() {
           ...(cvUrl ? { cv_url: cvUrl } : {}),
         };
 
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(
+            preregistrationStorageKey,
+            JSON.stringify({
+              email,
+              city,
+              state,
+              desired_role: desiredRole,
+              ...(cvUrl ? { cv_url: cvUrl } : {}),
+            }),
+          );
+        }
+
         // Aguarda o trigger handle_new_user criar o profile (até 4 tentativas)
         let saved = false;
         for (let attempt = 0; attempt < 4 && !saved; attempt++) {
@@ -179,6 +205,17 @@ export function QuickCandidateRegister() {
             .from('profiles')
             .upsert({ id: userId, name, ...extraData }, { onConflict: 'id' });
         }
+
+        await supabase.auth.updateUser({
+          data: {
+            name,
+            role: 'candidate',
+            city,
+            state,
+            desired_role: desiredRole,
+            ...(cvUrl ? { cv_url: cvUrl } : {}),
+          },
+        });
       }
     } catch (err) {
       console.error('Erro ao salvar dados extras:', err);

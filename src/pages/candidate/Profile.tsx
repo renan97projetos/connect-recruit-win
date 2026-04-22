@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { format, parse } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { CandidateLayout } from '@/components/CandidateLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -26,7 +22,8 @@ import {
   Save,
   X,
   Loader2,
-  CalendarIcon
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -42,6 +39,81 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PhoneInput } from '@/components/PhoneInput';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
+
+const CANDIDATE_PREREGISTRATION_KEY = 'candidate_preregistration';
+
+function getCandidatePreregistration(userEmail?: string) {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(CANDIDATE_PREREGISTRATION_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (userEmail && parsed?.email && parsed.email !== userEmail) return null;
+
+    return {
+      city: typeof parsed?.city === 'string' ? parsed.city : '',
+      state: typeof parsed?.state === 'string' ? parsed.state : '',
+      desired_role: typeof parsed?.desired_role === 'string' ? parsed.desired_role : '',
+      cv_url: typeof parsed?.cv_url === 'string' ? parsed.cv_url : '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+
+  const dmy = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    let [, d, m, y] = dmy;
+    let yearNum = parseInt(y, 10);
+    if (yearNum < 100) yearNum += 2000;
+
+    const dayNum = parseInt(d, 10);
+    const monthNum = parseInt(m, 10);
+    if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) return null;
+
+    const result = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+    if (result.getUTCDate() !== dayNum || result.getUTCMonth() !== monthNum - 1) return null;
+    return result;
+  }
+
+  const iso = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    const result = new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
+    if (result.getUTCDate() !== +iso[3] || result.getUTCMonth() !== +iso[2] - 1) return null;
+    return result;
+  }
+
+  return null;
+}
+
+function formatDateForDisplay(dateStr?: string) {
+  const parsed = dateStr ? parseDate(dateStr) : null;
+  if (!parsed) return '';
+
+  const day = String(parsed.getUTCDate()).padStart(2, '0');
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const year = parsed.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function formatDateToIso(dateStr: string) {
+  const parsed = parseDate(dateStr);
+  if (!parsed) return null;
+
+  const day = String(parsed.getUTCDate()).padStart(2, '0');
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const year = parsed.getUTCFullYear();
+  return `${year}-${month}-${day}`;
+}
+
+function pickFallbackValue(...values: Array<string | null | undefined>) {
+  return values.find((value) => typeof value === 'string' && value.trim().length > 0) || '';
+}
 
 interface Experience {
   id: string;
@@ -200,6 +272,7 @@ export default function CandidateProfile() {
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [currentStateLoaded, setCurrentStateLoaded] = useState<string>('');
+  const [birthDateInput, setBirthDateInput] = useState('');
 
   // Helper to normalize skills (handles string[], JSON strings, and Skill[] formats)
   const normalizeSkills = (skills: any[] | null): Skill[] => {
@@ -249,10 +322,12 @@ export default function CandidateProfile() {
     queryFn: async () => {
       if (!user) return null;
       const metadata = user.user_metadata || {};
+      const preregistrationData = getCandidatePreregistration(user.email);
       const fallbackProfileFields = {
-        city: typeof metadata.city === 'string' ? metadata.city : '',
-        state: typeof metadata.state === 'string' ? metadata.state : '',
-        desired_role: typeof metadata.desired_role === 'string' ? metadata.desired_role : '',
+        city: pickFallbackValue(typeof metadata.city === 'string' ? metadata.city : '', preregistrationData?.city),
+        state: pickFallbackValue(typeof metadata.state === 'string' ? metadata.state : '', preregistrationData?.state),
+        desired_role: pickFallbackValue(typeof metadata.desired_role === 'string' ? metadata.desired_role : '', preregistrationData?.desired_role),
+        cv_url: pickFallbackValue(typeof metadata.cv_url === 'string' ? metadata.cv_url : '', preregistrationData?.cv_url),
       };
       
       // First try to get existing profile
@@ -290,12 +365,14 @@ export default function CandidateProfile() {
           city: createdProfile.city || fallbackProfileFields.city,
           state: createdProfile.state || fallbackProfileFields.state,
           desired_role: createdProfile.desired_role || fallbackProfileFields.desired_role,
+          cv_url: createdProfile.cv_url || fallbackProfileFields.cv_url,
         };
 
         if (
           (!createdProfile.city && fallbackProfileFields.city) ||
           (!createdProfile.state && fallbackProfileFields.state) ||
-          (!createdProfile.desired_role && fallbackProfileFields.desired_role)
+          (!createdProfile.desired_role && fallbackProfileFields.desired_role) ||
+          (!createdProfile.cv_url && fallbackProfileFields.cv_url)
         ) {
           await supabase
             .from('profiles')
@@ -303,6 +380,7 @@ export default function CandidateProfile() {
               city: mergedCreatedProfile.city,
               state: mergedCreatedProfile.state,
               desired_role: mergedCreatedProfile.desired_role,
+              cv_url: mergedCreatedProfile.cv_url,
             })
             .eq('id', user.id);
         }
@@ -320,12 +398,14 @@ export default function CandidateProfile() {
         city: data.city || fallbackProfileFields.city,
         state: data.state || fallbackProfileFields.state,
         desired_role: data.desired_role || fallbackProfileFields.desired_role,
+        cv_url: data.cv_url || fallbackProfileFields.cv_url,
       };
 
       if (
         (!data.city && fallbackProfileFields.city) ||
         (!data.state && fallbackProfileFields.state) ||
-        (!data.desired_role && fallbackProfileFields.desired_role)
+        (!data.desired_role && fallbackProfileFields.desired_role) ||
+        (!data.cv_url && fallbackProfileFields.cv_url)
       ) {
         await supabase
           .from('profiles')
@@ -333,6 +413,7 @@ export default function CandidateProfile() {
             city: mergedProfile.city,
             state: mergedProfile.state,
             desired_role: mergedProfile.desired_role,
+            cv_url: mergedProfile.cv_url,
           })
           .eq('id', user.id);
       }
@@ -370,6 +451,10 @@ export default function CandidateProfile() {
       .finally(() => { if (!cancelled) setLoadingCities(false); });
     return () => { cancelled = true; };
   }, [profile?.state, currentStateLoaded]);
+
+  useEffect(() => {
+    setBirthDateInput(formatDateForDisplay(profile?.birth_date || ''));
+  }, [profile?.birth_date]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -739,20 +824,30 @@ export default function CandidateProfile() {
                 />
                 <div className="space-y-2">
                   <Label htmlFor="birthDate">Data de Nascimento *</Label>
-                  <div className="relative">
-                    <Input
-                      id="birthDate"
-                      type="date"
-                      value={profile.birth_date || ''}
-                      onChange={(e) => {
+                  <Input
+                    id="birthDate"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="DD/MM/AAAA"
+                    value={birthDateInput}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, '').slice(0, 8);
+                      const maskedValue = rawValue
+                        .replace(/^(\d{2})(\d)/, '$1/$2')
+                        .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+
+                      setBirthDateInput(maskedValue);
+
+                      const isoValue = formatDateToIso(maskedValue);
+
+                      if (isoValue || maskedValue === '') {
                         queryClient.setQueryData(['candidate-profile', user?.id], {
                           ...profile,
-                          birth_date: e.target.value
+                          birth_date: isoValue || '',
                         });
-                      }}
-                      className="pr-10"
-                    />
-                  </div>
+                      }
+                    }}
+                  />
                 </div>
               </div>
 
@@ -958,7 +1053,7 @@ export default function CandidateProfile() {
 
               <div className="space-y-2">
                 <Label htmlFor="cv">Currículo (PDF)</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Input
                     id="cv"
                     type="file"
@@ -967,18 +1062,22 @@ export default function CandidateProfile() {
                     className="flex-1"
                   />
                   {profile.cv_url && (
-                    <Button variant="outline" size="icon" asChild>
+                    <Button variant="outline" asChild>
                       <a href={profile.cv_url} target="_blank" rel="noopener noreferrer">
-                        <Upload className="h-4 w-4" />
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Ver currículo atual
                       </a>
                     </Button>
                   )}
                 </div>
                 {profile.cv_url && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
-                    CV enviado: <span className="font-medium text-foreground">{profile.cv_url.split('/').pop()?.split('?')[0] || 'arquivo.pdf'}</span>
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    <span>
+                      CV enviado:{' '}
+                      <span className="font-medium text-foreground">{profile.cv_url.split('/').pop()?.split('?')[0] || 'arquivo.pdf'}</span>
+                    </span>
+                  </div>
                 )}
               </div>
 
