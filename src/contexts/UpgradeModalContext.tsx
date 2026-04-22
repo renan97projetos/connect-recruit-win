@@ -116,10 +116,19 @@ export function UpgradeModalProvider({ children }: { children: ReactNode }) {
           </p>
 
           <DialogFooter className="sm:justify-center gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={requesting}>
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={requesting}
+              className="border border-border shadow-none normal-case font-medium tracking-normal hover:translate-x-0 hover:translate-y-0 hover:shadow-none active:shadow-none"
+            >
               Agora não
             </Button>
-            <Button onClick={confirmUpgrade} disabled={requesting}>
+            <Button
+              onClick={confirmUpgrade}
+              disabled={requesting}
+              className="border border-primary shadow-none normal-case font-medium tracking-normal hover:translate-x-0 hover:translate-y-0 hover:shadow-none active:shadow-none"
+            >
               {requesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Crown className="h-4 w-4 mr-2" />}
               Solicitar upgrade
             </Button>
