@@ -41,7 +41,7 @@ export default function Register() {
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
               Já tem uma conta?{' '}
-              <Link to="/login" className="font-semibold text-primary hover:underline underline-offset-4">
+              <Link to="/login?as=candidate" className="font-semibold text-primary hover:underline underline-offset-4">
                 Entrar
               </Link>
             </p>
