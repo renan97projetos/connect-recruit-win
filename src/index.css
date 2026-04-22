@@ -103,6 +103,7 @@
     --input: 214 32% 91%;
     --ring: 262 83% 58%;
     --radius: 0.75rem;
+  }
 
   .dark {
     --background: 0 0% 8%;
