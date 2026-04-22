@@ -526,6 +526,42 @@ export default function JobForm() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-3 pt-2">
+                        <div>
+                          <p className="mb-2 text-xs text-muted-foreground">
+                            Sugestões — clique para adicionar:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              'Plano de saúde',
+                              'Plano odontológico',
+                              'Seguro de vida',
+                              'Vale-refeição',
+                              'Vale-alimentação',
+                              'Auxílio combustível',
+                              'Vale-transporte',
+                              'Gympass',
+                              'Home office',
+                              'Day off no aniversário',
+                              'PLR',
+                              'Auxílio creche',
+                            ].filter(s => !benefitTags.includes(s)).map((s) => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                  setBenefits(prev => {
+                                    const filtered = prev.filter(b => b.trim());
+                                    if (filtered.includes(s)) return prev;
+                                    return [...filtered, s];
+                                  });
+                                }}
+                                className="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                              >
+                                + {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                         <div className="flex gap-2">
                           <Input
                             value={benefitInput}
@@ -536,7 +572,7 @@ export default function JobForm() {
                                 addBenefitTag();
                               }
                             }}
-                            placeholder="Ex: Vale-refeição, Plano de saúde..."
+                            placeholder="Adicionar benefício personalizado..."
                           />
                           <Button type="button" variant="secondary" onClick={addBenefitTag}>
                             Adicionar
