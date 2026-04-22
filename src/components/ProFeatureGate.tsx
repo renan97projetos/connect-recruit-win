@@ -1,13 +1,14 @@
 import { ReactNode } from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, Crown } from 'lucide-react';
 import { usePlanType } from '@/hooks/usePlanType';
+import { useUpgradeModal } from '@/contexts/UpgradeModalContext';
 import { cn } from '@/lib/utils';
 
 interface ProFeatureGateProps {
   children: ReactNode;
   featureName?: string; // ex: "Banco de Talentos"
   className?: string;
-  compact?: boolean; // se true, mostra só o cadeado sem texto (para usar em botões)
+  compact?: boolean; // se true, mostra só o badge compacto (para usar em botões)
 }
 
 export function ProFeatureGate({
@@ -17,9 +18,16 @@ export function ProFeatureGate({
   compact = false,
 }: ProFeatureGateProps) {
   const { isPro, loading } = usePlanType();
+  const { openUpgradeModal } = useUpgradeModal();
 
   if (loading) return <>{children}</>;
   if (isPro) return <>{children}</>;
+
+  const handleUpgrade = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openUpgradeModal({ featureName });
+  };
 
   // Usuário Starter: renderiza o conteúdo com overlay de bloqueio
   return (
@@ -35,9 +43,17 @@ export function ProFeatureGate({
       {/* Overlay de bloqueio */}
       <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
         {compact ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background border border-border shadow-sm text-xs font-semibold text-foreground">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border border-border shadow-sm text-xs font-semibold text-foreground">
             <Lock className="h-3 w-3" />
-            Pro
+            <span>{featureName ? `${featureName} • Pro` : 'Pro'}</span>
+            <button
+              type="button"
+              onClick={handleUpgrade}
+              className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold hover:opacity-90 transition-opacity"
+            >
+              <Crown className="h-2.5 w-2.5" />
+              Upgrade
+            </button>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-center gap-1 px-6 py-4 rounded-xl bg-background border border-border shadow-sm max-w-xs">
@@ -52,12 +68,14 @@ export function ProFeatureGate({
             <p className="text-xs text-muted-foreground">
               Disponível no plano Pro
             </p>
-            <a
-              href="/company/profile"
-              className="text-xs font-medium text-primary hover:underline mt-1"
+            <button
+              type="button"
+              onClick={handleUpgrade}
+              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
             >
-              Ver planos →
-            </a>
+              <Crown className="h-3.5 w-3.5" />
+              Fazer upgrade
+            </button>
           </div>
         )}
       </div>
