@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { BackofficeAuthProvider } from "@/contexts/BackofficeAuthContext";
+import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProRouteGuard } from "@/components/ProRouteGuard";
 import { BackofficeProtectedRoute } from "@/components/backoffice/BackofficeProtectedRoute";
@@ -86,6 +87,7 @@ const App = () => {
             <Sonner />
             <FloatingWhatsAppButton />
             <BrowserRouter>
+              <UpgradeModalProvider>
               <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -157,6 +159,7 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </UpgradeModalProvider>
           </BrowserRouter>
         </TooltipProvider>
       </BackofficeAuthProvider>
