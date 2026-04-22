@@ -157,7 +157,6 @@ export default function CompanyRegister() {
       if (error) toast({ title: 'Erro ao carregar planos', description: error.message, variant: 'destructive' });
       else {
         setPlans((data || []) as Plan[]);
-        if (data && data.length && !form.plan_id) setForm((f) => ({ ...f, plan_id: data[0].id }));
       }
       setLoadingPlans(false);
     })();
