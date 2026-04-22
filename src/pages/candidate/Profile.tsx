@@ -815,20 +815,26 @@ export default function CandidateProfile() {
                 />
                 <div className="space-y-2">
                   <Label htmlFor="birthDate">Data de Nascimento *</Label>
-                  <div className="relative">
-                    <Input
-                      id="birthDate"
-                      type="date"
-                      value={profile.birth_date || ''}
-                      onChange={(e) => {
-                        queryClient.setQueryData(['candidate-profile', user?.id], {
-                          ...profile,
-                          birth_date: e.target.value
-                        });
-                      }}
-                      className="pr-10"
-                    />
-                  </div>
+                  <Input
+                    id="birthDate"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="DD/MM/AAAA"
+                    value={formatDateForDisplay(profile.birth_date || '')}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, '').slice(0, 8);
+                      const maskedValue = rawValue
+                        .replace(/^(\d{2})(\d)/, '$1/$2')
+                        .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+
+                      const isoValue = formatDateToIso(maskedValue);
+
+                      queryClient.setQueryData(['candidate-profile', user?.id], {
+                        ...profile,
+                        birth_date: isoValue ?? maskedValue,
+                      });
+                    }}
+                  />
                 </div>
               </div>
 
@@ -1034,7 +1040,7 @@ export default function CandidateProfile() {
 
               <div className="space-y-2">
                 <Label htmlFor="cv">Currículo (PDF)</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Input
                     id="cv"
                     type="file"
@@ -1043,18 +1049,22 @@ export default function CandidateProfile() {
                     className="flex-1"
                   />
                   {profile.cv_url && (
-                    <Button variant="outline" size="icon" asChild>
+                    <Button variant="outline" asChild>
                       <a href={profile.cv_url} target="_blank" rel="noopener noreferrer">
-                        <Upload className="h-4 w-4" />
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Ver currículo atual
                       </a>
                     </Button>
                   )}
                 </div>
                 {profile.cv_url && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="text-green-600">✓</span>
-                    CV enviado: <span className="font-medium text-foreground">{profile.cv_url.split('/').pop()?.split('?')[0] || 'arquivo.pdf'}</span>
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    <span>
+                      CV enviado:{' '}
+                      <span className="font-medium text-foreground">{profile.cv_url.split('/').pop()?.split('?')[0] || 'arquivo.pdf'}</span>
+                    </span>
+                  </div>
                 )}
               </div>
 
