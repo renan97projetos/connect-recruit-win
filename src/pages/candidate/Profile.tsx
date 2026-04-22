@@ -160,6 +160,7 @@ interface ProfileData {
   educations: Education[];
   skills: Array<{ name: string; level: 'basico' | 'intermediario' | 'avancado' }> | string[];
   cv_url: string;
+  avatar_url?: string;
 }
 
 interface Skill {
