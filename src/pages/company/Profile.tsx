@@ -157,23 +157,52 @@ export default function CompanyProfile() {
     }
   };
 
-  const handleImageUpload = async (
+  const handleSelectImage = (
     event: React.ChangeEvent<HTMLInputElement>,
     kind: ImageKind,
   ) => {
+    const file = event.target.files?.[0];
+    // limpar valor para permitir reselecionar o mesmo arquivo
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Erro', description: 'Por favor, selecione uma imagem', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'Erro', description: 'A imagem deve ter no máximo 2MB', variant: 'destructive' });
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    if (kind === 'avatar') {
+      if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+      setPendingAvatar(file);
+      setPendingAvatarPreview(previewUrl);
+    } else {
+      if (pendingLogoPreview) URL.revokeObjectURL(pendingLogoPreview);
+      setPendingLogo(file);
+      setPendingLogoPreview(previewUrl);
+    }
+  };
+
+  const cancelPending = (kind: ImageKind) => {
+    if (kind === 'avatar') {
+      if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+      setPendingAvatar(null);
+      setPendingAvatarPreview(null);
+    } else {
+      if (pendingLogoPreview) URL.revokeObjectURL(pendingLogoPreview);
+      setPendingLogo(null);
+      setPendingLogoPreview(null);
+    }
+  };
+
+  const saveImage = async (kind: ImageKind) => {
+    const file = kind === 'avatar' ? pendingAvatar : pendingLogo;
+    if (!file) return;
     try {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast({ title: 'Erro', description: 'Por favor, selecione uma imagem', variant: 'destructive' });
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast({ title: 'Erro', description: 'A imagem deve ter no máximo 2MB', variant: 'destructive' });
-        return;
-      }
-
       const setUploading = kind === 'avatar' ? setUploadingAvatar : setUploadingLogo;
       const currentUrl = kind === 'avatar' ? avatarUrl : companyLogoUrl;
       const baseName = kind === 'avatar' ? 'avatar' : 'logo';
@@ -182,45 +211,50 @@ export default function CompanyProfile() {
       setUploading(true);
 
       if (currentUrl) {
-        const oldPath = currentUrl.split('/').slice(-2).join('/');
-        await supabase.storage.from('avatars').remove([oldPath]);
+        try {
+          const cleanUrl = currentUrl.split('?')[0];
+          const oldPath = cleanUrl.split('/').slice(-2).join('/');
+          await supabase.storage.from('avatars').remove([oldPath]);
+        } catch {/* ignore */}
       }
 
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const filePath = `${user?.id}/${baseName}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+        .upload(filePath, file, { upsert: true, cacheControl: '3600' });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
-
-      // cache-buster para forçar reload da imagem
       const finalUrl = `${publicUrl}?t=${Date.now()}`;
 
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ [dbField]: finalUrl } as any)
         .eq('id', user?.id);
-
       if (updateError) throw updateError;
 
       if (kind === 'avatar') setAvatarUrl(finalUrl);
       else setCompanyLogoUrl(finalUrl);
 
+      // Notificar outros componentes (ex: TopNav) imediatamente
+      window.dispatchEvent(
+        new CustomEvent('profile-image-updated', { detail: { kind, url: finalUrl } })
+      );
+
+      cancelPending(kind);
       toast({
-        title: 'Sucesso',
+        title: 'Salvo',
         description: kind === 'avatar' ? 'Foto de perfil atualizada' : 'Logo da empresa atualizada',
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível fazer upload da imagem',
+        description: 'Não foi possível salvar a imagem',
         variant: 'destructive',
       });
     } finally {
