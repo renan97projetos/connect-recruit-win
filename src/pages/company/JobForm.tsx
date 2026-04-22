@@ -67,6 +67,25 @@ export default function JobForm() {
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
 
+  const requirementRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const responsibilityRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const questionRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [focusTarget, setFocusTarget] = useState<{ list: 'req' | 'resp' | 'q'; index: number } | null>(null);
+
+  useEffect(() => {
+    if (!focusTarget) return;
+    const map = {
+      req: requirementRefs,
+      resp: responsibilityRefs,
+      q: questionRefs,
+    };
+    const el = map[focusTarget.list].current[focusTarget.index];
+    if (el) {
+      el.focus();
+      setFocusTarget(null);
+    }
+  }, [focusTarget, requirements, responsibilities, questions]);
+
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
