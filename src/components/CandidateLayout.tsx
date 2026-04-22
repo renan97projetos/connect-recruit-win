@@ -59,13 +59,6 @@ export function CandidateLayout({ children, title, description }: CandidateLayou
               );
             })}
 
-            <button
-              onClick={() => signOut()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sair</span>
-            </button>
           </div>
         </div>
       </div>
