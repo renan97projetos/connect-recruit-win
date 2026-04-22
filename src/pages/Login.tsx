@@ -71,11 +71,20 @@ export default function Login({ forcedRole }: LoginProps = {}) {
     const { error, role } = await signIn(email, password);
     
     if (!error) {
-      // Bloqueia acesso cruzado entre áreas
-      if (intendedRole && role && role !== intendedRole && role !== 'admin') {
+      // Bloqueia acesso cruzado entre áreas.
+      // - Área do candidato: SOMENTE candidatos podem entrar (admins têm /admin/dashboard).
+      // - Área da empresa: empresas e admins podem entrar.
+      const blocked =
+        intendedRole === 'candidate'
+          ? role !== 'candidate'
+          : intendedRole === 'company'
+          ? role !== 'company' && role !== 'admin'
+          : false;
+
+      if (intendedRole && blocked) {
         await supabase.auth.signOut();
         const expected = intendedRole === 'candidate' ? 'candidato' : 'empresa';
-        const actual = role === 'candidate' ? 'candidato' : role === 'company' ? 'empresa' : role;
+        const actual = role === 'candidate' ? 'candidato' : role === 'company' ? 'empresa' : role === 'admin' ? 'administrador' : 'desconhecido';
         toast({
           title: 'Acesso não permitido',
           description: `Esta é a área de ${expected}. Sua conta é de ${actual}. Use a área correta para entrar.`,
