@@ -829,19 +829,23 @@ export default function CandidateProfile() {
                     type="text"
                     inputMode="numeric"
                     placeholder="DD/MM/AAAA"
-                    value={formatDateForDisplay(profile.birth_date || '')}
+                    value={birthDateInput}
                     onChange={(e) => {
                       const rawValue = e.target.value.replace(/\D/g, '').slice(0, 8);
                       const maskedValue = rawValue
                         .replace(/^(\d{2})(\d)/, '$1/$2')
                         .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
 
+                      setBirthDateInput(maskedValue);
+
                       const isoValue = formatDateToIso(maskedValue);
 
-                      queryClient.setQueryData(['candidate-profile', user?.id], {
-                        ...profile,
-                        birth_date: isoValue ?? maskedValue,
-                      });
+                      if (isoValue || maskedValue === '') {
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          birth_date: isoValue || '',
+                        });
+                      }
                     }}
                   />
                 </div>
