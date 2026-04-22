@@ -42,6 +42,75 @@ import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 
 const CANDIDATE_PREREGISTRATION_KEY = 'candidate_preregistration';
 
+function getCandidatePreregistration(userEmail?: string) {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(CANDIDATE_PREREGISTRATION_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (userEmail && parsed?.email && parsed.email !== userEmail) return null;
+
+    return {
+      city: typeof parsed?.city === 'string' ? parsed.city : '',
+      state: typeof parsed?.state === 'string' ? parsed.state : '',
+      desired_role: typeof parsed?.desired_role === 'string' ? parsed.desired_role : '',
+      cv_url: typeof parsed?.cv_url === 'string' ? parsed.cv_url : '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+
+  const dmy = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    let [, d, m, y] = dmy;
+    let yearNum = parseInt(y, 10);
+    if (yearNum < 100) yearNum += 2000;
+
+    const dayNum = parseInt(d, 10);
+    const monthNum = parseInt(m, 10);
+    if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) return null;
+
+    const result = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+    if (result.getUTCDate() !== dayNum || result.getUTCMonth() !== monthNum - 1) return null;
+    return result;
+  }
+
+  const iso = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    const result = new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
+    if (result.getUTCDate() !== +iso[3] || result.getUTCMonth() !== +iso[2] - 1) return null;
+    return result;
+  }
+
+  return null;
+}
+
+function formatDateForDisplay(dateStr?: string) {
+  const parsed = dateStr ? parseDate(dateStr) : null;
+  if (!parsed) return '';
+
+  const day = String(parsed.getUTCDate()).padStart(2, '0');
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const year = parsed.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function formatDateToIso(dateStr: string) {
+  const parsed = parseDate(dateStr);
+  if (!parsed) return null;
+
+  const day = String(parsed.getUTCDate()).padStart(2, '0');
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const year = parsed.getUTCFullYear();
+  return `${year}-${month}-${day}`;
+}
+
 interface Experience {
   id: string;
   company: string;
