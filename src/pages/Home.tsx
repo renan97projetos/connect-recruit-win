@@ -80,8 +80,24 @@ export default function Home() {
     const [minSalary, maxSalary] = filters.salaryRange;
     if (minSalary > 0 || maxSalary < 50000) {
       filtered = filtered.filter(job => {
-        if (!job.salary_min || !job.salary_max) return false;
-        return job.salary_min >= minSalary && job.salary_max <= maxSalary;
+        // Aceita vagas que tenham qualquer sobreposição com o intervalo selecionado
+        const jMin = job.salary_min ?? job.salary_max ?? null;
+        const jMax = job.salary_max ?? job.salary_min ?? null;
+        if (jMin == null && jMax == null) return false;
+        return (jMax ?? 0) >= minSalary && (jMin ?? 0) <= maxSalary;
+      });
+    }
+    if (filters.experienceLevel && filters.experienceLevel !== 'all') {
+      const levelKeywords: Record<string, string[]> = {
+        junior: ['junior', 'júnior', 'jr', 'trainee', 'estágio', 'estagio'],
+        pleno: ['pleno', 'pl'],
+        senior: ['senior', 'sênior', 'sr'],
+        especialista: ['especialista', 'specialist', 'lead', 'principal'],
+      };
+      const kws = levelKeywords[filters.experienceLevel] || [];
+      filtered = filtered.filter(job => {
+        const haystack = `${job.title || ''} ${job.description || ''}`.toLowerCase();
+        return kws.some(k => haystack.includes(k));
       });
     }
     if (filters.datePosted && filters.datePosted !== 'all') {
