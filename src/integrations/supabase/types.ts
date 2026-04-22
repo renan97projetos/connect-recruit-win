@@ -1228,6 +1228,7 @@ export type Database = {
           cpf: string | null
           created_at: string | null
           cv_url: string | null
+          desired_role: string | null
           educations: Json | null
           experiences: Json | null
           id: string
@@ -1255,6 +1256,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           cv_url?: string | null
+          desired_role?: string | null
           educations?: Json | null
           experiences?: Json | null
           id: string
@@ -1282,6 +1284,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           cv_url?: string | null
+          desired_role?: string | null
           educations?: Json | null
           experiences?: Json | null
           id?: string
