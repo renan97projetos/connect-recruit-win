@@ -275,38 +275,57 @@ export default function CompanyProfile() {
             </CardHeader>
             <CardContent className="flex items-center gap-6">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl || undefined} alt="Foto do usuário" />
+                <AvatarImage src={pendingAvatarPreview || avatarUrl || undefined} alt="Foto do usuário" />
                 <AvatarFallback>
                   <User className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <Label htmlFor="user-avatar-upload" className="cursor-pointer">
-                  <Button variant="outline" disabled={uploadingAvatar} asChild>
-                    <span>
-                      {uploadingAvatar ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Carregar Foto
-                        </>
-                      )}
-                    </span>
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploadingAvatar}
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {pendingAvatar ? 'Trocar' : 'Carregar Foto'}
                   </Button>
-                </Label>
+                  {pendingAvatar && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="default"
+                        disabled={uploadingAvatar}
+                        onClick={() => saveImage('avatar')}
+                      >
+                        {uploadingAvatar ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                        ) : (
+                          <><Save className="mr-2 h-4 w-4" /> Salvar</>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={uploadingAvatar}
+                        onClick={() => cancelPending('avatar')}
+                      >
+                        <X className="mr-2 h-4 w-4" /> Cancelar
+                      </Button>
+                    </>
+                  )}
+                </div>
                 <Input
+                  ref={avatarInputRef}
                   id="user-avatar-upload"
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleImageUpload(e, 'avatar')}
+                  onChange={(e) => handleSelectImage(e, 'avatar')}
                   disabled={uploadingAvatar}
                 />
-                <p className="text-sm text-muted-foreground mt-2">JPG, PNG ou GIF. Máx 2MB.</p>
+                <p className="text-sm text-muted-foreground">JPG, PNG ou GIF. Máx 2MB.</p>
               </div>
             </CardContent>
           </Card>
@@ -319,38 +338,57 @@ export default function CompanyProfile() {
             </CardHeader>
             <CardContent className="flex items-center gap-6">
               <Avatar className="h-24 w-24 rounded-md">
-                <AvatarImage src={companyLogoUrl || undefined} alt="Logo da empresa" className="object-contain" />
+                <AvatarImage src={pendingLogoPreview || companyLogoUrl || undefined} alt="Logo da empresa" className="object-contain" />
                 <AvatarFallback className="rounded-md">
                   <Building2 className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <Label htmlFor="company-logo-upload" className="cursor-pointer">
-                  <Button variant="outline" disabled={uploadingLogo} asChild>
-                    <span>
-                      {uploadingLogo ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Carregar Logo
-                        </>
-                      )}
-                    </span>
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploadingLogo}
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {pendingLogo ? 'Trocar' : 'Carregar Logo'}
                   </Button>
-                </Label>
+                  {pendingLogo && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="default"
+                        disabled={uploadingLogo}
+                        onClick={() => saveImage('logo')}
+                      >
+                        {uploadingLogo ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                        ) : (
+                          <><Save className="mr-2 h-4 w-4" /> Salvar</>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={uploadingLogo}
+                        onClick={() => cancelPending('logo')}
+                      >
+                        <X className="mr-2 h-4 w-4" /> Cancelar
+                      </Button>
+                    </>
+                  )}
+                </div>
                 <Input
+                  ref={logoInputRef}
                   id="company-logo-upload"
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleImageUpload(e, 'logo')}
+                  onChange={(e) => handleSelectImage(e, 'logo')}
                   disabled={uploadingLogo}
                 />
-                <p className="text-sm text-muted-foreground mt-2">JPG, PNG ou SVG. Máx 2MB.</p>
+                <p className="text-sm text-muted-foreground">JPG, PNG ou SVG. Máx 2MB.</p>
               </div>
             </CardContent>
           </Card>
