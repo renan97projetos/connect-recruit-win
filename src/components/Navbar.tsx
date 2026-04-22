@@ -64,7 +64,9 @@ export function Navbar() {
   };
 
   const location = useLocation();
-  const isCandidateArea = location.pathname.startsWith('/candidate');
+  const isCandidateArea =
+    location.pathname.startsWith('/candidate') ||
+    (userRole === 'candidate' && location.pathname.startsWith('/jobs'));
 
   const navLinks = isCandidateArea ? [] : [
     { to: "/#vagas", label: "Vagas" },
