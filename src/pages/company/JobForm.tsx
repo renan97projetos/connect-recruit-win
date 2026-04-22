@@ -402,41 +402,72 @@ export default function JobForm() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="city">
-                      Cidade {formData.location !== 'remote' && '*'}
-                    </Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => {
-                        setFormData({ ...formData, city: e.target.value });
-                        if (errors.city) setErrors({ ...errors, city: undefined });
-                      }}
-                      placeholder="São Paulo"
-                      aria-invalid={!!errors.city}
-                      className={errors.city ? 'border-destructive' : ''}
-                    />
-                    {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
-                  </div>
+                <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
                   <div className="space-y-1.5">
                     <Label htmlFor="state">
                       Estado {formData.location !== 'remote' && '*'}
                     </Label>
-                    <Input
-                      id="state"
+                    <Select
                       value={formData.state}
-                      onChange={(e) => {
-                        setFormData({ ...formData, state: e.target.value.toUpperCase() });
+                      onValueChange={(v) => {
+                        setFormData({ ...formData, state: v, city: '' });
                         if (errors.state) setErrors({ ...errors, state: undefined });
+                        if (errors.city) setErrors({ ...errors, city: undefined });
                       }}
-                      placeholder="SP"
-                      maxLength={2}
-                      aria-invalid={!!errors.state}
-                      className={errors.state ? 'border-destructive' : ''}
-                    />
+                    >
+                      <SelectTrigger
+                        id="state"
+                        aria-invalid={!!errors.state}
+                        className={errors.state ? 'border-destructive' : ''}
+                      >
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {BRAZIL_STATES.map((s) => (
+                          <SelectItem key={s.uf} value={s.uf}>
+                            {s.uf} — {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="city">
+                      Cidade {formData.location !== 'remote' && '*'}
+                    </Label>
+                    <Select
+                      value={formData.city}
+                      onValueChange={(v) => {
+                        setFormData({ ...formData, city: v });
+                        if (errors.city) setErrors({ ...errors, city: undefined });
+                      }}
+                      disabled={!formData.state || citiesLoading}
+                    >
+                      <SelectTrigger
+                        id="city"
+                        aria-invalid={!!errors.city}
+                        className={errors.city ? 'border-destructive' : ''}
+                      >
+                        <SelectValue
+                          placeholder={
+                            !formData.state
+                              ? 'Selecione um estado primeiro'
+                              : citiesLoading
+                                ? 'Carregando cidades...'
+                                : 'Selecione a cidade'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {cities.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
                   </div>
                 </div>
               </CardContent>
