@@ -18,8 +18,6 @@ import {
 export function Navbar() {
   const { user, userRole, signOut, isAuthenticated, loading } = useSupabaseAuth();
   const navigate = useNavigate();
-  const [logoClickCount, setLogoClickCount] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
