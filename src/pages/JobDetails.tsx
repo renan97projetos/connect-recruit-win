@@ -287,7 +287,7 @@ export default function JobDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-soft">
+      <div className="min-h-screen bg-white app-internal">
         <Navbar />
         <div className="container mx-auto px-4 py-16 text-center">
           <p className="text-muted-foreground">Carregando...</p>
@@ -298,7 +298,7 @@ export default function JobDetails() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gradient-soft">
+      <div className="min-h-screen bg-white app-internal">
         <Navbar />
         <div className="container mx-auto px-4 py-16 text-center">
           <p className="text-muted-foreground">Vaga não encontrada</p>
