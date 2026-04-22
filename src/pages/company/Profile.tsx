@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, User, Building2 } from 'lucide-react';
+import { Loader2, Upload, User, Building2, Save, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -37,6 +37,13 @@ export default function CompanyProfile() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  // Arquivos selecionados aguardando "Salvar"
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
+  const [pendingLogo, setPendingLogo] = useState<File | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  const [pendingLogoPreview, setPendingLogoPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -150,23 +157,52 @@ export default function CompanyProfile() {
     }
   };
 
-  const handleImageUpload = async (
+  const handleSelectImage = (
     event: React.ChangeEvent<HTMLInputElement>,
     kind: ImageKind,
   ) => {
+    const file = event.target.files?.[0];
+    // limpar valor para permitir reselecionar o mesmo arquivo
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Erro', description: 'Por favor, selecione uma imagem', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'Erro', description: 'A imagem deve ter no máximo 2MB', variant: 'destructive' });
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    if (kind === 'avatar') {
+      if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+      setPendingAvatar(file);
+      setPendingAvatarPreview(previewUrl);
+    } else {
+      if (pendingLogoPreview) URL.revokeObjectURL(pendingLogoPreview);
+      setPendingLogo(file);
+      setPendingLogoPreview(previewUrl);
+    }
+  };
+
+  const cancelPending = (kind: ImageKind) => {
+    if (kind === 'avatar') {
+      if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+      setPendingAvatar(null);
+      setPendingAvatarPreview(null);
+    } else {
+      if (pendingLogoPreview) URL.revokeObjectURL(pendingLogoPreview);
+      setPendingLogo(null);
+      setPendingLogoPreview(null);
+    }
+  };
+
+  const saveImage = async (kind: ImageKind) => {
+    const file = kind === 'avatar' ? pendingAvatar : pendingLogo;
+    if (!file) return;
     try {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast({ title: 'Erro', description: 'Por favor, selecione uma imagem', variant: 'destructive' });
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast({ title: 'Erro', description: 'A imagem deve ter no máximo 2MB', variant: 'destructive' });
-        return;
-      }
-
       const setUploading = kind === 'avatar' ? setUploadingAvatar : setUploadingLogo;
       const currentUrl = kind === 'avatar' ? avatarUrl : companyLogoUrl;
       const baseName = kind === 'avatar' ? 'avatar' : 'logo';
@@ -175,45 +211,50 @@ export default function CompanyProfile() {
       setUploading(true);
 
       if (currentUrl) {
-        const oldPath = currentUrl.split('/').slice(-2).join('/');
-        await supabase.storage.from('avatars').remove([oldPath]);
+        try {
+          const cleanUrl = currentUrl.split('?')[0];
+          const oldPath = cleanUrl.split('/').slice(-2).join('/');
+          await supabase.storage.from('avatars').remove([oldPath]);
+        } catch {/* ignore */}
       }
 
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const filePath = `${user?.id}/${baseName}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+        .upload(filePath, file, { upsert: true, cacheControl: '3600' });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
-
-      // cache-buster para forçar reload da imagem
       const finalUrl = `${publicUrl}?t=${Date.now()}`;
 
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ [dbField]: finalUrl } as any)
         .eq('id', user?.id);
-
       if (updateError) throw updateError;
 
       if (kind === 'avatar') setAvatarUrl(finalUrl);
       else setCompanyLogoUrl(finalUrl);
 
+      // Notificar outros componentes (ex: TopNav) imediatamente
+      window.dispatchEvent(
+        new CustomEvent('profile-image-updated', { detail: { kind, url: finalUrl } })
+      );
+
+      cancelPending(kind);
       toast({
-        title: 'Sucesso',
+        title: 'Salvo',
         description: kind === 'avatar' ? 'Foto de perfil atualizada' : 'Logo da empresa atualizada',
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível fazer upload da imagem',
+        description: 'Não foi possível salvar a imagem',
         variant: 'destructive',
       });
     } finally {
@@ -234,38 +275,57 @@ export default function CompanyProfile() {
             </CardHeader>
             <CardContent className="flex items-center gap-6">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl || undefined} alt="Foto do usuário" />
+                <AvatarImage src={pendingAvatarPreview || avatarUrl || undefined} alt="Foto do usuário" />
                 <AvatarFallback>
                   <User className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <Label htmlFor="user-avatar-upload" className="cursor-pointer">
-                  <Button variant="outline" disabled={uploadingAvatar} asChild>
-                    <span>
-                      {uploadingAvatar ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Carregar Foto
-                        </>
-                      )}
-                    </span>
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploadingAvatar}
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {pendingAvatar ? 'Trocar' : 'Carregar Foto'}
                   </Button>
-                </Label>
+                  {pendingAvatar && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="default"
+                        disabled={uploadingAvatar}
+                        onClick={() => saveImage('avatar')}
+                      >
+                        {uploadingAvatar ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                        ) : (
+                          <><Save className="mr-2 h-4 w-4" /> Salvar</>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={uploadingAvatar}
+                        onClick={() => cancelPending('avatar')}
+                      >
+                        <X className="mr-2 h-4 w-4" /> Cancelar
+                      </Button>
+                    </>
+                  )}
+                </div>
                 <Input
+                  ref={avatarInputRef}
                   id="user-avatar-upload"
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleImageUpload(e, 'avatar')}
+                  onChange={(e) => handleSelectImage(e, 'avatar')}
                   disabled={uploadingAvatar}
                 />
-                <p className="text-sm text-muted-foreground mt-2">JPG, PNG ou GIF. Máx 2MB.</p>
+                <p className="text-sm text-muted-foreground">JPG, PNG ou GIF. Máx 2MB.</p>
               </div>
             </CardContent>
           </Card>
@@ -278,38 +338,57 @@ export default function CompanyProfile() {
             </CardHeader>
             <CardContent className="flex items-center gap-6">
               <Avatar className="h-24 w-24 rounded-md">
-                <AvatarImage src={companyLogoUrl || undefined} alt="Logo da empresa" className="object-contain" />
+                <AvatarImage src={pendingLogoPreview || companyLogoUrl || undefined} alt="Logo da empresa" className="object-contain" />
                 <AvatarFallback className="rounded-md">
                   <Building2 className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <Label htmlFor="company-logo-upload" className="cursor-pointer">
-                  <Button variant="outline" disabled={uploadingLogo} asChild>
-                    <span>
-                      {uploadingLogo ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Carregar Logo
-                        </>
-                      )}
-                    </span>
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploadingLogo}
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {pendingLogo ? 'Trocar' : 'Carregar Logo'}
                   </Button>
-                </Label>
+                  {pendingLogo && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="default"
+                        disabled={uploadingLogo}
+                        onClick={() => saveImage('logo')}
+                      >
+                        {uploadingLogo ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                        ) : (
+                          <><Save className="mr-2 h-4 w-4" /> Salvar</>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={uploadingLogo}
+                        onClick={() => cancelPending('logo')}
+                      >
+                        <X className="mr-2 h-4 w-4" /> Cancelar
+                      </Button>
+                    </>
+                  )}
+                </div>
                 <Input
+                  ref={logoInputRef}
                   id="company-logo-upload"
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleImageUpload(e, 'logo')}
+                  onChange={(e) => handleSelectImage(e, 'logo')}
                   disabled={uploadingLogo}
                 />
-                <p className="text-sm text-muted-foreground mt-2">JPG, PNG ou SVG. Máx 2MB.</p>
+                <p className="text-sm text-muted-foreground">JPG, PNG ou SVG. Máx 2MB.</p>
               </div>
             </CardContent>
           </Card>
