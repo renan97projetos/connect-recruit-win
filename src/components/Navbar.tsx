@@ -48,22 +48,6 @@ export function Navbar() {
     navigate('/');
   };
 
-  const handleLogoClick = (e: React.MouseEvent) => {
-    const now = Date.now();
-
-    if (now - lastClickTime > 2000) {
-      setLogoClickCount(1);
-    } else {
-      setLogoClickCount(prev => prev + 1);
-    }
-    setLastClickTime(now);
-
-    if (logoClickCount + 1 >= 5) {
-      e.preventDefault();
-      navigate('/admin/auth');
-      setLogoClickCount(0);
-    }
-  };
 
   const getDashboardRoute = () => {
     if (!userRole) return '/';
