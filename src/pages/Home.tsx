@@ -101,19 +101,23 @@ export default function Home() {
       });
     }
     if (filters.datePosted && filters.datePosted !== 'all') {
-      const now = new Date();
-      const filterDate = new Date();
-      if (filters.datePosted === '24h') {
-        filterDate.setDate(now.getDate() - 1);
-      } else if (filters.datePosted === '7d') {
-        filterDate.setDate(now.getDate() - 7);
-      } else if (filters.datePosted === '30d') {
-        filterDate.setDate(now.getDate() - 30);
+      const now = Date.now();
+      const DAY = 24 * 60 * 60 * 1000;
+      // Faixas EXCLUSIVAS: cada opção mostra um intervalo diferente
+      const ranges: Record<string, { minDays: number; maxDays: number }> = {
+        '24h': { minDays: 0, maxDays: 1 },   // últimas 24h
+        '7d': { minDays: 1, maxDays: 7 },    // entre 1 e 7 dias atrás
+        '30d': { minDays: 7, maxDays: 30 },  // entre 7 e 30 dias atrás
+      };
+      const range = ranges[filters.datePosted];
+      if (range) {
+        const lowerBound = now - range.maxDays * DAY;
+        const upperBound = now - range.minDays * DAY;
+        filtered = filtered.filter(job => {
+          const t = new Date(job.created_at).getTime();
+          return t >= lowerBound && t <= upperBound;
+        });
       }
-      filtered = filtered.filter(job => {
-        const jobDate = new Date(job.created_at);
-        return jobDate >= filterDate;
-      });
     }
     if (sortBy === 'date') {
       filtered = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
