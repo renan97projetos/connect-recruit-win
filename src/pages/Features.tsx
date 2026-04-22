@@ -268,13 +268,6 @@ export default function Features() {
             <Button
               asChild
               size="lg"
-              className="bg-yellow text-foreground border-3 border-background font-bold shadow-brutal hover:shadow-brutal-lg"
-            >
-              <Link to="/register">Começar grátis →</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
               variant="outline"
               className="border-3 border-background font-bold bg-transparent text-background hover:bg-background hover:text-foreground"
             >
