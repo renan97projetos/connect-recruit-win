@@ -20,6 +20,7 @@ import JobDetails from "./pages/JobDetails";
 import Contact from "./pages/Contact";
 import CandidateDashboard from "./pages/candidate/Dashboard";
 import CandidateProfile from "./pages/candidate/Profile";
+import CandidateJobs from "./pages/candidate/Jobs";
 import CompanyDashboard from "./pages/company/Dashboard";
 import CompanyHub from "./pages/company/Hub";
 import JobForm from "./pages/company/JobForm";
@@ -100,6 +101,7 @@ const App = () => {
               <Route path="/contact" element={<Contact />} />
               <Route path="/upload-documents/:applicationId" element={<UploadDocuments />} />
               <Route path="/candidate" element={<ProtectedRoute requiredRole="candidate"><CandidateDashboard /></ProtectedRoute>} />
+              <Route path="/candidate/jobs" element={<ProtectedRoute requiredRole="candidate"><CandidateJobs /></ProtectedRoute>} />
               <Route path="/candidate/profile" element={<ProtectedRoute requiredRole="candidate"><CandidateProfile /></ProtectedRoute>} />
               <Route path="/company" element={<ProtectedRoute requiredRole="company"><CompanyHub /></ProtectedRoute>} />
               <Route path="/company/dashboard" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
