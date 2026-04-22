@@ -452,6 +452,10 @@ export default function CandidateProfile() {
     return () => { cancelled = true; };
   }, [profile?.state, currentStateLoaded]);
 
+  useEffect(() => {
+    setBirthDateInput(formatDateForDisplay(profile?.birth_date || ''));
+  }, [profile?.birth_date]);
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: Partial<ProfileData>) => {
