@@ -1220,6 +1220,7 @@ export type Database = {
           birth_date: string | null
           city: string | null
           cnpj: string | null
+          company_logo_url: string | null
           company_name: string | null
           cpf: string | null
           created_at: string | null
@@ -1246,6 +1247,7 @@ export type Database = {
           birth_date?: string | null
           city?: string | null
           cnpj?: string | null
+          company_logo_url?: string | null
           company_name?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -1272,6 +1274,7 @@ export type Database = {
           birth_date?: string | null
           city?: string | null
           cnpj?: string | null
+          company_logo_url?: string | null
           company_name?: string | null
           cpf?: string | null
           created_at?: string | null
