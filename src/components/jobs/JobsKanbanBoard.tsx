@@ -1063,10 +1063,7 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
             )}
           >
             <Card 
-              className={cn(
-                "border hover:shadow-md transition-all bg-background cursor-pointer group",
-                isPaused && "border-dashed border-muted-foreground/40 bg-muted/30"
-              )}
+              className="border hover:shadow-md transition-all bg-background cursor-pointer group"
               onClick={handleCardClick}
             >
               <CardHeader className="p-3 pb-2">
@@ -1145,9 +1142,9 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                   </div>
                   <div className="flex items-center gap-1.5">
                     {isPaused && (
-                      <Badge variant="outline" className="text-xs px-1.5 py-0 bg-muted text-muted-foreground border-muted-foreground/30">
-                        <FileText className="h-3 w-3 mr-1" />
-                        Rascunho
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        <Pause className="h-3 w-3 mr-1" />
+                        Pausada
                       </Badge>
                     )}
                     {!isRequest && appCount > 0 && (
@@ -1280,53 +1277,8 @@ export function JobsKanbanBoard({ jobRequests, publishedJobs, isOwner, onRefresh
                         isBlocked && "opacity-50 cursor-not-allowed"
                       )}
                     >
-                      {column.id === 'published' ? (() => {
-                        const activeItems: typeof column.items = [];
-                        const draftItems: typeof column.items = [];
-                        column.items.forEach(it => {
-                          if (column.type === 'job' && (it as PublishedJob).is_active === false) {
-                            draftItems.push(it);
-                          } else {
-                            activeItems.push(it);
-                          }
-                        });
-                        let runningIndex = 0;
-                        return (
-                          <>
-                            <div className="flex items-center gap-1.5 px-1 pt-1 pb-1.5">
-                              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                Ativas
-                              </span>
-                              <span className="text-[11px] text-muted-foreground">({activeItems.length})</span>
-                            </div>
-                            {activeItems.length === 0 ? (
-                              <p className="text-[11px] text-muted-foreground italic px-2 py-1">
-                                Nenhuma ativa
-                              </p>
-                            ) : (
-                              activeItems.map(item => renderCard(item, column.type, runningIndex++, column))
-                            )}
-                            <div className="flex items-center gap-1.5 px-1 pt-3 pb-1.5">
-                              <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                Rascunho
-                              </span>
-                              <span className="text-[11px] text-muted-foreground">({draftItems.length})</span>
-                            </div>
-                            {draftItems.length === 0 ? (
-                              <p className="text-[11px] text-muted-foreground italic px-2 py-1">
-                                Nenhum rascunho
-                              </p>
-                            ) : (
-                              draftItems.map(item => renderCard(item, column.type, runningIndex++, column))
-                            )}
-                          </>
-                        );
-                      })() : (
-                        column.items.map((item, index) => 
-                          renderCard(item, column.type, index, column)
-                        )
+                      {column.items.map((item, index) => 
+                        renderCard(item, column.type, index, column)
                       )}
                       {provided.placeholder}
                     </div>
