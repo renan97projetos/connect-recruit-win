@@ -836,6 +836,7 @@ export default function JobForm() {
                     {questions.map((q, i) => (
                       <div key={i} className="flex gap-2 items-start">
                         <Input
+                          ref={(el) => { questionRefs.current[i] = el; }}
                           placeholder={`Pergunta ${i + 1}`}
                           value={q.question}
                           onChange={(e) =>
@@ -853,6 +854,7 @@ export default function JobForm() {
                                   ...prev,
                                   { question: '', question_type: 'text', required: true },
                                 ]);
+                                setFocusTarget({ list: 'q', index: i + 1 });
                               }
                             }
                           }}
