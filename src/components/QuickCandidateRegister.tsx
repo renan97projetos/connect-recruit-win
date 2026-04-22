@@ -104,9 +104,18 @@ export function QuickCandidateRegister() {
 
     if (error) {
       let msg = 'Tente novamente';
-      if (error.message?.includes('already registered')) msg = 'Este email já está cadastrado';
-      else if (error.message?.includes('Invalid email')) msg = 'Email inválido';
-      else if (error.message?.includes('weak password')) msg = 'Senha muito fraca';
+      const m = (error.message || '').toLowerCase();
+      if (m.includes('already registered') || m.includes('user already')) {
+        msg = 'Este email já está cadastrado';
+      } else if (m.includes('invalid email')) {
+        msg = 'Email inválido';
+      } else if (m.includes('weak password')) {
+        msg = 'Senha muito fraca';
+      } else if (m.includes('rate limit') || m.includes('over_email_send_rate_limit') || m.includes('429')) {
+        msg = 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+      } else if (error.message) {
+        msg = error.message;
+      }
       toast({ title: 'Erro ao cadastrar', description: msg, variant: 'destructive' });
       setLoading(false);
       return;
