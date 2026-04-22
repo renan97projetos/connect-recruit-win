@@ -29,29 +29,29 @@ export default function CompanyHub() {
   const doneCount = checklist.filter((c) => c.done).length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f8f8f6]">
       <CompanyHeader showHubLink={false} />
 
       <main className="container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-black mb-3">Bem-vindo</h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-3">Bem-vindo</h1>
+            <p className="text-lg text-gray-500">
               Escolha por onde quer começar
             </p>
           </div>
 
           {/* Onboarding checklist */}
           {onboarding && !onboarding.isComplete && (
-            <div className="mb-10 bg-yellow border-3 border-foreground rounded-2xl shadow-brutal-lg p-6">
+            <div className="mb-10 bg-white border border-gray-200 rounded-2xl p-6">
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
-                  <h2 className="text-xl md:text-2xl font-black mb-1">Configure sua conta</h2>
-                  <p className="text-sm text-foreground/80 font-semibold">
+                  <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-1">Configure sua conta</h2>
+                  <p className="text-sm text-gray-500">
                     Complete os passos abaixo para começar
                   </p>
                 </div>
-                <div className="bg-background border-3 border-foreground rounded-xl px-3 py-1.5 shadow-brutal text-sm font-black whitespace-nowrap">
+                <div className="bg-primary/10 text-primary rounded-lg px-3 py-1.5 text-sm font-semibold whitespace-nowrap">
                   {doneCount}/{checklist.length}
                 </div>
               </div>
@@ -61,27 +61,27 @@ export default function CompanyHub() {
                   <li key={i}>
                     <button
                       onClick={() => navigate(item.href)}
-                      className="w-full flex items-center gap-3 text-left bg-background border-2 border-foreground rounded-lg px-4 py-3 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal transition-all"
+                      className="w-full flex items-center gap-3 text-left bg-white border border-gray-200 rounded-lg px-4 py-3 hover:border-primary/40 hover:bg-primary/5 transition-colors"
                     >
                       <div
-                        className={`flex-shrink-0 w-6 h-6 rounded-full border-2 border-foreground flex items-center justify-center ${
-                          item.done ? 'bg-lime' : 'bg-background'
+                        className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center ${
+                          item.done ? 'bg-green-100 border-green-400' : 'bg-green-50 border-gray-300'
                         }`}
                       >
                         {item.done ? (
-                          <Check className="h-3.5 w-3.5 text-foreground" strokeWidth={3} />
+                          <Check className="h-3.5 w-3.5 text-green-700" strokeWidth={3} />
                         ) : (
-                          <Circle className="h-2 w-2 text-muted-foreground" />
+                          <Circle className="h-2 w-2 text-gray-400" />
                         )}
                       </div>
                       <span
-                        className={`text-sm font-semibold flex-1 ${
-                          item.done ? 'line-through text-muted-foreground' : ''
+                        className={`text-sm font-medium flex-1 ${
+                          item.done ? 'line-through text-gray-400' : 'text-gray-700'
                         }`}
                       >
                         {item.label}
                       </span>
-                      {!item.done && <ArrowRight className="h-4 w-4 flex-shrink-0" />}
+                      {!item.done && <ArrowRight className="h-4 w-4 flex-shrink-0 text-gray-400" />}
                     </button>
                   </li>
                 ))}
@@ -93,26 +93,26 @@ export default function CompanyHub() {
             {/* Gestão de Vagas */}
             <button
               onClick={() => navigate('/company/dashboard')}
-              className="group text-left bg-lime border-3 border-foreground rounded-2xl shadow-brutal-lg p-8 hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-brutal-hover transition-all"
+              className="group text-left bg-white border border-gray-200 rounded-2xl p-8 hover:border-primary/40 hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between mb-6">
-                <div className="w-16 h-16 bg-background rounded-xl border-3 border-foreground flex items-center justify-center shadow-brutal">
-                  <Briefcase className="h-8 w-8 text-foreground" />
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Briefcase className="h-8 w-8 text-primary" />
                 </div>
-                <ArrowRight className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ArrowRight className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-black mb-2">Recrutamento e Seleção</h2>
-              <p className="text-foreground/80 font-semibold mb-6">
+              <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">Recrutamento e Seleção</h2>
+              <p className="text-gray-500 text-sm mb-6">
                 Solicitações, processo seletivo, banco de talentos e dashboard de recrutamento.
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="text-xs font-bold uppercase tracking-wide bg-background/60 border-2 border-foreground px-2 py-1 rounded-lg flex items-center gap-1">
+                <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center gap-1">
                   <BarChart3 className="h-3 w-3" /> Dashboard
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wide bg-background/60 border-2 border-foreground px-2 py-1 rounded-lg">
+                <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
                   Solicitações
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wide bg-background/60 border-2 border-foreground px-2 py-1 rounded-lg">
+                <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
                   Banco de Talentos
                 </span>
               </div>
@@ -122,26 +122,26 @@ export default function CompanyHub() {
             {!roleLoading && isOwner && (
               <button
                 onClick={() => navigate('/company/employee-dashboard')}
-                className="group text-left bg-cyan border-3 border-foreground rounded-2xl shadow-brutal-lg p-8 hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-brutal-hover transition-all"
+                className="group text-left bg-white border border-gray-200 rounded-2xl p-8 hover:border-primary/40 hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 bg-background rounded-xl border-3 border-foreground flex items-center justify-center shadow-brutal">
-                    <Users className="h-8 w-8 text-foreground" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Users className="h-8 w-8 text-primary" />
                   </div>
-                  <ArrowRight className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black mb-2">Gestão RH Interna</h2>
-                <p className="text-foreground/80 font-semibold mb-6">
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">Gestão RH Interna</h2>
+                <p className="text-gray-500 text-sm mb-6">
                   Colaboradores, avaliações de desempenho, treinamentos e solicitações internas.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wide bg-background/60 border-2 border-foreground px-2 py-1 rounded-lg">
+                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
                     Colaboradores
                   </span>
-                  <span className="text-xs font-bold uppercase tracking-wide bg-background/60 border-2 border-foreground px-2 py-1 rounded-lg">
+                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
                     Avaliações
                   </span>
-                  <span className="text-xs font-bold uppercase tracking-wide bg-background/60 border-2 border-foreground px-2 py-1 rounded-lg">
+                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
                     Solicitações
                   </span>
                 </div>

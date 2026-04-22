@@ -284,7 +284,7 @@ export default function TeamManagement() {
         </div>
 
         {members.length === 0 ? (
-          <Card className="border-3 border-dashed border-muted-foreground/30">
+          <Card className="border border-dashed border-gray-300">
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">
                 Nenhum membro cadastrado. Clique em "Adicionar Membro" para começar.
@@ -294,7 +294,7 @@ export default function TeamManagement() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {members.map((member) => (
-              <Card key={member.id} className={`border-3 border-foreground shadow-brutal ${!member.is_active ? 'opacity-50' : ''}`}>
+              <Card key={member.id} className={`border border-gray-200 shadow-sm ${!member.is_active ? 'opacity-50' : ''}`}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -352,7 +352,7 @@ export default function TeamManagement() {
           <div className="space-y-4 py-4">
             {/* Foto */}
             <div className="flex flex-col items-center gap-4">
-              <Avatar className="h-24 w-24 border-3 border-foreground">
+              <Avatar className="h-24 w-24 border-2 border-gray-200">
                 <AvatarImage src={formData.photo_url || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                   {formData.name ? getInitials(formData.name) : '?'}
