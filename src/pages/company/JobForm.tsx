@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,6 +66,25 @@ export default function JobForm() {
     required: boolean;
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+
+  const requirementRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const responsibilityRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const questionRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [focusTarget, setFocusTarget] = useState<{ list: 'req' | 'resp' | 'q'; index: number } | null>(null);
+
+  useEffect(() => {
+    if (!focusTarget) return;
+    const map = {
+      req: requirementRefs,
+      resp: responsibilityRefs,
+      q: questionRefs,
+    };
+    const el = map[focusTarget.list].current[focusTarget.index];
+    if (el) {
+      el.focus();
+      setFocusTarget(null);
+    }
+  }, [focusTarget, requirements, responsibilities, questions]);
 
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [aiInput, setAiInput] = useState('');
@@ -705,12 +724,16 @@ export default function JobForm() {
                           {requirements.map((req, i) => (
                             <div key={i} className="flex gap-2">
                               <Input
+                                ref={(el) => { requirementRefs.current[i] = el; }}
                                 value={req}
                                 onChange={(e) => updateList(setRequirements, i, e.target.value)}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
-                                    if (req.trim()) addItem(setRequirements);
+                                    if (req.trim()) {
+                                      addItem(setRequirements);
+                                      setFocusTarget({ list: 'req', index: i + 1 });
+                                    }
                                   }
                                 }}
                                 placeholder="Ex: 3+ anos de experiência com React"
@@ -747,12 +770,16 @@ export default function JobForm() {
                         {responsibilities.map((resp, i) => (
                           <div key={i} className="flex gap-2">
                             <Input
+                              ref={(el) => { responsibilityRefs.current[i] = el; }}
                               value={resp}
                               onChange={(e) => updateList(setResponsibilities, i, e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
-                                  if (resp.trim()) addItem(setResponsibilities);
+                                  if (resp.trim()) {
+                                    addItem(setResponsibilities);
+                                    setFocusTarget({ list: 'resp', index: i + 1 });
+                                  }
                                 }
                               }}
                               placeholder="Ex: Desenvolver novas features no produto"
@@ -809,6 +836,7 @@ export default function JobForm() {
                     {questions.map((q, i) => (
                       <div key={i} className="flex gap-2 items-start">
                         <Input
+                          ref={(el) => { questionRefs.current[i] = el; }}
                           placeholder={`Pergunta ${i + 1}`}
                           value={q.question}
                           onChange={(e) =>
@@ -826,6 +854,7 @@ export default function JobForm() {
                                   ...prev,
                                   { question: '', question_type: 'text', required: true },
                                 ]);
+                                setFocusTarget({ list: 'q', index: i + 1 });
                               }
                             }
                           }}
