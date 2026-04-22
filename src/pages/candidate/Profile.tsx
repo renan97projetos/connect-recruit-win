@@ -46,11 +46,16 @@ function getCandidatePreregistration(userEmail?: string) {
   if (typeof window === 'undefined') return null;
 
   try {
-    const raw = window.localStorage.getItem(CANDIDATE_PREREGISTRATION_KEY);
+    const normalizedEmail = userEmail?.toLowerCase().trim();
+    const scopedKey = normalizedEmail
+      ? `${CANDIDATE_PREREGISTRATION_KEY}:${normalizedEmail}`
+      : null;
+    const raw = (scopedKey ? window.localStorage.getItem(scopedKey) : null)
+      || window.localStorage.getItem(CANDIDATE_PREREGISTRATION_KEY);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);
-    if (userEmail && parsed?.email && parsed.email !== userEmail) return null;
+    if (normalizedEmail && parsed?.email && parsed.email.toLowerCase().trim() !== normalizedEmail) return null;
 
     return {
       city: typeof parsed?.city === 'string' ? parsed.city : '',
@@ -323,11 +328,29 @@ export default function CandidateProfile() {
       if (!user) return null;
       const metadata = user.user_metadata || {};
       const preregistrationData = getCandidatePreregistration(user.email);
+      const authFallbackFields = {
+        city: pickFallbackValue(
+          typeof metadata.city === 'string' ? metadata.city : '',
+          typeof user.user_metadata?.city === 'string' ? user.user_metadata.city : ''
+        ),
+        state: pickFallbackValue(
+          typeof metadata.state === 'string' ? metadata.state : '',
+          typeof user.user_metadata?.state === 'string' ? user.user_metadata.state : ''
+        ),
+        desired_role: pickFallbackValue(
+          typeof metadata.desired_role === 'string' ? metadata.desired_role : '',
+          typeof user.user_metadata?.desired_role === 'string' ? user.user_metadata.desired_role : ''
+        ),
+        cv_url: pickFallbackValue(
+          typeof metadata.cv_url === 'string' ? metadata.cv_url : '',
+          typeof user.user_metadata?.cv_url === 'string' ? user.user_metadata.cv_url : ''
+        ),
+      };
       const fallbackProfileFields = {
-        city: pickFallbackValue(typeof metadata.city === 'string' ? metadata.city : '', preregistrationData?.city),
-        state: pickFallbackValue(typeof metadata.state === 'string' ? metadata.state : '', preregistrationData?.state),
-        desired_role: pickFallbackValue(typeof metadata.desired_role === 'string' ? metadata.desired_role : '', preregistrationData?.desired_role),
-        cv_url: pickFallbackValue(typeof metadata.cv_url === 'string' ? metadata.cv_url : '', preregistrationData?.cv_url),
+        city: pickFallbackValue(preregistrationData?.city, authFallbackFields.city),
+        state: pickFallbackValue(preregistrationData?.state, authFallbackFields.state),
+        desired_role: pickFallbackValue(preregistrationData?.desired_role, authFallbackFields.desired_role),
+        cv_url: pickFallbackValue(preregistrationData?.cv_url, authFallbackFields.cv_url),
       };
       
       // First try to get existing profile
