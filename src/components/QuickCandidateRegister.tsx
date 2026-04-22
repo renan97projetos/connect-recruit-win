@@ -39,6 +39,20 @@ export function QuickCandidateRegister() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const persistPreregistrationData = (data: {
+    email: string;
+    city: string;
+    state: string;
+    desired_role: string;
+    cv_url?: string;
+  }) => {
+    if (typeof window === 'undefined') return;
+
+    const key = `${preregistrationStorageKey}:${data.email.toLowerCase().trim()}`;
+    window.localStorage.setItem(key, JSON.stringify(data));
+    window.localStorage.setItem(preregistrationStorageKey, JSON.stringify(data));
+  };
+
   useEffect(() => {
     if (!state) {
       setCities([]);
@@ -126,17 +140,12 @@ export function QuickCandidateRegister() {
       return;
     }
 
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(
-        preregistrationStorageKey,
-        JSON.stringify({
-          email,
-          city,
-          state,
-          desired_role: desiredRole,
-        }),
-      );
-    }
+    persistPreregistrationData({
+      email,
+      city,
+      state,
+      desired_role: desiredRole,
+    });
 
     // Aguarda criação do perfil pelo trigger e atualiza com dados extras
     try {
@@ -166,18 +175,13 @@ export function QuickCandidateRegister() {
           ...(cvUrl ? { cv_url: cvUrl } : {}),
         };
 
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(
-            preregistrationStorageKey,
-            JSON.stringify({
-              email,
-              city,
-              state,
-              desired_role: desiredRole,
-              ...(cvUrl ? { cv_url: cvUrl } : {}),
-            }),
-          );
-        }
+        persistPreregistrationData({
+          email,
+          city,
+          state,
+          desired_role: desiredRole,
+          ...(cvUrl ? { cv_url: cvUrl } : {}),
+        });
 
         // Aguarda o trigger handle_new_user criar o profile (até 4 tentativas)
         let saved = false;
