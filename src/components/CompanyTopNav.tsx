@@ -265,7 +265,7 @@ export function CompanyTopNav() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 flex-shrink-0 px-1.5 py-1 rounded-md hover:bg-gray-100 transition-colors">
               <Avatar className="h-7 w-7 cursor-pointer">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
+                {avatarUrl && <AvatarImage key={avatarUrl} src={avatarUrl} alt={userName} />}
                 <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-semibold">
                   {userInitials}
                 </AvatarFallback>
