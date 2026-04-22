@@ -118,7 +118,7 @@ export default function JobRequests() {
         <TabsList>
           <TabsTrigger value="active" className="gap-2">
             <Briefcase className="h-4 w-4" />
-            Ativas ({activeJobs.length})
+            Ativas ({openJobs.length})
           </TabsTrigger>
           <TabsTrigger value="requests" className="gap-2">
             <ClipboardList className="h-4 w-4" />
@@ -127,33 +127,82 @@ export default function JobRequests() {
         </TabsList>
 
         <TabsContent value="active">
-          {activeJobs.length === 0 ? (
+          {openJobs.length === 0 ? (
             <Card>
               <CardContent className="py-16 text-center">
                 <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Nenhuma vaga ativa</h3>
+                <h3 className="text-lg font-semibold mb-2">Nenhuma vaga aberta</h3>
                 <p className="text-sm text-muted-foreground">
                   Publique uma requisição aprovada para ativar uma vaga.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <JobsKanbanBoard
-              jobRequests={[]}
-              publishedJobs={activeJobs}
-              isOwner={isOwner}
-              onRefresh={fetchData}
-              permissions={{
-                canCreate: hasPermission('create_vagas'),
-                canEdit: hasPermission('edit_vagas'),
-                canPublish: hasPermission('publish_vagas'),
-                canApprove: hasPermission('approve_vagas'),
-                canReject: hasPermission('reject_vagas'),
-                canDelete: hasPermission('delete_vagas'),
-                canManageCandidates: hasPermission('manage_candidatos'),
-                canEvaluate: hasPermission('avaliar_candidatos'),
-              }}
-            />
+            <div className="space-y-8">
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <h3 className="text-base font-semibold">Vagas Ativas</h3>
+                  <span className="text-sm text-muted-foreground">({activeJobs.length})</span>
+                </div>
+                {activeJobs.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                      Nenhuma vaga ativa no momento.
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <JobsKanbanBoard
+                    jobRequests={[]}
+                    publishedJobs={activeJobs}
+                    isOwner={isOwner}
+                    onRefresh={fetchData}
+                    permissions={{
+                      canCreate: hasPermission('create_vagas'),
+                      canEdit: hasPermission('edit_vagas'),
+                      canPublish: hasPermission('publish_vagas'),
+                      canApprove: hasPermission('approve_vagas'),
+                      canReject: hasPermission('reject_vagas'),
+                      canDelete: hasPermission('delete_vagas'),
+                      canManageCandidates: hasPermission('manage_candidatos'),
+                      canEvaluate: hasPermission('avaliar_candidatos'),
+                    }}
+                  />
+                )}
+              </section>
+
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-2 w-2 rounded-full bg-slate-400" />
+                  <h3 className="text-base font-semibold">Vagas em Rascunho</h3>
+                  <span className="text-sm text-muted-foreground">({draftJobs.length})</span>
+                </div>
+                {draftJobs.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                      Nenhuma vaga em rascunho.
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <JobsKanbanBoard
+                    jobRequests={[]}
+                    publishedJobs={draftJobs}
+                    isOwner={isOwner}
+                    onRefresh={fetchData}
+                    permissions={{
+                      canCreate: hasPermission('create_vagas'),
+                      canEdit: hasPermission('edit_vagas'),
+                      canPublish: hasPermission('publish_vagas'),
+                      canApprove: hasPermission('approve_vagas'),
+                      canReject: hasPermission('reject_vagas'),
+                      canDelete: hasPermission('delete_vagas'),
+                      canManageCandidates: hasPermission('manage_candidatos'),
+                      canEvaluate: hasPermission('avaliar_candidatos'),
+                    }}
+                  />
+                )}
+              </section>
+            </div>
           )}
         </TabsContent>
 
