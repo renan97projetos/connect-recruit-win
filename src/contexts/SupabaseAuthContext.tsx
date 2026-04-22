@@ -2,12 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+interface SignUpMetadata {
+  city?: string;
+  state?: string;
+  desired_role?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userRole: 'admin' | 'company' | 'candidate' | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string, role: 'admin' | 'company' | 'candidate') => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string, role: 'admin' | 'company' | 'candidate', metadata?: SignUpMetadata) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any; role?: 'admin' | 'company' | 'candidate' | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -72,7 +78,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const signUp = async (email: string, password: string, name: string, role: 'admin' | 'company' | 'candidate') => {
+  const signUp = async (email: string, password: string, name: string, role: 'admin' | 'company' | 'candidate', metadata?: SignUpMetadata) => {
     try {
       const redirectUrl = `https://www.sinapserh.com.br/`;
       
@@ -83,7 +89,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           emailRedirectTo: redirectUrl,
           data: {
             name,
-            role // Passa a role nos metadados para o trigger processar
+            role,
+            ...metadata,
           }
         }
       });
