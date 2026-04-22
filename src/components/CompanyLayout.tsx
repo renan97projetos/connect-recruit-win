@@ -17,7 +17,7 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
   return (
     <OnboardingProvider>
       <OnboardingTourStyles />
-      <div className="min-h-screen bg-[#f8f8f6]">
+      <div className="min-h-screen bg-[#f8f8f6] app-internal">
         <CompanyTopNav />
         <main className="px-4 md:px-6 py-6">{children}</main>
         <WelcomeModal />
