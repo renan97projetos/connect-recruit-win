@@ -46,9 +46,6 @@ export function CompanyHeader({ showHubLink = true }: CompanyHeaderProps) {
         <div className="h-16 flex items-center justify-between gap-4">
           {/* Logo SaaS */}
           <Link to="/company" className="flex items-center gap-3 group min-w-0">
-            <div className="w-10 h-10 bg-primary rounded-lg border-3 border-foreground flex items-center justify-center shadow-brutal group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-brutal-hover transition-all flex-shrink-0">
-              <Zap className="h-5 w-5 text-primary-foreground" />
-            </div>
             <span className="font-bold text-xl tracking-tight hidden sm:block">SinapseRH</span>
           </Link>
 
