@@ -617,7 +617,7 @@ export default function JobForm() {
                       <div className="space-y-3 pt-2">
                         <div className="rounded-md border bg-primary/5 p-3">
                           <p className="text-xs font-medium text-foreground mb-2">
-                            ⚡ Requisitos rápidos (mais usados):
+                            ⚡ Requisitos rápidos:
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {[
