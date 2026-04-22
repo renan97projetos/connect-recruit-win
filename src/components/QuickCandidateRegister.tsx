@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,13 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Rocket, Upload, FileText, X } from 'lucide-react';
+import { Eye, EyeOff, Rocket, Upload, FileText, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-
-const BR_STATES = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-];
+import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 
 const schema = z.object({
   name: z.string().trim().min(3, 'Nome muito curto').max(100, 'Nome muito longo'),
@@ -34,10 +31,25 @@ export function QuickCandidateRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [cities, setCities] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { signUp } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!state) {
+      setCities([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingCities(true);
+    fetchCitiesByState(state)
+      .then((list) => { if (!cancelled) setCities(list); })
+      .finally(() => { if (!cancelled) setLoadingCities(false); });
+    return () => { cancelled = true; };
+  }, [state]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,9 +104,18 @@ export function QuickCandidateRegister() {
 
     if (error) {
       let msg = 'Tente novamente';
-      if (error.message?.includes('already registered')) msg = 'Este email já está cadastrado';
-      else if (error.message?.includes('Invalid email')) msg = 'Email inválido';
-      else if (error.message?.includes('weak password')) msg = 'Senha muito fraca';
+      const m = (error.message || '').toLowerCase();
+      if (m.includes('already registered') || m.includes('user already')) {
+        msg = 'Este email já está cadastrado';
+      } else if (m.includes('invalid email')) {
+        msg = 'Email inválido';
+      } else if (m.includes('weak password')) {
+        msg = 'Senha muito fraca';
+      } else if (m.includes('rate limit') || m.includes('over_email_send_rate_limit') || m.includes('429')) {
+        msg = 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+      } else if (error.message) {
+        msg = error.message;
+      }
       toast({ title: 'Erro ao cadastrar', description: msg, variant: 'destructive' });
       setLoading(false);
       return;
@@ -247,37 +268,58 @@ export function QuickCandidateRegister() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="quick-city">Cidade</Label>
-            <Input
-              id="quick-city"
-              type="text"
-              placeholder="Sua cidade"
-              value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-                setErrors((p) => ({ ...p, city: undefined }));
-              }}
-              autoComplete="address-level2"
-              required
-              className={errors.city ? 'border-destructive' : ''}
-            />
-            {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
-          </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="quick-state">Estado</Label>
-            <Select value={state} onValueChange={(v) => { setState(v); setErrors((p) => ({ ...p, state: undefined })); }}>
+            <Select
+              value={state}
+              onValueChange={(v) => {
+                setState(v);
+                setCity('');
+                setErrors((p) => ({ ...p, state: undefined, city: undefined }));
+              }}
+            >
               <SelectTrigger id="quick-state" className={errors.state ? 'border-destructive' : ''}>
                 <SelectValue placeholder="UF" />
               </SelectTrigger>
               <SelectContent className="max-h-60">
-                {BR_STATES.map((uf) => (
-                  <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                {BRAZIL_STATES.map((s) => (
+                  <SelectItem key={s.uf} value={s.uf}>{s.uf}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}
+          </div>
+
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="quick-city">Cidade</Label>
+            <Select
+              value={city}
+              onValueChange={(v) => {
+                setCity(v);
+                setErrors((p) => ({ ...p, city: undefined }));
+              }}
+              disabled={!state || loadingCities}
+            >
+              <SelectTrigger id="quick-city" className={errors.city ? 'border-destructive' : ''}>
+                <SelectValue placeholder={
+                  !state ? 'Selecione o estado primeiro'
+                  : loadingCities ? 'Carregando cidades...'
+                  : 'Selecione a cidade'
+                } />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {loadingCities ? (
+                  <div className="flex items-center justify-center py-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Carregando...
+                  </div>
+                ) : (
+                  cities.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
           </div>
         </div>
 
