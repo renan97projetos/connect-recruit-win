@@ -116,9 +116,18 @@ export function CompanyTopNav() {
     const onFocus = () => fetchProfile();
     window.addEventListener('focus', onFocus);
 
+    const onImageUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { kind?: string; url?: string } | undefined;
+      if (!detail?.url) return;
+      if (detail.kind === 'avatar') setAvatarUrl(detail.url);
+      else if (detail.kind === 'logo') setCompanyLogoUrl(detail.url);
+    };
+    window.addEventListener('profile-image-updated', onImageUpdated);
+
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('profile-image-updated', onImageUpdated);
     };
   }, [user?.id, user?.email]);
 
