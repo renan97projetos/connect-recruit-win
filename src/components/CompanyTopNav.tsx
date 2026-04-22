@@ -298,41 +298,15 @@ export function CompanyTopNav() {
             <nav className="p-3 space-y-4 overflow-y-auto">
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5 px-2">
-                  Recrutamento
+                  {moduleLabel}
                 </p>
                 <div className="flex flex-col gap-0.5">
-                  {mainMenuItems.map((item) => {
-                    const active = item.end
-                      ? location.pathname === item.path
-                      : isActive(item.path);
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        onClick={() => setMobileOpen(false)}
-                        className={cn(
-                          'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                          active
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {isOwner && (
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5 px-2">
-                    Gestão RH
-                  </p>
-                  <div className="flex flex-col gap-0.5">
-                    {hrMenuItems.map((item) => {
-                      const active = isActive(item.path);
+                  {moduleItems
+                    .filter((item) => !item.ownerOnly || isOwner)
+                    .map((item) => {
+                      const active = item.end
+                        ? location.pathname === item.path
+                        : isActive(item.path);
                       return (
                         <Link
                           key={item.path}
@@ -350,9 +324,18 @@ export function CompanyTopNav() {
                         </Link>
                       );
                     })}
-                  </div>
                 </div>
-              )}
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    navigate('/company');
+                  }}
+                  className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs text-gray-500 hover:bg-gray-100"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Trocar de módulo
+                </button>
+              </div>
+
 
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5 px-2">
