@@ -121,15 +121,39 @@ export function QuickCandidateRegister() {
           }
         }
 
-        await supabase
-          .from('profiles')
-          .update({
-            city,
-            state,
-            summary: `Cargo/área de interesse: ${desiredRole}`,
-            ...(cvUrl ? { cv_url: cvUrl } : {}),
-          })
-          .eq('id', userId);
+        const extraData: Record<string, any> = {
+          city,
+          state,
+          desired_role: desiredRole,
+          ...(cvUrl ? { cv_url: cvUrl } : {}),
+        };
+
+        // Aguarda o trigger handle_new_user criar o profile (até 4 tentativas)
+        let saved = false;
+        for (let attempt = 0; attempt < 4 && !saved; attempt++) {
+          const { data: existing } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();
+
+          if (existing) {
+            const { error: updErr } = await supabase
+              .from('profiles')
+              .update(extraData)
+              .eq('id', userId);
+            if (!updErr) saved = true;
+          } else {
+            await new Promise((r) => setTimeout(r, 500));
+          }
+        }
+
+        // Fallback: upsert direto caso nenhuma tentativa tenha funcionado
+        if (!saved) {
+          await supabase
+            .from('profiles')
+            .upsert({ id: userId, name, ...extraData }, { onConflict: 'id' });
+        }
       }
     } catch (err) {
       console.error('Erro ao salvar dados extras:', err);
