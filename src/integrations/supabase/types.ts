@@ -1003,6 +1003,7 @@ export type Database = {
           company_name: string
           created_at: string | null
           description: string
+          experience_level: string | null
           external_company_name: string | null
           external_job_url: string | null
           id: string
@@ -1028,6 +1029,7 @@ export type Database = {
           company_name: string
           created_at?: string | null
           description: string
+          experience_level?: string | null
           external_company_name?: string | null
           external_job_url?: string | null
           id?: string
@@ -1053,6 +1055,7 @@ export type Database = {
           company_name?: string
           created_at?: string | null
           description?: string
+          experience_level?: string | null
           external_company_name?: string | null
           external_job_url?: string | null
           id?: string
