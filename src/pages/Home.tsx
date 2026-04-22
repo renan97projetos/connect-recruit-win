@@ -323,6 +323,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* Como Funciona - Chunky Steps */}
