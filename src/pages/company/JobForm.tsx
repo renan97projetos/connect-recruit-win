@@ -724,12 +724,16 @@ export default function JobForm() {
                           {requirements.map((req, i) => (
                             <div key={i} className="flex gap-2">
                               <Input
+                                ref={(el) => { requirementRefs.current[i] = el; }}
                                 value={req}
                                 onChange={(e) => updateList(setRequirements, i, e.target.value)}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
-                                    if (req.trim()) addItem(setRequirements);
+                                    if (req.trim()) {
+                                      addItem(setRequirements);
+                                      setFocusTarget({ list: 'req', index: i + 1 });
+                                    }
                                   }
                                 }}
                                 placeholder="Ex: 3+ anos de experiência com React"
