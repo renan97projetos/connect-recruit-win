@@ -268,37 +268,58 @@ export function QuickCandidateRegister() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="quick-city">Cidade</Label>
-            <Input
-              id="quick-city"
-              type="text"
-              placeholder="Sua cidade"
-              value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-                setErrors((p) => ({ ...p, city: undefined }));
-              }}
-              autoComplete="address-level2"
-              required
-              className={errors.city ? 'border-destructive' : ''}
-            />
-            {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
-          </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="quick-state">Estado</Label>
-            <Select value={state} onValueChange={(v) => { setState(v); setErrors((p) => ({ ...p, state: undefined })); }}>
+            <Select
+              value={state}
+              onValueChange={(v) => {
+                setState(v);
+                setCity('');
+                setErrors((p) => ({ ...p, state: undefined, city: undefined }));
+              }}
+            >
               <SelectTrigger id="quick-state" className={errors.state ? 'border-destructive' : ''}>
                 <SelectValue placeholder="UF" />
               </SelectTrigger>
               <SelectContent className="max-h-60">
-                {BR_STATES.map((uf) => (
-                  <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                {BRAZIL_STATES.map((s) => (
+                  <SelectItem key={s.uf} value={s.uf}>{s.uf}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}
+          </div>
+
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="quick-city">Cidade</Label>
+            <Select
+              value={city}
+              onValueChange={(v) => {
+                setCity(v);
+                setErrors((p) => ({ ...p, city: undefined }));
+              }}
+              disabled={!state || loadingCities}
+            >
+              <SelectTrigger id="quick-city" className={errors.city ? 'border-destructive' : ''}>
+                <SelectValue placeholder={
+                  !state ? 'Selecione o estado primeiro'
+                  : loadingCities ? 'Carregando cidades...'
+                  : 'Selecione a cidade'
+                } />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {loadingCities ? (
+                  <div className="flex items-center justify-center py-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Carregando...
+                  </div>
+                ) : (
+                  cities.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
           </div>
         </div>
 
