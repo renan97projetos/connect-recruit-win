@@ -120,8 +120,17 @@ export function CompanyTopNav() {
   const isActive = (path: string, end = false) =>
     end ? location.pathname === path : location.pathname.startsWith(path) && path !== '/company';
 
-  const isInGroup = (items: NavItem[]) =>
-    items.some((i) => isActive(i.path, i.end));
+  // Detecta módulo atual pela rota: 'rh' (Gestão RH Interna) ou 'rs' (Recrutamento)
+  const hrPathPrefixes = [
+    '/company/employee-dashboard',
+    '/company/employees',
+    '/company/assessments',
+    '/company/employee-requests',
+  ];
+  const isHrModule = hrPathPrefixes.some((p) => location.pathname.startsWith(p));
+  const activeModule: 'rh' | 'rs' = isHrModule ? 'rh' : 'rs';
+  const moduleItems = activeModule === 'rh' ? hrMenuItems : mainMenuItems;
+  const moduleLabel = activeModule === 'rh' ? 'Gestão RH' : 'Recrutamento';
 
   const handleLogout = async () => {
     await signOut();
@@ -149,68 +158,43 @@ export function CompanyTopNav() {
       {/* Separador */}
       <div className="hidden md:block h-5 w-px bg-gray-200" />
 
-      {/* Nav links — desktop */}
-      <nav data-tour="nav-main" className="hidden md:flex items-center gap-1 flex-1 min-w-0">
-        {mainMenuItems.map((item) => {
-          const active = item.end ? location.pathname === item.path : isActive(item.path);
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
-                active
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              )}
-            >
-              <item.icon className="h-3.5 w-3.5" />
-              {item.label}
-              {item.proOnly && !isPro && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
-                  PRO
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      {/* Botão voltar ao Hub + label do módulo */}
+      <button
+        onClick={() => navigate('/company')}
+        className="hidden md:flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors flex-shrink-0"
+        title="Voltar ao Hub"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        <span className="text-gray-400">{moduleLabel}</span>
+      </button>
 
-        {/* Gestão RH — dropdown (só owner) */}
-        {isOwner && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
+      {/* Nav links — desktop (apenas do módulo atual) */}
+      <nav data-tour="nav-main" className="hidden md:flex items-center gap-1 flex-1 min-w-0">
+        {moduleItems
+          .filter((item) => !item.ownerOnly || isOwner)
+          .map((item) => {
+            const active = item.end ? location.pathname === item.path : isActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  isInGroup(hrMenuItems)
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+                  active
                     ? 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 )}
               >
-                <Users className="h-3.5 w-3.5" />
-                Gestão RH
-                <ChevronDown className="h-3 w-3" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 shadow-lg border border-gray-200">
-              {hrMenuItems.map((item) => (
-                <DropdownMenuItem
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="cursor-pointer"
-                >
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
-                  {item.proOnly && !isPro && (
-                    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
-                      PRO
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+                <item.icon className="h-3.5 w-3.5" />
+                {item.label}
+                {item.proOnly && !isPro && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
+                    PRO
+                  </span>
+                )}
+              </Link>
+            );
+          })}
       </nav>
 
       {/* Right side */}
