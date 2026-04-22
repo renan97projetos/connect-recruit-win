@@ -108,6 +108,8 @@ export default function JobRequests() {
   }
 
   const activeJobs = publishedJobs.filter(j => j.is_active);
+  const draftJobs = publishedJobs.filter(j => !j.is_active && !j.is_archived);
+  const openJobs = [...activeJobs, ...draftJobs];
   const pendingRequests = jobRequests.filter(r => r.status !== 'published');
 
   return (
