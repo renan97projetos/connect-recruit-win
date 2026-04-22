@@ -365,51 +365,37 @@ export default function CandidateProfile() {
         throw error;
       }
       
-      // If no profile exists, create one
+      // If no profile exists, create one (use upsert to handle race with handle_new_user trigger)
       if (!data) {
         const newProfile = {
           id: user.id,
           name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+          city: fallbackProfileFields.city || null,
+          state: fallbackProfileFields.state || null,
+          desired_role: fallbackProfileFields.desired_role || null,
+          cv_url: fallbackProfileFields.cv_url || null,
         };
-        
+
         const { data: createdProfile, error: createError } = await supabase
           .from('profiles')
-          .insert(newProfile)
+          .upsert(newProfile, { onConflict: 'id' })
           .select()
           .single();
-          
+
         if (createError) {
           console.error('Profile create error:', createError);
+          // Foreign key violation: auth.users does not contain this id anymore
+          // (e.g. user was deleted but session is still cached on the client).
+          if ((createError as any)?.code === '23503') {
+            throw new Error(
+              'Sua sessão expirou ou sua conta não está mais ativa. Faça logout e entre novamente.'
+            );
+          }
           throw createError;
         }
 
-        const mergedCreatedProfile = {
-          ...createdProfile,
-          city: createdProfile.city || fallbackProfileFields.city,
-          state: createdProfile.state || fallbackProfileFields.state,
-          desired_role: createdProfile.desired_role || fallbackProfileFields.desired_role,
-          cv_url: createdProfile.cv_url || fallbackProfileFields.cv_url,
-        };
-
-        if (
-          (!createdProfile.city && fallbackProfileFields.city) ||
-          (!createdProfile.state && fallbackProfileFields.state) ||
-          (!createdProfile.desired_role && fallbackProfileFields.desired_role) ||
-          (!createdProfile.cv_url && fallbackProfileFields.cv_url)
-        ) {
-          await supabase
-            .from('profiles')
-            .update({
-              city: mergedCreatedProfile.city,
-              state: mergedCreatedProfile.state,
-              desired_role: mergedCreatedProfile.desired_role,
-              cv_url: mergedCreatedProfile.cv_url,
-            })
-            .eq('id', user.id);
-        }
-        
         return {
-          ...mergedCreatedProfile,
+          ...createdProfile,
           experiences: [],
           educations: [],
           skills: [],
