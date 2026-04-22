@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, User } from 'lucide-react';
+import { Loader2, Upload, User, Building2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -27,13 +27,16 @@ const profileSchema = z.object({
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
+type ImageKind = 'avatar' | 'logo';
 
 export default function CompanyProfile() {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -69,7 +72,6 @@ export default function CompanyProfile() {
 
       if (profileErr) throw profileErr;
 
-      // Extrai endereço/cidade/UF salvos em tenants.notes (formato "Endereço: X | Cidade: Y | UF: Z")
       const parseNote = (key: string) => {
         if (!tenant?.notes) return '';
         const m = tenant.notes.split('|').map((p) => p.trim()).find((p) => p.toLowerCase().startsWith(`${key.toLowerCase()}:`));
@@ -86,6 +88,9 @@ export default function CompanyProfile() {
         state: profile?.state || parseNote('UF') || '',
         zip_code: profile?.zip_code || '',
       });
+      const profileAny = profile as any;
+      setCompanyLogoUrl(profileAny?.company_logo_url ?? null);
+      // Compatibilidade: se ainda não existe foto do usuário separada, mantém avatar_url existente como avatar do usuário
       setAvatarUrl(profile?.avatar_url ?? null);
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
@@ -112,7 +117,6 @@ export default function CompanyProfile() {
 
       if (error) throw error;
 
-      // Sincroniza dados oficiais da empresa em tenants
       const notes = [
         data.address && `Endereço: ${data.address}`,
         data.city && `Cidade: ${data.city}`,
@@ -146,42 +150,37 @@ export default function CompanyProfile() {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    kind: ImageKind,
+  ) => {
     try {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // Validar tipo de arquivo
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: 'Erro',
-          description: 'Por favor, selecione uma imagem',
-          variant: 'destructive',
-        });
+        toast({ title: 'Erro', description: 'Por favor, selecione uma imagem', variant: 'destructive' });
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast({ title: 'Erro', description: 'A imagem deve ter no máximo 2MB', variant: 'destructive' });
         return;
       }
 
-      // Validar tamanho (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          title: 'Erro',
-          description: 'A imagem deve ter no máximo 2MB',
-          variant: 'destructive',
-        });
-        return;
-      }
+      const setUploading = kind === 'avatar' ? setUploadingAvatar : setUploadingLogo;
+      const currentUrl = kind === 'avatar' ? avatarUrl : companyLogoUrl;
+      const baseName = kind === 'avatar' ? 'avatar' : 'logo';
+      const dbField = kind === 'avatar' ? 'avatar_url' : 'company_logo_url';
 
       setUploading(true);
 
-      // Deletar avatar antigo se existir
-      if (avatarUrl) {
-        const oldPath = avatarUrl.split('/').slice(-2).join('/');
+      if (currentUrl) {
+        const oldPath = currentUrl.split('/').slice(-2).join('/');
         await supabase.storage.from('avatars').remove([oldPath]);
       }
 
-      // Upload do novo avatar
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}/avatar.${fileExt}`;
+      const filePath = `${user?.id}/${baseName}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -189,24 +188,26 @@ export default function CompanyProfile() {
 
       if (uploadError) throw uploadError;
 
-      // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Atualizar perfil com nova URL
+      // cache-buster para forçar reload da imagem
+      const finalUrl = `${publicUrl}?t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ [dbField]: finalUrl } as any)
         .eq('id', user?.id);
 
       if (updateError) throw updateError;
 
-      setAvatarUrl(publicUrl);
+      if (kind === 'avatar') setAvatarUrl(finalUrl);
+      else setCompanyLogoUrl(finalUrl);
 
       toast({
         title: 'Sucesso',
-        description: 'Foto de perfil atualizada',
+        description: kind === 'avatar' ? 'Foto de perfil atualizada' : 'Logo da empresa atualizada',
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
@@ -216,57 +217,103 @@ export default function CompanyProfile() {
         variant: 'destructive',
       });
     } finally {
-      setUploading(false);
+      if (kind === 'avatar') setUploadingAvatar(false);
+      else setUploadingLogo(false);
     }
   };
 
   return (
     <CompanyLayout title="Configurações da Conta" description="Gerencie suas informações de perfil">
       <div className="max-w-4xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Foto de Perfil</CardTitle>
-            <CardDescription>Atualize sua foto de perfil</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={avatarUrl || undefined} alt="Avatar" />
-              <AvatarFallback>
-                <User className="h-12 w-12" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <Label htmlFor="avatar-upload" className="cursor-pointer">
-                <Button variant="outline" disabled={uploading} asChild>
-                  <span>
-                    {uploading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Carregar Foto
-                      </>
-                    )}
-                  </span>
-                </Button>
-              </Label>
-              <Input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-                disabled={uploading}
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                JPG, PNG ou GIF. Máximo 2MB.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Foto do usuário */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Foto do Usuário</CardTitle>
+              <CardDescription>Sua foto pessoal exibida no perfil</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center gap-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={avatarUrl || undefined} alt="Foto do usuário" />
+                <AvatarFallback>
+                  <User className="h-12 w-12" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <Label htmlFor="user-avatar-upload" className="cursor-pointer">
+                  <Button variant="outline" disabled={uploadingAvatar} asChild>
+                    <span>
+                      {uploadingAvatar ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Carregar Foto
+                        </>
+                      )}
+                    </span>
+                  </Button>
+                </Label>
+                <Input
+                  id="user-avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageUpload(e, 'avatar')}
+                  disabled={uploadingAvatar}
+                />
+                <p className="text-sm text-muted-foreground mt-2">JPG, PNG ou GIF. Máx 2MB.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Logo da Empresa */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Logo da Empresa</CardTitle>
+              <CardDescription>Identidade visual exibida no header e Career Page</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center gap-6">
+              <Avatar className="h-24 w-24 rounded-md">
+                <AvatarImage src={companyLogoUrl || undefined} alt="Logo da empresa" className="object-contain" />
+                <AvatarFallback className="rounded-md">
+                  <Building2 className="h-12 w-12" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <Label htmlFor="company-logo-upload" className="cursor-pointer">
+                  <Button variant="outline" disabled={uploadingLogo} asChild>
+                    <span>
+                      {uploadingLogo ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Carregar Logo
+                        </>
+                      )}
+                    </span>
+                  </Button>
+                </Label>
+                <Input
+                  id="company-logo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageUpload(e, 'logo')}
+                  disabled={uploadingLogo}
+                />
+                <p className="text-sm text-muted-foreground mt-2">JPG, PNG ou SVG. Máx 2MB.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
