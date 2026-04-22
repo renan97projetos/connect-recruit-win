@@ -41,7 +41,7 @@ export function JobFiltersComponent({
       [key]: value
     });
   };
-  const FilterContent = () => <div className="space-y-6">
+  const filterContent = <div className="space-y-6">
       {/* Filtros principais sempre visíveis */}
       <div className="space-y-2">
         <Label htmlFor="keyword">Palavra-chave / Cargo</Label>
@@ -163,7 +163,7 @@ export function JobFiltersComponent({
             <h3 className="font-semibold text-lg">Filtros</h3>
             {activeFiltersCount > 0 && <Badge variant="secondary">{activeFiltersCount} ativos</Badge>}
           </div>
-          <FilterContent />
+          {filterContent}
         </div>
       </div>
 
@@ -187,7 +187,7 @@ export function JobFiltersComponent({
               </SheetDescription>
             </SheetHeader>
             <div className="mt-6">
-              <FilterContent />
+              {filterContent}
             </div>
           </SheetContent>
         </Sheet>
