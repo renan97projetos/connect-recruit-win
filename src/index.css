@@ -111,22 +111,38 @@
   }
 
   /* Neutralize neobrutalist Button & Card styling within the internal app */
-  .app-internal button.border-3,
-  .app-internal a.border-3,
   .app-internal .border-3 {
-    border-width: 1px;
+    border-width: 1px !important;
+  }
+
+  .app-internal [class*="shadow-brutal"] {
+    box-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.04) !important;
   }
 
   .app-internal [class*="shadow-brutal"]:hover {
     transform: none !important;
+    box-shadow: 0 2px 4px 0 hsl(0 0% 0% / 0.06) !important;
   }
 
-  /* Buttons (shadcn) — remove uppercase + thick borders + offset hover */
-  .app-internal button[class*="uppercase"],
-  .app-internal a[class*="uppercase"] {
+  /* Remove uppercase + tight tracking on internal buttons */
+  .app-internal button.uppercase,
+  .app-internal a.uppercase {
     text-transform: none;
     letter-spacing: normal;
   }
+
+  /* Default shadcn Button has uppercase via base cva — strip inside internal */
+  .app-internal button {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  /* Remove translate offset on hover from any element */
+  .app-internal [class*="hover:translate-x-"]:hover,
+  .app-internal [class*="hover:translate-y-"]:hover {
+    transform: none !important;
+  }
+
 
 
   .dark {
