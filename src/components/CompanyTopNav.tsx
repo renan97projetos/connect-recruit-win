@@ -159,7 +159,9 @@ export function CompanyTopNav() {
       {/* Logo + nome empresa */}
       <Link to="/company" data-tour="company-logo" className="flex items-center gap-2 mr-2 min-w-0 flex-shrink-0">
         <Avatar className="h-7 w-7 rounded-md">
-          {companyLogoUrl && <AvatarImage src={companyLogoUrl} alt={companyName} className="object-contain" />}
+          {companyLogoUrl && (
+            <AvatarImage key={companyLogoUrl} src={companyLogoUrl} alt={companyName} className="object-contain" />
+          )}
           <AvatarFallback className="bg-primary text-primary-foreground text-xs rounded-md font-semibold">
             {companyInitials}
           </AvatarFallback>
@@ -263,7 +265,7 @@ export function CompanyTopNav() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 flex-shrink-0 px-1.5 py-1 rounded-md hover:bg-gray-100 transition-colors">
               <Avatar className="h-7 w-7 cursor-pointer">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
+                {avatarUrl && <AvatarImage key={avatarUrl} src={avatarUrl} alt={userName} />}
                 <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-semibold">
                   {userInitials}
                 </AvatarFallback>
