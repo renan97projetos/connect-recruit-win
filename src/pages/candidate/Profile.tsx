@@ -629,6 +629,20 @@ export default function CandidateProfile() {
                     }}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={user?.email || ''}
+                    readOnly
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    O email não pode ser alterado
+                  </p>
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
