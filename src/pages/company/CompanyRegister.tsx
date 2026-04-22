@@ -184,13 +184,9 @@ export default function CompanyRegister() {
         body: { email: form.company_email },
       });
       if ((check as any)?.exists) {
-        const role = (check as any).role;
-        const label = role === 'candidate' ? 'candidato' : role === 'company' ? 'empresa' : role === 'super_admin' ? 'super admin' : 'outro tipo';
         toast({
           title: 'Email já cadastrado',
-          description: role === 'company'
-            ? 'Já existe uma empresa cadastrada com este email. Faça login para continuar.'
-            : `Este email já está em uso em uma conta de ${label}. Use outro email para cadastrar a empresa.`,
+          description: 'Este email já está em uso. Use outro email ou faça login com sua conta existente.',
           variant: 'destructive',
         });
         setSubmitting(false);

@@ -76,20 +76,9 @@ export function QuickCandidateRegister() {
         body: { email },
       });
       if (check?.exists) {
-        const role = check.role;
-        if (role && role !== 'candidate') {
-          const label = role === 'company' ? 'empresa' : role === 'super_admin' ? 'super admin' : role;
-          toast({
-            title: 'Email já cadastrado',
-            description: `Este email já está em uso em uma conta de ${label}. Use outro email para criar sua conta de candidato.`,
-            variant: 'destructive',
-          });
-          setLoading(false);
-          return;
-        }
         toast({
           title: 'Email já cadastrado',
-          description: 'Já existe uma conta de candidato com este email. Faça login para continuar.',
+          description: 'Este email já está em uso. Use outro email ou faça login com sua conta existente.',
           variant: 'destructive',
         });
         setLoading(false);
