@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { BackofficeAuthProvider } from "@/contexts/BackofficeAuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProRouteGuard } from "@/components/ProRouteGuard";
 import { BackofficeProtectedRoute } from "@/components/backoffice/BackofficeProtectedRoute";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import Home from "./pages/Home";
@@ -112,12 +113,12 @@ const App = () => {
               <Route path="/company/assessments" element={<ProtectedRoute requiredRole="company"><Assessments /></ProtectedRoute>} />
               <Route path="/company/job-history" element={<ProtectedRoute requiredRole="company"><JobHistory /></ProtectedRoute>} />
               <Route path="/company/talent-pool" element={<ProtectedRoute requiredRole="company"><TalentPool /></ProtectedRoute>} />
-              <Route path="/company/employees" element={<ProtectedRoute requiredRole="company"><CompanyEmployeeManagement /></ProtectedRoute>} />
-              <Route path="/company/employees/new" element={<ProtectedRoute requiredRole="company"><CompanyEmployeeForm /></ProtectedRoute>} />
-              <Route path="/company/employees/:id" element={<ProtectedRoute requiredRole="company"><CompanyEmployeeDetails /></ProtectedRoute>} />
-              <Route path="/company/employees/:id/edit" element={<ProtectedRoute requiredRole="company"><CompanyEmployeeForm /></ProtectedRoute>} />
-              <Route path="/company/employee-dashboard" element={<ProtectedRoute requiredRole="company"><EmployeeDashboard /></ProtectedRoute>} />
-              <Route path="/company/employee-requests" element={<ProtectedRoute requiredRole="company"><EmployeeRequests /></ProtectedRoute>} />
+              <Route path="/company/employees" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><CompanyEmployeeManagement /></ProRouteGuard></ProtectedRoute>} />
+              <Route path="/company/employees/new" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><CompanyEmployeeForm /></ProRouteGuard></ProtectedRoute>} />
+              <Route path="/company/employees/:id" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><CompanyEmployeeDetails /></ProRouteGuard></ProtectedRoute>} />
+              <Route path="/company/employees/:id/edit" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><CompanyEmployeeForm /></ProRouteGuard></ProtectedRoute>} />
+              <Route path="/company/employee-dashboard" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><EmployeeDashboard /></ProRouteGuard></ProtectedRoute>} />
+              <Route path="/company/employee-requests" element={<ProtectedRoute requiredRole="company"><ProRouteGuard><EmployeeRequests /></ProRouteGuard></ProtectedRoute>} />
               <Route path="/company/job-requests" element={<ProtectedRoute requiredRole="company"><JobRequests /></ProtectedRoute>} />
               <Route path="/company/job-requests/new" element={<ProtectedRoute requiredRole="company"><JobRequestForm /></ProtectedRoute>} />
               <Route path="/company/job-requests/:id" element={<ProtectedRoute requiredRole="company"><JobRequestDetails /></ProtectedRoute>} />

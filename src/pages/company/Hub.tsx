@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyHeader } from '@/components/CompanyHeader';
-import { Briefcase, Users, ArrowRight, BarChart3, Settings, Check, Circle } from 'lucide-react';
+import { Briefcase, Users, ArrowRight, BarChart3, Settings, Check, Circle, Lock } from 'lucide-react';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
+import { usePlanType } from '@/hooks/usePlanType';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { checkOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding';
@@ -10,6 +11,7 @@ import { checkOnboardingStatus, type OnboardingStatus } from '@/lib/onboarding';
 export default function CompanyHub() {
   const navigate = useNavigate();
   const { isOwner, loading: roleLoading } = useCompanyRole();
+  const { isPro } = usePlanType();
   const { user } = useSupabaseAuth();
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
 
@@ -118,21 +120,30 @@ export default function CompanyHub() {
               </div>
             </button>
 
-            {/* Gestão RH Interna - apenas para owner */}
+            {/* Gestão RH Interna - apenas para owner; bloqueado no plano Starter */}
             {!roleLoading && isOwner && (
               <button
-                onClick={() => navigate('/company/employee-dashboard')}
-                className="group text-left bg-white border border-gray-200 rounded-2xl p-8 hover:border-primary/40 hover:shadow-md transition-all"
+                onClick={() => navigate(isPro ? '/company/employee-dashboard' : '/company/profile')}
+                className={`group relative text-left bg-white border border-gray-200 rounded-2xl p-8 transition-all ${
+                  isPro ? 'hover:border-primary/40 hover:shadow-md' : 'hover:border-violet-300'
+                }`}
               >
+                {!isPro && (
+                  <span className="absolute top-4 right-4 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 bg-violet-100 text-violet-600 rounded">
+                    <Lock className="h-3 w-3" /> PRO
+                  </span>
+                )}
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <Users className="h-8 w-8 text-primary" />
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${isPro ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                    <Users className={`h-8 w-8 ${isPro ? 'text-primary' : 'text-gray-400'}`} />
                   </div>
-                  <ArrowRight className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {isPro && <ArrowRight className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
                 <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">Gestão RH Interna</h2>
                 <p className="text-gray-500 text-sm mb-6">
-                  Colaboradores, avaliações de desempenho, treinamentos e solicitações internas.
+                  {isPro
+                    ? 'Colaboradores, avaliações de desempenho, treinamentos e solicitações internas.'
+                    : 'Disponível no plano Pro. Faça upgrade para acessar colaboradores, avaliações e mais.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
