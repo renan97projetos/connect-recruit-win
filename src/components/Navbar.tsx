@@ -103,8 +103,7 @@ export function Navbar() {
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center gap-3 group" 
-            onClick={handleLogoClick}
+            className="flex items-center gap-3 group"
           >
             <span className="font-bold text-xl tracking-tight hidden sm:block">SinapseRH</span>
           </Link>
