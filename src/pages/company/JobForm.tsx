@@ -69,6 +69,23 @@ export default function JobForm() {
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
 
+  const [cities, setCities] = useState<string[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const uf = formData.state;
+    if (!uf) {
+      setCities([]);
+      return;
+    }
+    setCitiesLoading(true);
+    fetchCitiesByState(uf)
+      .then(list => { if (!cancelled) setCities(list); })
+      .finally(() => { if (!cancelled) setCitiesLoading(false); });
+    return () => { cancelled = true; };
+  }, [formData.state]);
+
   const handleGenerateDescription = async () => {
     if (!aiInput.trim()) return;
     setAiLoading(true);
