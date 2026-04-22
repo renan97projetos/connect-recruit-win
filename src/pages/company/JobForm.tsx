@@ -770,12 +770,16 @@ export default function JobForm() {
                         {responsibilities.map((resp, i) => (
                           <div key={i} className="flex gap-2">
                             <Input
+                              ref={(el) => { responsibilityRefs.current[i] = el; }}
                               value={resp}
                               onChange={(e) => updateList(setResponsibilities, i, e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
-                                  if (resp.trim()) addItem(setResponsibilities);
+                                  if (resp.trim()) {
+                                    addItem(setResponsibilities);
+                                    setFocusTarget({ list: 'resp', index: i + 1 });
+                                  }
                                 }
                               }}
                               placeholder="Ex: Desenvolver novas features no produto"
