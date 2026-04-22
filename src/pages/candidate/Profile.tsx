@@ -785,6 +785,21 @@ export default function CandidateProfile() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="desired_role">Cargo ou área de interesse</Label>
+                <Input
+                  id="desired_role"
+                  placeholder="Ex: Desenvolvedor Front-end, Vendas, RH..."
+                  value={profile.desired_role || ''}
+                  onChange={(e) => {
+                    queryClient.setQueryData(['candidate-profile', user?.id], {
+                      ...profile,
+                      desired_role: e.target.value
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="summary">Resumo Profissional</Label>
                 <Textarea
                   id="summary"
