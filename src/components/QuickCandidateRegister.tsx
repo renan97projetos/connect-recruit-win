@@ -42,7 +42,6 @@ export function QuickCandidateRegister() {
     email: string;
     city: string;
     state: string;
-    desired_role: string;
     cv_url?: string;
   }) => {
     if (typeof window === 'undefined') return;
