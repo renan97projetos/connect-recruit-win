@@ -72,12 +72,6 @@ export function JobStagePanel({ job, onClose }: JobStagePanelProps) {
             {stage.label}
           </span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex-shrink-0"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
