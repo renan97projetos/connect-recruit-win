@@ -35,8 +35,7 @@ type PipelineStageId =
   | 'proposta'
   | 'admissao'
   | 'contratado'
-  | 'reprovado'
-  | 'cancelada';
+  | 'reprovado';
 
 const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
   { id: 'aberta', label: 'Vagas', color: 'text-violet-600' },
@@ -48,7 +47,6 @@ const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] =
   { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
   { id: 'contratado', label: 'Contratado', color: 'text-green-600' },
   { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
-  { id: 'cancelada', label: 'Canceladas', color: 'text-rose-600' },
 ];
 
 const LOCATION_LABELS: Record<string, string> = {

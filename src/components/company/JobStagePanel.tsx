@@ -283,6 +283,7 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
           cancellation_decided_by: user?.id,
           pipeline_stage: 'cancelada',
           is_active: false,
+          is_archived: true,
           updated_at: new Date().toISOString(),
         } as any)
         .eq('id', job.id);
@@ -290,7 +291,11 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
       setCancelRequestOpen(false);
       setCancelReason('');
       if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-      toast({ title: 'Vaga cancelada', description: 'A vaga foi movida para Canceladas.' });
+      // Notifica candidatos por e-mail (assíncrono, não bloqueia)
+      supabase.functions.invoke('notify-candidates-job-cancelled', {
+        body: { jobId: job.id, reason: cancelReason.trim() },
+      }).catch(() => {});
+      toast({ title: 'Vaga cancelada', description: 'Os candidatos foram notificados e a vaga foi movida para o Histórico.' });
       refresh();
       onClose();
       return;
@@ -350,12 +355,17 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
         cancellation_rejection_reason: null,
         pipeline_stage: 'cancelada',
         is_active: false,
+        is_archived: true,
         updated_at: new Date().toISOString(),
       } as any)
       .eq('id', job.id);
     setBusy(false);
     if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-    toast({ title: 'Cancelamento aprovado', description: 'A vaga foi movida para Canceladas.' });
+    // Notifica candidatos por e-mail
+    supabase.functions.invoke('notify-candidates-job-cancelled', {
+      body: { jobId: job.id, reason: job.cancellation_reason || undefined },
+    }).catch(() => {});
+    toast({ title: 'Cancelamento aprovado', description: 'Os candidatos foram notificados e a vaga foi movida para o Histórico.' });
     refresh();
     onClose();
   };
