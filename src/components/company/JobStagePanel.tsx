@@ -453,23 +453,71 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
               <Edit className="h-4 w-4 text-primary" /> Editar vaga
             </button>
 
-            {/* Pausar / Retomar */}
-            {!isPaused ? (
+            {/* Pausar / Retomar — não disponível para vagas canceladas */}
+            {!isCancelled && (
+              !isPaused ? (
+                <button
+                  disabled={busy}
+                  onClick={() => setPauseOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-yellow-500/50 hover:bg-yellow-50 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <PauseCircle className="h-4 w-4 text-yellow-600" /> Pausar vaga
+                </button>
+              ) : (
+                <button
+                  disabled={busy}
+                  onClick={handleResume}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-500/50 hover:bg-green-50 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <PlayCircle className="h-4 w-4 text-green-600" /> Retomar vaga
+                </button>
+              )
+            )}
+
+            {/* Aprovação de cancelamento — gestor */}
+            {isApprover && cancellationStatus === 'pending' && !isCancelled && (
+              <>
+                <button
+                  disabled={busy}
+                  onClick={handleApproveCancellation}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm font-medium transition-colors"
+                >
+                  <Ban className="h-4 w-4" /> Aprovar cancelamento
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={() => setCancelRejectOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <XCircle className="h-4 w-4 text-gray-500" /> Recusar cancelamento
+                </button>
+              </>
+            )}
+
+            {/* Excluir (rascunho) ou Solicitar cancelamento (publicada) */}
+            {!isCancelled && isDraft && (
               <button
                 disabled={busy}
-                onClick={() => setPauseOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-yellow-500/50 hover:bg-yellow-50 text-sm font-medium text-gray-700 transition-colors"
+                onClick={() => setDeleteOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 hover:border-red-500 hover:bg-red-50 text-sm font-medium text-red-700 transition-colors"
               >
-                <PauseCircle className="h-4 w-4 text-yellow-600" /> Pausar vaga
+                <Trash2 className="h-4 w-4" /> Excluir vaga
               </button>
-            ) : (
+            )}
+            {!isCancelled && !isDraft && cancellationStatus === 'none' && (
               <button
                 disabled={busy}
-                onClick={handleResume}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-500/50 hover:bg-green-50 text-sm font-medium text-gray-700 transition-colors"
+                onClick={() => setCancelRequestOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-rose-200 hover:border-rose-500 hover:bg-rose-50 text-sm font-medium text-rose-700 transition-colors"
               >
-                <PlayCircle className="h-4 w-4 text-green-600" /> Retomar vaga
+                <Ban className="h-4 w-4" /> Solicitar cancelamento
               </button>
+            )}
+            {!isCancelled && cancellationStatus === 'pending' && !isApprover && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                <Clock className="h-4 w-4" />
+                Cancelamento aguardando aprovação do gestor
+              </div>
             )}
           </div>
         </section>
