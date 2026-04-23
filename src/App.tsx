@@ -107,8 +107,8 @@ const App = () => {
               <Route path="/company/dashboard" element={<ProtectedRoute requiredRole="company"><CompanyDashboard /></ProtectedRoute>} />
               <Route path="/company/jobs/new" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id/edit" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
-              <Route path="/company/jobs/:id" element={<ProtectedRoute requiredRole="company"><JobPipeline /></ProtectedRoute>} />
-              <Route path="/company/jobs/:id/candidates" element={<ProtectedRoute requiredRole="company"><JobPipeline /></ProtectedRoute>} />
+              <Route path="/company/jobs/:id" element={<Navigate to="/company/dashboard" replace />} />
+              <Route path="/company/jobs/:id/candidates" element={<Navigate to="/company/dashboard" replace />} />
               <Route path="/company/selection-process" element={<Navigate to="/company" replace />} />
               <Route path="/company/workflow/:id" element={<ProtectedRoute requiredRole="company"><WorkflowConfiguration /></ProtectedRoute>} />
               <Route path="/company/assessments" element={<ProtectedRoute requiredRole="company"><Assessments /></ProtectedRoute>} />
