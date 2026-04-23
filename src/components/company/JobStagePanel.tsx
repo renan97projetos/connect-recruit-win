@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Edit, MapPin, Briefcase, DollarSign, Calendar, Clock,
   PauseCircle, PlayCircle, Send, CheckCircle2, XCircle, AlertTriangle,
+  Trash2, Ban,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -27,6 +28,7 @@ const STAGE_LABELS: Record<string, { label: string; color: string }> = {
   admissao: { label: 'Admissão', color: 'bg-teal-50 text-teal-700' },
   contratado: { label: 'Contratado', color: 'bg-green-50 text-green-700' },
   reprovado: { label: 'Reprovado', color: 'bg-red-50 text-red-700' },
+  cancelada: { label: 'Cancelada', color: 'bg-rose-50 text-rose-700' },
 };
 
 const APPROVAL_BADGE: Record<string, { label: string; color: string }> = {
@@ -57,6 +59,11 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
   const [pauseReason, setPauseReason] = useState('');
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [cancelRequestOpen, setCancelRequestOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelRejectOpen, setCancelRejectOpen] = useState(false);
+  const [cancelRejectReason, setCancelRejectReason] = useState('');
 
   useEffect(() => {
     const loadCandidates = async () => {
@@ -79,6 +86,15 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
   const requiresApproval: boolean = !!job.requires_approval;
   const isPaused: boolean = !!job.is_paused;
   const isApprover: boolean = job.approver_id && user?.id === job.approver_id;
+  const cancellationStatus: string = job.cancellation_status || 'none';
+  const isCancelled: boolean = (job.pipeline_stage || 'aberta') === 'cancelada';
+
+  // Vaga é "rascunho" (pode excluir direto) se:
+  // - approval_status === 'draft' (precisava aprovação e nunca foi aprovada/publicada)
+  // - OU não foi aprovada e nunca foi ativada
+  const isDraft: boolean =
+    approvalStatus === 'draft' ||
+    (requiresApproval && approvalStatus !== 'approved' && !job.is_active && !job.approval_decided_at);
 
   const refresh = () => onJobUpdated?.();
 
@@ -228,6 +244,113 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
     onClose();
   };
 
+  // Excluir vaga (apenas rascunho)
+  const handleDelete = async () => {
+    setBusy(true);
+    const { error } = await supabase.from('jobs').delete().eq('id', job.id);
+    setBusy(false);
+    setDeleteOpen(false);
+    if (error) return toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+    toast({ title: 'Vaga excluída', description: 'O rascunho foi removido.' });
+    refresh();
+    onClose();
+  };
+
+  // Solicitar cancelamento (vaga publicada) — vai para o gestor aprovar
+  const handleRequestCancellation = async () => {
+    if (!cancelReason.trim()) {
+      toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
+      return;
+    }
+    let approverId = job.approver_id;
+    if (!approverId) {
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('default_approver_id')
+        .eq('company_id', job.company_id)
+        .maybeSingle();
+      approverId = (tenant as any)?.default_approver_id;
+    }
+    if (!approverId) {
+      toast({
+        title: 'Configure um gestor',
+        description: 'Defina o aprovador padrão em Perfil da Empresa.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase
+      .from('jobs')
+      .update({
+        cancellation_status: 'pending',
+        cancellation_reason: cancelReason.trim(),
+        cancellation_requested_at: new Date().toISOString(),
+        cancellation_requested_by: user?.id,
+        approver_id: approverId,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq('id', job.id);
+    setBusy(false);
+    setCancelRequestOpen(false);
+    setCancelReason('');
+    if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    toast({
+      title: 'Solicitação enviada',
+      description: 'O gestor foi notificado para aprovar o cancelamento.',
+    });
+    refresh();
+    onClose();
+  };
+
+  // Aprovar cancelamento (gestor)
+  const handleApproveCancellation = async () => {
+    setBusy(true);
+    const { error } = await supabase
+      .from('jobs')
+      .update({
+        cancellation_status: 'approved',
+        cancellation_decided_at: new Date().toISOString(),
+        cancellation_decided_by: user?.id,
+        cancellation_rejection_reason: null,
+        pipeline_stage: 'cancelada',
+        is_active: false,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq('id', job.id);
+    setBusy(false);
+    if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    toast({ title: 'Cancelamento aprovado', description: 'A vaga foi movida para Canceladas.' });
+    refresh();
+    onClose();
+  };
+
+  // Recusar cancelamento (gestor)
+  const handleRejectCancellation = async () => {
+    if (!cancelRejectReason.trim()) {
+      toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase
+      .from('jobs')
+      .update({
+        cancellation_status: 'rejected',
+        cancellation_decided_at: new Date().toISOString(),
+        cancellation_decided_by: user?.id,
+        cancellation_rejection_reason: cancelRejectReason.trim(),
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq('id', job.id);
+    setBusy(false);
+    setCancelRejectOpen(false);
+    setCancelRejectReason('');
+    if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    toast({ title: 'Cancelamento recusado', description: 'O recrutador foi notificado.' });
+    refresh();
+    onClose();
+  };
+
   const isOverdue =
     approvalStatus === 'pending_approval' &&
     job.approval_deadline_at &&
@@ -278,7 +401,48 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
           </section>
         )}
 
-        {/* Ações desta etapa */}
+        {/* Cancelamento - solicitação pendente */}
+        {cancellationStatus === 'pending' && !isCancelled && (
+          <section className="px-6 py-4 bg-amber-50/60 border-b border-amber-100">
+            <p className="text-[11px] uppercase tracking-wide text-amber-700 font-semibold mb-1">
+              Cancelamento solicitado
+            </p>
+            {job.cancellation_reason && (
+              <p className="text-[13px] text-amber-900 mb-1">{job.cancellation_reason}</p>
+            )}
+            <p className="text-[11px] text-amber-700">
+              {isApprover ? 'Aguardando sua decisão.' : 'Aguardando aprovação do gestor.'}
+            </p>
+          </section>
+        )}
+
+        {/* Cancelamento - recusado */}
+        {cancellationStatus === 'rejected' && job.cancellation_rejection_reason && !isCancelled && (
+          <section className="px-6 py-4 bg-red-50/40 border-b border-red-100">
+            <p className="text-[11px] uppercase tracking-wide text-red-700 font-semibold mb-1">
+              Cancelamento recusado pelo gestor
+            </p>
+            <p className="text-[13px] text-red-900">{job.cancellation_rejection_reason}</p>
+          </section>
+        )}
+
+        {/* Cancelamento - aprovado (vaga cancelada) */}
+        {isCancelled && (
+          <section className="px-6 py-4 bg-rose-50/60 border-b border-rose-100">
+            <p className="text-[11px] uppercase tracking-wide text-rose-700 font-semibold mb-1">
+              Vaga cancelada
+            </p>
+            {job.cancellation_reason && (
+              <p className="text-[13px] text-rose-900">{job.cancellation_reason}</p>
+            )}
+            {job.cancellation_decided_at && (
+              <p className="text-[11px] text-rose-700 mt-1">
+                em {new Date(job.cancellation_decided_at).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+          </section>
+        )}
+
         <section className="px-6 py-5 border-b border-gray-200">
           <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold mb-3">
             Ações
@@ -330,23 +494,71 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
               <Edit className="h-4 w-4 text-primary" /> Editar vaga
             </button>
 
-            {/* Pausar / Retomar */}
-            {!isPaused ? (
+            {/* Pausar / Retomar — não disponível para vagas canceladas */}
+            {!isCancelled && (
+              !isPaused ? (
+                <button
+                  disabled={busy}
+                  onClick={() => setPauseOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-yellow-500/50 hover:bg-yellow-50 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <PauseCircle className="h-4 w-4 text-yellow-600" /> Pausar vaga
+                </button>
+              ) : (
+                <button
+                  disabled={busy}
+                  onClick={handleResume}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-500/50 hover:bg-green-50 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <PlayCircle className="h-4 w-4 text-green-600" /> Retomar vaga
+                </button>
+              )
+            )}
+
+            {/* Aprovação de cancelamento — gestor */}
+            {isApprover && cancellationStatus === 'pending' && !isCancelled && (
+              <>
+                <button
+                  disabled={busy}
+                  onClick={handleApproveCancellation}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm font-medium transition-colors"
+                >
+                  <Ban className="h-4 w-4" /> Aprovar cancelamento
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={() => setCancelRejectOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <XCircle className="h-4 w-4 text-gray-500" /> Recusar cancelamento
+                </button>
+              </>
+            )}
+
+            {/* Excluir (rascunho) ou Solicitar cancelamento (publicada) */}
+            {!isCancelled && isDraft && (
               <button
                 disabled={busy}
-                onClick={() => setPauseOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-yellow-500/50 hover:bg-yellow-50 text-sm font-medium text-gray-700 transition-colors"
+                onClick={() => setDeleteOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 hover:border-red-500 hover:bg-red-50 text-sm font-medium text-red-700 transition-colors"
               >
-                <PauseCircle className="h-4 w-4 text-yellow-600" /> Pausar vaga
+                <Trash2 className="h-4 w-4" /> Excluir vaga
               </button>
-            ) : (
+            )}
+            {!isCancelled && !isDraft && cancellationStatus === 'none' && (
               <button
                 disabled={busy}
-                onClick={handleResume}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-500/50 hover:bg-green-50 text-sm font-medium text-gray-700 transition-colors"
+                onClick={() => setCancelRequestOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-rose-200 hover:border-rose-500 hover:bg-rose-50 text-sm font-medium text-rose-700 transition-colors"
               >
-                <PlayCircle className="h-4 w-4 text-green-600" /> Retomar vaga
+                <Ban className="h-4 w-4" /> Solicitar cancelamento
               </button>
+            )}
+            {!isCancelled && cancellationStatus === 'pending' && !isApprover && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                <Clock className="h-4 w-4" />
+                Cancelamento aguardando aprovação do gestor
+              </div>
             )}
           </div>
         </section>
@@ -555,6 +767,78 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
             </Button>
             <Button variant="destructive" onClick={handleReject} disabled={busy || !rejectReason.trim()}>
               {busy ? 'Enviando...' : 'Recusar vaga'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de exclusão (rascunho) */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir vaga</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Esta vaga ainda está em rascunho e será removida permanentemente. Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={busy}>
+              {busy ? 'Excluindo...' : 'Excluir definitivamente'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de solicitação de cancelamento */}
+      <Dialog open={cancelRequestOpen} onOpenChange={setCancelRequestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar cancelamento da vaga</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Como esta vaga já foi publicada, o cancelamento precisa ser aprovado pelo gestor responsável.
+          </p>
+          <Textarea
+            placeholder="Motivo do cancelamento (obrigatório)"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelRequestOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRequestCancellation} disabled={busy || !cancelReason.trim()}>
+              {busy ? 'Enviando...' : 'Enviar para o gestor'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de recusa de cancelamento */}
+      <Dialog open={cancelRejectOpen} onOpenChange={setCancelRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recusar cancelamento</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Informe o motivo da recusa. O recrutador será notificado e a vaga continuará ativa.
+          </p>
+          <Textarea
+            placeholder="Motivo da recusa (obrigatório)"
+            value={cancelRejectReason}
+            onChange={(e) => setCancelRejectReason(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelRejectOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleRejectCancellation} disabled={busy || !cancelRejectReason.trim()}>
+              {busy ? 'Enviando...' : 'Recusar'}
             </Button>
           </DialogFooter>
         </DialogContent>
