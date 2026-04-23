@@ -26,7 +26,7 @@ export function QuickCandidateRegister() {
   const [password, setPassword] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [desiredRole, setDesiredRole] = useState('');
+  
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
