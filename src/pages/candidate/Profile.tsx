@@ -563,6 +563,7 @@ export default function CandidateProfile() {
       zip_code: profile.zip_code,
       summary: profile.summary,
       desired_role: profile.desired_role,
+      interest_area: profile.interest_area,
       linkedin_url: profile.linkedin_url,
       portfolio_url: profile.portfolio_url,
     });
