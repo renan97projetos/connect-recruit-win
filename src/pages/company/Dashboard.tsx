@@ -67,6 +67,7 @@ export default function CompanyDashboard() {
   const navigate = useNavigate();
   const { companyId, loading: roleLoading } = useCompanyRole();
   const { isPro } = usePlanType();
+  const { openUpgradeModal } = useUpgradeModal();
   const { context: jarvisContext } = useJarvisContext();
   const [jarvisOpen, setJarvisOpen] = useState(false);
   const [showBriefing, setShowBriefing] = useState(false);
@@ -475,7 +476,7 @@ export default function CompanyDashboard() {
                   </p>
                   <Button
                     size="sm"
-                    onClick={() => navigate('/company/profile?tab=plan')}
+                    onClick={() => openUpgradeModal({ featureName: 'Aprovação de vagas' })}
                     className="bg-amber-600 hover:bg-amber-700 text-white"
                   >
                     <Crown className="h-3.5 w-3.5 mr-1.5" />
