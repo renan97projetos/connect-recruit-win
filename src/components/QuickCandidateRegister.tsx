@@ -17,7 +17,6 @@ const schema = z.object({
   password: z.string().min(6, 'Mínimo 6 caracteres').max(100, 'Senha muito longa'),
   city: z.string().trim().min(2, 'Cidade obrigatória').max(100, 'Cidade muito longa'),
   state: z.string().trim().length(2, 'Selecione o estado'),
-  desiredRole: z.string().trim().min(2, 'Informe o cargo ou área').max(150, 'Texto muito longo'),
 });
 
 export function QuickCandidateRegister() {
@@ -27,7 +26,7 @@ export function QuickCandidateRegister() {
   const [password, setPassword] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [desiredRole, setDesiredRole] = useState('');
+  
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,7 +42,6 @@ export function QuickCandidateRegister() {
     email: string;
     city: string;
     state: string;
-    desired_role: string;
     cv_url?: string;
   }) => {
     if (typeof window === 'undefined') return;
@@ -85,7 +83,7 @@ export function QuickCandidateRegister() {
     e.preventDefault();
     setErrors({});
 
-    const parsed = schema.safeParse({ name, email, password, city, state, desiredRole });
+    const parsed = schema.safeParse({ name, email, password, city, state });
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
       parsed.error.errors.forEach((err) => {
@@ -118,7 +116,6 @@ export function QuickCandidateRegister() {
     const { error } = await signUp(email, password, name, 'candidate', {
       city,
       state,
-      desired_role: desiredRole,
     });
 
     if (error) {
@@ -144,7 +141,6 @@ export function QuickCandidateRegister() {
       email,
       city,
       state,
-      desired_role: desiredRole,
     });
 
     // Aguarda criação do perfil pelo trigger e atualiza com dados extras
@@ -171,7 +167,6 @@ export function QuickCandidateRegister() {
         const extraData: Record<string, any> = {
           city,
           state,
-          desired_role: desiredRole,
           ...(cvUrl ? { cv_url: cvUrl } : {}),
         };
 
@@ -179,7 +174,6 @@ export function QuickCandidateRegister() {
           email,
           city,
           state,
-          desired_role: desiredRole,
           ...(cvUrl ? { cv_url: cvUrl } : {}),
         });
 
@@ -216,7 +210,6 @@ export function QuickCandidateRegister() {
             role: 'candidate',
             city,
             state,
-            desired_role: desiredRole,
             ...(cvUrl ? { cv_url: cvUrl } : {}),
           },
         });
@@ -368,22 +361,8 @@ export function QuickCandidateRegister() {
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="quick-role">Cargo ou área de interesse</Label>
-          <Input
-            id="quick-role"
-            type="text"
-            placeholder="Ex: Desenvolvedor Front-end, Vendas, RH..."
-            value={desiredRole}
-            onChange={(e) => {
-              setDesiredRole(e.target.value);
-              setErrors((p) => ({ ...p, desiredRole: undefined }));
-            }}
-            required
-            className={errors.desiredRole ? 'border-destructive' : ''}
-          />
-          {errors.desiredRole && <p className="text-xs text-destructive">{errors.desiredRole}</p>}
-        </div>
+
+
 
         <div className="space-y-1.5">
           <Label htmlFor="quick-cv">Currículo (opcional)</Label>
