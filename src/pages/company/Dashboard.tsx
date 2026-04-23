@@ -27,6 +27,7 @@ import { JarvisCommandBar } from '@/components/jarvis/JarvisCommandBar';
 
 type PipelineStageId =
   | 'aberta'
+  | 'aguardando'
   | 'triagem'
   | 'entrevista'
   | 'avaliacao'
@@ -37,6 +38,7 @@ type PipelineStageId =
 
 const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
   { id: 'aberta', label: 'Vaga aberta', color: 'text-violet-600' },
+  { id: 'aguardando', label: 'Aguardando 1º candidato', color: 'text-purple-600' },
   { id: 'triagem', label: 'Triagem', color: 'text-gray-600' },
   { id: 'entrevista', label: 'Entrevista', color: 'text-blue-600' },
   { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
