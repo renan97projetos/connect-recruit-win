@@ -65,11 +65,27 @@ const SKILL_LEVELS = {
   avancado: { label: 'Avançado', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
 };
 
+const VALID_LEVELS: Skill['level'][] = ['basico', 'intermediario', 'avancado'];
+
 const normalizeSkill = (skill: Skill | string): Skill => {
   if (typeof skill === 'string') {
+    // Tenta parsear caso seja um JSON serializado
+    const trimmed = skill.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object' && parsed.name) {
+          const level = VALID_LEVELS.includes(parsed.level) ? parsed.level : 'intermediario';
+          return { name: String(parsed.name), level };
+        }
+      } catch {
+        // cai no fallback
+      }
+    }
     return { name: skill, level: 'intermediario' };
   }
-  return skill;
+  const level = VALID_LEVELS.includes(skill?.level) ? skill.level : 'intermediario';
+  return { name: skill.name, level };
 };
 
 interface CandidateProfileViewProps {
