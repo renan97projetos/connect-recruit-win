@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { usePlanType } from '@/hooks/usePlanType';
+import { useUpgradeModal } from '@/contexts/UpgradeModalContext';
 import { useJarvisContext } from '@/hooks/useJarvisContext';
 import { JarvisFab } from '@/components/jarvis/JarvisFab';
 import { JarvisPanel } from '@/components/jarvis/JarvisPanel';
