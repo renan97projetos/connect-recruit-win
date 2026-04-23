@@ -730,6 +730,78 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de exclusão (rascunho) */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir vaga</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Esta vaga ainda está em rascunho e será removida permanentemente. Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={busy}>
+              {busy ? 'Excluindo...' : 'Excluir definitivamente'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de solicitação de cancelamento */}
+      <Dialog open={cancelRequestOpen} onOpenChange={setCancelRequestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar cancelamento da vaga</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Como esta vaga já foi publicada, o cancelamento precisa ser aprovado pelo gestor responsável.
+          </p>
+          <Textarea
+            placeholder="Motivo do cancelamento (obrigatório)"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelRequestOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRequestCancellation} disabled={busy || !cancelReason.trim()}>
+              {busy ? 'Enviando...' : 'Enviar para o gestor'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de recusa de cancelamento */}
+      <Dialog open={cancelRejectOpen} onOpenChange={setCancelRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recusar cancelamento</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Informe o motivo da recusa. O recrutador será notificado e a vaga continuará ativa.
+          </p>
+          <Textarea
+            placeholder="Motivo da recusa (obrigatório)"
+            value={cancelRejectReason}
+            onChange={(e) => setCancelRejectReason(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelRejectOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleRejectCancellation} disabled={busy || !cancelRejectReason.trim()}>
+              {busy ? 'Enviando...' : 'Recusar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
