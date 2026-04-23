@@ -1437,34 +1437,40 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          is_auto_generated: boolean
           job_id: string
           options: Json | null
           order_position: number
           question: string
           question_type: string
           required: boolean
+          source_key: string | null
         }
         Insert: {
           company_id: string
           created_at?: string
           id?: string
+          is_auto_generated?: boolean
           job_id: string
           options?: Json | null
           order_position?: number
           question: string
           question_type?: string
           required?: boolean
+          source_key?: string | null
         }
         Update: {
           company_id?: string
           created_at?: string
           id?: string
+          is_auto_generated?: boolean
           job_id?: string
           options?: Json | null
           order_position?: number
           question?: string
           question_type?: string
           required?: boolean
+          source_key?: string | null
         }
         Relationships: [
           {
@@ -1843,6 +1849,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_screening_answers_to_score: {
+        Args: { _application_id: string }
+        Returns: undefined
+      }
       calculate_application_score: {
         Args: { _application_id: string }
         Returns: undefined
@@ -1858,6 +1868,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      generate_screening_questions: {
+        Args: { _job_id: string }
+        Returns: undefined
       }
       get_invitation_by_token: {
         Args: { _token: string }
