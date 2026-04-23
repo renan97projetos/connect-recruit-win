@@ -25,7 +25,7 @@ export default function JobHistory() {
         .from('jobs')
         .select('*, applications(count)')
         .eq('company_id', user?.id)
-        .eq('is_archived', true)
+        .or('is_archived.eq.true,pipeline_stage.eq.cancelada')
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -72,52 +72,65 @@ export default function JobHistory() {
           </div>
         ) : filteredJobs && filteredJobs.length > 0 ? (
           <div className="grid gap-4">
-            {filteredJobs.map((job: any) => (
-              <Card key={job.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Archive className="h-4 w-4 text-muted-foreground" />
-                        <CardTitle className="text-lg">{job.title}</CardTitle>
+            {filteredJobs.map((job: any) => {
+              const isCancelled = job.pipeline_stage === 'cancelada';
+              return (
+                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-lg">{job.title}</CardTitle>
+                        </div>
+                        <CardDescription>{job.location}</CardDescription>
                       </div>
-                      <CardDescription>{job.location}</CardDescription>
+                      <Badge
+                        variant="outline"
+                        className={isCancelled ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-muted'}
+                      >
+                        {isCancelled ? 'Cancelada' : 'Arquivada'}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="bg-muted">
-                      Arquivada
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1 text-sm">
-                      <p className="text-muted-foreground">
-                        <span className="font-medium">Tipo:</span>{' '}
-                        {jobTypeLabels[job.job_type] || job.job_type}
-                      </p>
-                      <p className="text-muted-foreground">
-                        <span className="font-medium">Candidatos:</span>{' '}
-                        {job.applications?.[0]?.count || 0}
-                      </p>
-                      <p className="text-muted-foreground">
-                        <span className="font-medium">Arquivada em:</span>{' '}
-                        {format(new Date(job.updated_at), "dd 'de' MMMM 'de' yyyy", {
-                          locale: ptBR,
-                        })}
-                      </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1 text-sm">
+                        <p className="text-muted-foreground">
+                          <span className="font-medium">Tipo:</span>{' '}
+                          {jobTypeLabels[job.job_type] || job.job_type}
+                        </p>
+                        <p className="text-muted-foreground">
+                          <span className="font-medium">Candidatos:</span>{' '}
+                          {job.applications?.[0]?.count || 0}
+                        </p>
+                        <p className="text-muted-foreground">
+                          <span className="font-medium">
+                            {isCancelled ? 'Cancelada em:' : 'Arquivada em:'}
+                          </span>{' '}
+                          {format(new Date(job.updated_at), "dd 'de' MMMM 'de' yyyy", {
+                            locale: ptBR,
+                          })}
+                        </p>
+                        {isCancelled && job.cancellation_reason && (
+                          <p className="text-muted-foreground">
+                            <span className="font-medium">Motivo:</span> {job.cancellation_reason}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/company/jobs/${job.id}`)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Detalhes
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/company/jobs/${job.id}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalhes
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Card>
