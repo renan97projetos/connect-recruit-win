@@ -1232,6 +1232,7 @@ export type Database = {
           educations: Json | null
           experiences: Json | null
           id: string
+          interest_area: string | null
           linkedin_url: string | null
           name: string
           neighborhood: string | null
@@ -1260,6 +1261,7 @@ export type Database = {
           educations?: Json | null
           experiences?: Json | null
           id: string
+          interest_area?: string | null
           linkedin_url?: string | null
           name: string
           neighborhood?: string | null
@@ -1288,6 +1290,7 @@ export type Database = {
           educations?: Json | null
           experiences?: Json | null
           id?: string
+          interest_area?: string | null
           linkedin_url?: string | null
           name?: string
           neighborhood?: string | null
