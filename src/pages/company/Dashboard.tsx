@@ -332,7 +332,7 @@ export default function CompanyDashboard() {
 
       {/* Pipeline — contadores clicáveis */}
       <div data-tour="pipeline-stages" className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {PIPELINE_STAGES.map((stage) => {
+        {visibleStages.map((stage) => {
           const isActive = activeStage === stage.id;
           const count = getCountForStage(stage.id);
           return (
