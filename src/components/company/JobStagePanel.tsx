@@ -86,6 +86,15 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
   const requiresApproval: boolean = !!job.requires_approval;
   const isPaused: boolean = !!job.is_paused;
   const isApprover: boolean = job.approver_id && user?.id === job.approver_id;
+  const cancellationStatus: string = job.cancellation_status || 'none';
+  const isCancelled: boolean = (job.pipeline_stage || 'aberta') === 'cancelada';
+
+  // Vaga é "rascunho" (pode excluir direto) se:
+  // - approval_status === 'draft' (precisava aprovação e nunca foi aprovada/publicada)
+  // - OU não foi aprovada e nunca foi ativada
+  const isDraft: boolean =
+    approvalStatus === 'draft' ||
+    (requiresApproval && approvalStatus !== 'approved' && !job.is_active && !job.approval_decided_at);
 
   const refresh = () => onJobUpdated?.();
 
