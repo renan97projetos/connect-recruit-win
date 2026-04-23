@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { usePlanType } from '@/hooks/usePlanType';
 
 interface JobStagePanelProps {
   job: any;
@@ -52,6 +53,7 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
+  const { isPro } = usePlanType();
   const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
