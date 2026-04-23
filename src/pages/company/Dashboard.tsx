@@ -208,12 +208,16 @@ export default function CompanyDashboard() {
       return jobs.filter((j) => {
         const stage = j.pipeline_stage || 'aberta';
         if (stage !== 'aberta') return false;
-        const isAguardando =
-          j.is_active && (!j.applications || j.applications.length === 0);
-        return !isAguardando;
+        if (j.is_archived) return false;
+        const hasApps = j.applications && j.applications.length > 0;
+        if (j.is_paused) return true;
+        return j.is_active && hasApps;
       });
     }
-    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage);
+    return jobs.filter((j) => {
+      if (j.is_archived) return false;
+      return (j.pipeline_stage || 'aberta') === activeStage;
+    });
   }, [jobs, activeStage]);
 
   const activeStageLabel = PIPELINE_STAGES.find((s) => s.id === activeStage)?.label || '';
