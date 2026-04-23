@@ -39,6 +39,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PhoneInput } from '@/components/PhoneInput';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
+import { INTEREST_AREAS, ROLE_GROUPS, ALL_ROLES, OTHER_OPTION } from '@/lib/candidateRoles';
 
 const CANDIDATE_PREREGISTRATION_KEY = 'candidate_preregistration';
 
