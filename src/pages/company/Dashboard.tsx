@@ -167,13 +167,13 @@ export default function CompanyDashboard() {
       ).length;
     }
     if (stageId === 'aberta') {
-      // 'Vaga aberta' agora exclui as que estão em 'aguardando' (sem candidatos e ativas)
+      // 'Vagas' = rascunho + aguardando aprovação + pausadas (exclui aguardando 1º candidato)
       return jobs.filter((j) => {
         const stage = j.pipeline_stage || 'aberta';
         if (stage !== 'aberta') return false;
-        const isAguardando =
+        const isAguardandoCand =
           j.is_active && (!j.applications || j.applications.length === 0);
-        return !isAguardando;
+        return !isAguardandoCand;
       }).length;
     }
     return jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
@@ -377,96 +377,97 @@ export default function CompanyDashboard() {
 
         {activeStage === 'aberta' ? (
           (() => {
-            const ativas = jobsInActiveStage.filter((j) => j.is_active);
-            const inativas = jobsInActiveStage.filter((j) => !j.is_active);
+            const isPaused = (j: any) => !!j.is_paused;
+            const isPendingApproval = (j: any) =>
+              j.requires_approval && j.approval_status === 'pending_approval';
+            const isDraft = (j: any) =>
+              !j.is_active &&
+              !isPaused(j) &&
+              !isPendingApproval(j);
 
-            const renderJobCard = (job: typeof jobsInActiveStage[number]) => (
-              <button
-                key={job.id}
-                onClick={() => openJobPanel(job)}
-                className="bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
-              >
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <span className="text-sm font-semibold text-gray-900 group-hover:text-primary line-clamp-2">
-                    {job.title}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0',
-                      job.is_active
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
-                    )}
-                  >
-                    {job.is_active ? 'Ativa' : 'Inativa'}
-                  </span>
+            const pausadas = jobsInActiveStage.filter(isPaused);
+            const aguardando = jobsInActiveStage.filter(isPendingApproval);
+            const rascunhos = jobsInActiveStage.filter(isDraft);
+
+            const renderJobCard = (job: typeof jobsInActiveStage[number]) => {
+              const approvalLabel: Record<string, { text: string; cls: string }> = {
+                pending_approval: { text: 'Aguardando aprovação', cls: 'bg-amber-50 text-amber-700' },
+                rejected: { text: 'Reprovada', cls: 'bg-red-50 text-red-700' },
+                approved: { text: 'Aprovada', cls: 'bg-green-50 text-green-700' },
+                draft: { text: 'Rascunho', cls: 'bg-gray-100 text-gray-600' },
+              };
+              const badge = job.is_paused
+                ? { text: 'Pausada', cls: 'bg-yellow-50 text-yellow-700' }
+                : job.requires_approval && approvalLabel[job.approval_status]
+                  ? approvalLabel[job.approval_status]
+                  : job.is_active
+                    ? { text: 'Ativa', cls: 'bg-green-50 text-green-700' }
+                    : { text: 'Rascunho', cls: 'bg-gray-100 text-gray-500' };
+
+              return (
+                <button
+                  key={job.id}
+                  onClick={() => openJobPanel(job)}
+                  className="bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <span className="text-sm font-semibold text-gray-900 group-hover:text-primary line-clamp-2">
+                      {job.title}
+                    </span>
+                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0', badge.cls)}>
+                      {badge.text}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <Users className="h-3 w-3" />
+                      {job.applications?.length || 0} candidatos
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <MapPin className="h-3 w-3" />
+                      {job.city || 'Sem localização'}
+                      {job.location && ` · ${LOCATION_LABELS[job.location] || job.location}`}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <Clock className="h-3 w-3" />
+                      Há {daysAgo(job.created_at)} dia(s)
+                    </div>
+                  </div>
+                </button>
+              );
+            };
+
+            const renderGroup = (title: string, dotColor: string, items: any[]) => (
+              <section key={title}>
+                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                  <span className={cn('h-2 w-2 rounded-full', dotColor)} />
+                  <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
+                  <span className="text-xs text-gray-500">({items.length})</span>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Users className="h-3 w-3" />
-                    {job.applications?.length || 0} candidatos
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <MapPin className="h-3 w-3" />
-                    {job.city || 'Sem localização'}
-                    {job.location && ` · ${LOCATION_LABELS[job.location] || job.location}`}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <Clock className="h-3 w-3" />
-                    Há {daysAgo(job.created_at)} dia(s)
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {items.map(renderJobCard)}
                 </div>
-              </button>
+              </section>
             );
+
+            const hasAny = pausadas.length + aguardando.length + rascunhos.length > 0;
 
             return (
               <div className="space-y-8">
-                {/* Vagas Ativas */}
-                <section>
-                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
-                    <h3 className="text-sm font-semibold text-gray-700">Vagas Ativas</h3>
-                    <span className="text-xs text-gray-500">({ativas.length})</span>
-                  </div>
-                  {ativas.length === 0 ? (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-white/50">
-                      <p className="text-gray-400 text-sm">Nenhuma vaga ativa</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {ativas.map(renderJobCard)}
-                    </div>
-                  )}
-                </section>
+                {aguardando.length > 0 && renderGroup('Aguardando aprovação', 'bg-amber-500', aguardando)}
+                {rascunhos.length > 0 && renderGroup('Rascunho', 'bg-gray-400', rascunhos)}
+                {pausadas.length > 0 && renderGroup('Pausadas', 'bg-yellow-500', pausadas)}
 
-                {/* Vagas Inativas */}
-                <section>
-                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
-                    <span className="h-2 w-2 rounded-full bg-gray-400" />
-                    <h3 className="text-sm font-semibold text-gray-700">Vagas Inativas</h3>
-                    <span className="text-xs text-gray-500">({inativas.length})</span>
-                  </div>
-                  {inativas.length === 0 ? (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-white/50">
-                      <p className="text-gray-400 text-sm">Nenhuma vaga inativa</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {inativas.map(renderJobCard)}
-                    </div>
-                  )}
-                </section>
-
-                {jobsInActiveStage.length === 0 && (
+                {!hasAny && (
                   <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center bg-white/50">
-                    <p className="text-gray-400 text-sm mb-1">Nenhuma vaga nesta etapa</p>
+                    <p className="text-gray-400 text-sm mb-1">Nenhuma vaga em rascunho, aguardando ou pausada</p>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => navigate('/company/jobs/new')}
                       className="mt-3 border-gray-200 shadow-none hover:bg-gray-50 text-gray-700 font-medium"
                     >
-                      Criar primeira vaga
+                      Criar nova vaga
                     </Button>
                   </div>
                 )}
@@ -526,7 +527,13 @@ export default function CompanyDashboard() {
       {/* Sheet do painel da vaga */}
       <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
         <SheetContent side="right" className="w-[420px] sm:max-w-[420px] p-0 overflow-y-auto bg-white">
-          {selectedJob && <JobStagePanel job={selectedJob} onClose={() => setPanelOpen(false)} />}
+          {selectedJob && (
+            <JobStagePanel
+              job={selectedJob}
+              onClose={() => setPanelOpen(false)}
+              onJobUpdated={loadData}
+            />
+          )}
         </SheetContent>
       </Sheet>
 

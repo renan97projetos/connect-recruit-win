@@ -21,3 +21,5 @@ project_id = "herfafjqjvlaehabfxss"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.send-job-approval-email]
+    verify_jwt = true

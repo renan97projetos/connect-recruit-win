@@ -53,7 +53,9 @@ export default function JobForm() {
     salaryMax: '',
     experienceLevel: '',
     isActive: true,
+    requiresApproval: false,
   });
+  const [hasDefaultApprover, setHasDefaultApprover] = useState(false);
 
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
@@ -138,12 +140,12 @@ export default function JobForm() {
   useEffect(() => {
     const load = async () => {
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name, company_name')
-          .eq('id', user.id)
-          .single();
+        const [{ data: profile }, { data: tenant }] = await Promise.all([
+          supabase.from('profiles').select('name, company_name').eq('id', user.id).single(),
+          supabase.from('tenants').select('default_approver_id').eq('company_id', user.id).maybeSingle(),
+        ]);
         setCompanyName(profile?.company_name || profile?.name || 'Sua empresa');
+        setHasDefaultApprover(!!(tenant as any)?.default_approver_id);
       }
       if (isEditing && id) {
         const { data: job, error } = await supabase
@@ -163,6 +165,7 @@ export default function JobForm() {
             salaryMax: job.salary_max?.toString() || '',
             experienceLevel: (job as any).experience_level || '',
             isActive: job.is_active,
+            requiresApproval: !!(job as any).requires_approval,
           });
           setRequirements(job.requirements?.length > 0 ? job.requirements : ['']);
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
@@ -234,7 +237,11 @@ export default function JobForm() {
       const filteredResponsibilities = responsibilities.filter(r => r.trim() !== '');
       const filteredBenefits = benefits.filter(b => b.trim() !== '');
 
-      const jobData = {
+      // Se exige aprovação e está publicando, NÃO ativa direto - vai para draft pendente
+      const willPublish = mode === 'publish';
+      const requiresApproval = formData.requiresApproval;
+
+      const jobData: any = {
         company_id: user.id,
         company_name: companyName || user.email || 'Empresa',
         title: formData.title,
@@ -250,7 +257,11 @@ export default function JobForm() {
         salary_currency: 'BRL',
         benefits: filteredBenefits,
         experience_level: formData.experienceLevel || null,
-        is_active: mode === 'publish',
+        is_active: willPublish && !requiresApproval,
+        requires_approval: requiresApproval,
+        approval_status: requiresApproval
+          ? (willPublish ? 'pending_approval' : 'draft')
+          : 'not_required',
       };
 
       let error;
@@ -285,11 +296,38 @@ export default function JobForm() {
         }
       }
 
+      // Se publicou e exige aprovação, calcular deadline e notificar aprovador
+      if (willPublish && requiresApproval && jobId) {
+        const { data: tenant } = await supabase
+          .from('tenants')
+          .select('default_approver_id, default_approval_deadline_days')
+          .eq('company_id', user.id)
+          .maybeSingle();
+        const approverId = (tenant as any)?.default_approver_id;
+        const days = (tenant as any)?.default_approval_deadline_days || 3;
+        if (approverId) {
+          const deadlineAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+          await supabase.from('jobs').update({
+            approver_id: approverId,
+            approval_deadline_days: days,
+            approval_deadline_at: deadlineAt,
+            approval_submitted_at: new Date().toISOString(),
+          } as any).eq('id', jobId);
+          supabase.functions.invoke('send-job-approval-email', {
+            body: { jobId, type: 'request' },
+          }).catch(() => {});
+        }
+      }
+
       toast({
-        title: mode === 'publish' ? 'Vaga publicada!' : 'Rascunho salvo',
-        description: mode === 'publish'
-          ? 'A vaga está visível para candidatos.'
-          : 'Você pode publicá-la depois quando quiser.',
+        title: willPublish && requiresApproval
+          ? 'Enviada para aprovação'
+          : mode === 'publish' ? 'Vaga publicada!' : 'Rascunho salvo',
+        description: willPublish && requiresApproval
+          ? 'O aprovador foi notificado por e-mail.'
+          : mode === 'publish'
+            ? 'A vaga está visível para candidatos.'
+            : 'Você pode publicá-la depois quando quiser.',
       });
       refreshPlanUsage();
       navigate('/company/dashboard');
@@ -923,6 +961,34 @@ export default function JobForm() {
               </CardContent>
             </Card>
             </ProFeatureGate>
+
+            {/* Aprovação */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Aprovação antes da publicação</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.requiresApproval}
+                    onChange={(e) => setFormData({ ...formData, requiresApproval: e.target.checked })}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Esta vaga exige aprovação</p>
+                    <p className="text-xs text-muted-foreground">
+                      Ao publicar, a vaga ficará "Aguardando aprovação" e o aprovador padrão receberá um e-mail.
+                    </p>
+                  </div>
+                </label>
+                {formData.requiresApproval && !hasDefaultApprover && (
+                  <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                    Configure um aprovador padrão em <strong>Perfil da Empresa → Aprovação de Vagas</strong>.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Rodapé sticky com 2 CTAs */}
             <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
