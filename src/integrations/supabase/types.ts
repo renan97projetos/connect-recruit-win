@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          adherence_score: number | null
           applied_at: string
           candidate_email: string
           candidate_id: string
@@ -25,13 +26,17 @@ export type Database = {
           is_favorite: boolean | null
           job_id: string
           notes: Json | null
+          profile_completeness: number | null
           score: number | null
+          score_breakdown: Json | null
+          score_history: Json | null
           source: string | null
           stage_history: Json | null
           status: string
           updated_at: string
         }
         Insert: {
+          adherence_score?: number | null
           applied_at?: string
           candidate_email: string
           candidate_id: string
@@ -41,13 +46,17 @@ export type Database = {
           is_favorite?: boolean | null
           job_id: string
           notes?: Json | null
+          profile_completeness?: number | null
           score?: number | null
+          score_breakdown?: Json | null
+          score_history?: Json | null
           source?: string | null
           stage_history?: Json | null
           status?: string
           updated_at?: string
         }
         Update: {
+          adherence_score?: number | null
           applied_at?: string
           candidate_email?: string
           candidate_id?: string
@@ -57,7 +66,10 @@ export type Database = {
           is_favorite?: boolean | null
           job_id?: string
           notes?: Json | null
+          profile_completeness?: number | null
           score?: number | null
+          score_breakdown?: Json | null
+          score_history?: Json | null
           source?: string | null
           stage_history?: Json | null
           status?: string
@@ -1017,18 +1029,25 @@ export type Database = {
           is_active: boolean | null
           is_archived: boolean | null
           is_paused: boolean
+          is_remote: boolean | null
+          job_area: string | null
           job_request_id: string | null
           job_type: string
           location: string
+          min_experience_years: number | null
           paused_at: string | null
           paused_reason: string | null
           pipeline_stage: string
+          required_education_area: string | null
+          required_education_level: string | null
+          required_skills: string[] | null
           requirements: string[] | null
           requires_approval: boolean
           responsibilities: string[] | null
           salary_currency: string | null
           salary_max: number | null
           salary_min: number | null
+          score_weights: Json | null
           state: string | null
           title: string
           updated_at: string | null
@@ -1054,18 +1073,25 @@ export type Database = {
           is_active?: boolean | null
           is_archived?: boolean | null
           is_paused?: boolean
+          is_remote?: boolean | null
+          job_area?: string | null
           job_request_id?: string | null
           job_type: string
           location: string
+          min_experience_years?: number | null
           paused_at?: string | null
           paused_reason?: string | null
           pipeline_stage?: string
+          required_education_area?: string | null
+          required_education_level?: string | null
+          required_skills?: string[] | null
           requirements?: string[] | null
           requires_approval?: boolean
           responsibilities?: string[] | null
           salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
+          score_weights?: Json | null
           state?: string | null
           title: string
           updated_at?: string | null
@@ -1091,18 +1117,25 @@ export type Database = {
           is_active?: boolean | null
           is_archived?: boolean | null
           is_paused?: boolean
+          is_remote?: boolean | null
+          job_area?: string | null
           job_request_id?: string | null
           job_type?: string
           location?: string
+          min_experience_years?: number | null
           paused_at?: string | null
           paused_reason?: string | null
           pipeline_stage?: string
+          required_education_area?: string | null
+          required_education_level?: string | null
+          required_skills?: string[] | null
           requirements?: string[] | null
           requires_approval?: boolean
           responsibilities?: string[] | null
           salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
+          score_weights?: Json | null
           state?: string | null
           title?: string
           updated_at?: string | null
@@ -1789,6 +1822,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_application_score: {
+        Args: { _application_id: string }
+        Returns: undefined
+      }
       can_manage_company_users: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
@@ -1846,6 +1883,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_skill: { Args: { _skill: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
