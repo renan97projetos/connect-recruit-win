@@ -296,11 +296,38 @@ export default function JobForm() {
         }
       }
 
+      // Se publicou e exige aprovação, calcular deadline e notificar aprovador
+      if (willPublish && requiresApproval && jobId) {
+        const { data: tenant } = await supabase
+          .from('tenants')
+          .select('default_approver_id, default_approval_deadline_days')
+          .eq('company_id', user.id)
+          .maybeSingle();
+        const approverId = (tenant as any)?.default_approver_id;
+        const days = (tenant as any)?.default_approval_deadline_days || 3;
+        if (approverId) {
+          const deadlineAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+          await supabase.from('jobs').update({
+            approver_id: approverId,
+            approval_deadline_days: days,
+            approval_deadline_at: deadlineAt,
+            approval_submitted_at: new Date().toISOString(),
+          } as any).eq('id', jobId);
+          supabase.functions.invoke('send-job-approval-email', {
+            body: { jobId, type: 'request' },
+          }).catch(() => {});
+        }
+      }
+
       toast({
-        title: mode === 'publish' ? 'Vaga publicada!' : 'Rascunho salvo',
-        description: mode === 'publish'
-          ? 'A vaga está visível para candidatos.'
-          : 'Você pode publicá-la depois quando quiser.',
+        title: willPublish && requiresApproval
+          ? 'Enviada para aprovação'
+          : mode === 'publish' ? 'Vaga publicada!' : 'Rascunho salvo',
+        description: willPublish && requiresApproval
+          ? 'O aprovador foi notificado por e-mail.'
+          : mode === 'publish'
+            ? 'A vaga está visível para candidatos.'
+            : 'Você pode publicá-la depois quando quiser.',
       });
       refreshPlanUsage();
       navigate('/company/dashboard');
