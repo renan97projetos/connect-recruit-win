@@ -483,6 +483,17 @@ export default function CandidateProfile() {
     });
   }, [profile?.birth_date]);
 
+  // Inicializa modo "Outros" quando o perfil carrega com valores fora das listas
+  useEffect(() => {
+    if (profile?.interest_area && !INTEREST_AREAS.includes(profile.interest_area)) {
+      setInterestAreaOther(true);
+    }
+    if (profile?.desired_role && !ALL_ROLES.includes(profile.desired_role)) {
+      setDesiredRoleOther(true);
+    }
+  }, [profile?.interest_area, profile?.desired_role]);
+
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: Partial<ProfileData>) => {
