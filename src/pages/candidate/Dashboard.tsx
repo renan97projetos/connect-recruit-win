@@ -26,7 +26,7 @@ export default function CandidateDashboard() {
         .from('applications')
         .select(`
           *,
-          jobs (
+          jobs!inner (
             id,
             title,
             company_name,
@@ -39,7 +39,7 @@ export default function CandidateDashboard() {
         .order('applied_at', { ascending: false });
 
     if (!error && data) {
-      setApplications(data);
+      setApplications(data.filter((app) => app.jobs));
     }
     
     setLoading(false);
