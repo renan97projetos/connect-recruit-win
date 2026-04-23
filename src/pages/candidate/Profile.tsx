@@ -154,6 +154,7 @@ interface ProfileData {
   zip_code: string;
   summary: string;
   desired_role: string;
+  interest_area: string;
   linkedin_url: string;
   portfolio_url: string;
   experiences: Experience[];
