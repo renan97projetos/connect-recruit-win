@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { usePlanType } from '@/hooks/usePlanType';
 
 interface JobStagePanelProps {
   job: any;
@@ -52,6 +53,7 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
+  const { isPro } = usePlanType();
   const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -393,8 +395,8 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Aprovação - mensagem de reprovação */}
-        {approvalStatus === 'rejected' && job.approval_rejection_reason && (
+        {/* Aprovação - mensagem de reprovação (somente Pro) */}
+        {isPro && approvalStatus === 'rejected' && job.approval_rejection_reason && (
           <section className="px-6 py-4 bg-red-50/40 border-b border-red-100">
             <p className="text-[11px] uppercase tracking-wide text-red-700 font-semibold mb-1">
               Motivo da recusa
@@ -450,8 +452,8 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
             Ações
           </p>
           <div className="flex flex-col gap-2">
-            {/* Aprovação - aprovador */}
-            {isApprover && approvalStatus === 'pending_approval' && (
+            {/* Aprovação - aprovador (somente Pro) */}
+            {isPro && isApprover && approvalStatus === 'pending_approval' && (
               <>
                 <button
                   disabled={busy}
@@ -470,8 +472,8 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
               </>
             )}
 
-            {/* Submeter para aprovação - recrutador */}
-            {requiresApproval &&
+            {/* Submeter para aprovação - recrutador (somente Pro) */}
+            {isPro && requiresApproval &&
               (approvalStatus === 'draft' || approvalStatus === 'rejected') && (
                 <button
                   disabled={busy}
