@@ -366,7 +366,14 @@ export default function JobForm() {
             : 'Você pode publicá-la depois quando quiser.',
       });
       refreshPlanUsage();
-      navigate('/company/dashboard');
+      if (mode === 'draft') {
+        // Permanece na vaga após salvar rascunho
+        if (!isEditing && jobId) {
+          navigate(`/company/jobs/${jobId}/edit`, { replace: true });
+        }
+      } else {
+        navigate('/company/dashboard');
+      }
     } catch (e) {
       console.error('Error saving job:', e);
       toast({
