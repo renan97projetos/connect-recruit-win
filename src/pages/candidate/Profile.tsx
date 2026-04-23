@@ -1117,19 +1117,101 @@ export default function CandidateProfile() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="desired_role">Cargo ou área de interesse</Label>
-                <Input
-                  id="desired_role"
-                  placeholder="Ex: Desenvolvedor Front-end, Vendas, RH..."
-                  value={profile.desired_role || ''}
-                  onChange={(e) => {
-                    queryClient.setQueryData(['candidate-profile', user?.id], {
-                      ...profile,
-                      desired_role: e.target.value
-                    });
-                  }}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="interest_area">Área de Interesse</Label>
+                  <Select
+                    value={
+                      !profile.interest_area
+                        ? ''
+                        : INTEREST_AREAS.includes(profile.interest_area)
+                          ? profile.interest_area
+                          : OTHER_OPTION
+                    }
+                    onValueChange={(value) => {
+                      queryClient.setQueryData(['candidate-profile', user?.id], {
+                        ...profile,
+                        interest_area: value === OTHER_OPTION ? '' : value,
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="interest_area">
+                      <SelectValue placeholder="Selecione uma área" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {INTEREST_AREAS.map((area) => (
+                        <SelectItem key={area} value={area}>{area}</SelectItem>
+                      ))}
+                      <SelectItem value={OTHER_OPTION}>{OTHER_OPTION}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(!profile.interest_area || !INTEREST_AREAS.includes(profile.interest_area)) &&
+                    (profile.interest_area !== '' ||
+                      // show input when user explicitly chose "Outros"
+                      (profile.interest_area === '' &&
+                        // detect by checking previous select value through a sentinel: render when empty AND user picked Outros
+                        false)) && null}
+                  {!INTEREST_AREAS.includes(profile.interest_area) && profile.interest_area !== undefined && profile.interest_area !== null && (
+                    <Input
+                      placeholder="Digite a área de interesse"
+                      value={profile.interest_area || ''}
+                      onChange={(e) => {
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          interest_area: e.target.value,
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="desired_role">Cargo</Label>
+                  <Select
+                    value={
+                      !profile.desired_role
+                        ? ''
+                        : ALL_ROLES.includes(profile.desired_role)
+                          ? profile.desired_role
+                          : OTHER_OPTION
+                    }
+                    onValueChange={(value) => {
+                      queryClient.setQueryData(['candidate-profile', user?.id], {
+                        ...profile,
+                        desired_role: value === OTHER_OPTION ? '' : value,
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="desired_role">
+                      <SelectValue placeholder="Selecione um cargo" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {ROLE_GROUPS.map((group) => (
+                        <div key={group.label}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                            {group.label}
+                          </div>
+                          {group.items.map((role) => (
+                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                          ))}
+                        </div>
+                      ))}
+                      <SelectItem value={OTHER_OPTION}>{OTHER_OPTION}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {!ALL_ROLES.includes(profile.desired_role) && profile.desired_role !== undefined && profile.desired_role !== null && (
+                    <Input
+                      placeholder="Digite o cargo"
+                      value={profile.desired_role || ''}
+                      onChange={(e) => {
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          desired_role: e.target.value,
+                        });
+                      }}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
