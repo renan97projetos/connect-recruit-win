@@ -24,7 +24,7 @@ import CandidateJobs from "./pages/candidate/Jobs";
 import CompanyDashboard from "./pages/company/Dashboard";
 import CompanyHub from "./pages/company/Hub";
 import JobForm from "./pages/company/JobForm";
-import JobPipeline from "./pages/company/JobPipeline";
+
 
 // SelectionProcess removed — replaced by Dashboard pipeline
 import WorkflowConfiguration from "./pages/company/WorkflowConfiguration";
