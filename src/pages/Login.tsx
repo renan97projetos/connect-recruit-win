@@ -104,8 +104,17 @@ export default function Login({ forcedRole }: LoginProps = {}) {
         company: '/company',
         candidate: '/candidate',
       };
-      
-      navigate(role ? dashboardRoutes[role] : '/');
+
+      // Se houver um destino pretendido (ex.: vaga que o usuário tentou acessar antes do login),
+      // redireciona para lá após login bem-sucedido.
+      const redirectTo = searchParams.get('redirect');
+      const isSafeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//');
+
+      if (isSafeRedirect) {
+        navigate(redirectTo);
+      } else {
+        navigate(role ? dashboardRoutes[role] : '/');
+      }
     } else {
       let errorMessage = 'Verifique suas credenciais';
       
