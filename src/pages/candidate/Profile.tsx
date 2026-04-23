@@ -247,7 +247,11 @@ export default function CandidateProfile() {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
+  // "Outros" toggles for area de interesse / cargo (free-text mode)
+  const [interestAreaOther, setInterestAreaOther] = useState(false);
+  const [desiredRoleOther, setDesiredRoleOther] = useState(false);
+
   // Experience dialog state
   const [experienceDialog, setExperienceDialog] = useState(false);
   const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
