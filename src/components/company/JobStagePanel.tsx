@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Edit, MapPin, Briefcase, DollarSign, Calendar, Clock,
   PauseCircle, PlayCircle, Send, CheckCircle2, XCircle, AlertTriangle,
+  Trash2, Ban,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -27,6 +28,7 @@ const STAGE_LABELS: Record<string, { label: string; color: string }> = {
   admissao: { label: 'Admissão', color: 'bg-teal-50 text-teal-700' },
   contratado: { label: 'Contratado', color: 'bg-green-50 text-green-700' },
   reprovado: { label: 'Reprovado', color: 'bg-red-50 text-red-700' },
+  cancelada: { label: 'Cancelada', color: 'bg-rose-50 text-rose-700' },
 };
 
 const APPROVAL_BADGE: Record<string, { label: string; color: string }> = {
@@ -57,6 +59,11 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
   const [pauseReason, setPauseReason] = useState('');
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [cancelRequestOpen, setCancelRequestOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelRejectOpen, setCancelRejectOpen] = useState(false);
+  const [cancelRejectReason, setCancelRejectReason] = useState('');
 
   useEffect(() => {
     const loadCandidates = async () => {
