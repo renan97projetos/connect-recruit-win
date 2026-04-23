@@ -1137,17 +1137,26 @@ export default function CandidateProfile() {
                   <Label htmlFor="interest_area">Área de Interesse</Label>
                   <Select
                     value={
-                      !profile.interest_area
-                        ? ''
-                        : INTEREST_AREAS.includes(profile.interest_area)
+                      interestAreaOther
+                        ? OTHER_OPTION
+                        : profile.interest_area && INTEREST_AREAS.includes(profile.interest_area)
                           ? profile.interest_area
-                          : OTHER_OPTION
+                          : ''
                     }
                     onValueChange={(value) => {
-                      queryClient.setQueryData(['candidate-profile', user?.id], {
-                        ...profile,
-                        interest_area: value === OTHER_OPTION ? '' : value,
-                      });
+                      if (value === OTHER_OPTION) {
+                        setInterestAreaOther(true);
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          interest_area: '',
+                        });
+                      } else {
+                        setInterestAreaOther(false);
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          interest_area: value,
+                        });
+                      }
                     }}
                   >
                     <SelectTrigger id="interest_area">
@@ -1160,13 +1169,7 @@ export default function CandidateProfile() {
                       <SelectItem value={OTHER_OPTION}>{OTHER_OPTION}</SelectItem>
                     </SelectContent>
                   </Select>
-                  {(!profile.interest_area || !INTEREST_AREAS.includes(profile.interest_area)) &&
-                    (profile.interest_area !== '' ||
-                      // show input when user explicitly chose "Outros"
-                      (profile.interest_area === '' &&
-                        // detect by checking previous select value through a sentinel: render when empty AND user picked Outros
-                        false)) && null}
-                  {!INTEREST_AREAS.includes(profile.interest_area) && profile.interest_area !== undefined && profile.interest_area !== null && (
+                  {interestAreaOther && (
                     <Input
                       placeholder="Digite a área de interesse"
                       value={profile.interest_area || ''}
@@ -1184,17 +1187,26 @@ export default function CandidateProfile() {
                   <Label htmlFor="desired_role">Cargo</Label>
                   <Select
                     value={
-                      !profile.desired_role
-                        ? ''
-                        : ALL_ROLES.includes(profile.desired_role)
+                      desiredRoleOther
+                        ? OTHER_OPTION
+                        : profile.desired_role && ALL_ROLES.includes(profile.desired_role)
                           ? profile.desired_role
-                          : OTHER_OPTION
+                          : ''
                     }
                     onValueChange={(value) => {
-                      queryClient.setQueryData(['candidate-profile', user?.id], {
-                        ...profile,
-                        desired_role: value === OTHER_OPTION ? '' : value,
-                      });
+                      if (value === OTHER_OPTION) {
+                        setDesiredRoleOther(true);
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          desired_role: '',
+                        });
+                      } else {
+                        setDesiredRoleOther(false);
+                        queryClient.setQueryData(['candidate-profile', user?.id], {
+                          ...profile,
+                          desired_role: value,
+                        });
+                      }
                     }}
                   >
                     <SelectTrigger id="desired_role">
@@ -1214,7 +1226,7 @@ export default function CandidateProfile() {
                       <SelectItem value={OTHER_OPTION}>{OTHER_OPTION}</SelectItem>
                     </SelectContent>
                   </Select>
-                  {!ALL_ROLES.includes(profile.desired_role) && profile.desired_role !== undefined && profile.desired_role !== null && (
+                  {desiredRoleOther && (
                     <Input
                       placeholder="Digite o cargo"
                       value={profile.desired_role || ''}
