@@ -17,7 +17,6 @@ const schema = z.object({
   password: z.string().min(6, 'Mínimo 6 caracteres').max(100, 'Senha muito longa'),
   city: z.string().trim().min(2, 'Cidade obrigatória').max(100, 'Cidade muito longa'),
   state: z.string().trim().length(2, 'Selecione o estado'),
-  desiredRole: z.string().trim().min(2, 'Informe o cargo ou área').max(150, 'Texto muito longo'),
 });
 
 export function QuickCandidateRegister() {
