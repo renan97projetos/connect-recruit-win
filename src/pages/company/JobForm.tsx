@@ -53,7 +53,9 @@ export default function JobForm() {
     salaryMax: '',
     experienceLevel: '',
     isActive: true,
+    requiresApproval: false,
   });
+  const [hasDefaultApprover, setHasDefaultApprover] = useState(false);
 
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
