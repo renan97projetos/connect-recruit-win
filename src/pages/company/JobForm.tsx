@@ -287,6 +287,14 @@ export default function JobForm() {
         approval_status: requiresApproval
           ? (willPublish ? 'pending_approval' : 'draft')
           : 'not_required',
+        // Score de aderência
+        required_skills: scoreConfig.required_skills,
+        job_area: scoreConfig.job_area || null,
+        required_education_level: scoreConfig.required_education_level || null,
+        required_education_area: scoreConfig.required_education_area || null,
+        min_experience_years: scoreConfig.min_experience_years || 0,
+        is_remote: scoreConfig.is_remote || formData.location === 'remote',
+        score_weights: scoreConfig.score_weights,
       };
 
       let error;
