@@ -260,12 +260,43 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
     onClose();
   };
 
-  // Solicitar cancelamento (vaga publicada) — vai para o gestor aprovar
+  // Cancelar vaga
+  // - Starter (sem fluxo de aprovação): cancela imediatamente, sem precisar de gestor.
+  // - Pro: envia solicitação para o gestor aprovar.
   const handleRequestCancellation = async () => {
     if (!cancelReason.trim()) {
       toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
       return;
     }
+
+    // Plano Starter: o próprio usuário é o gestor — cancelamento direto
+    if (!isPro) {
+      setBusy(true);
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          cancellation_status: 'approved',
+          cancellation_reason: cancelReason.trim(),
+          cancellation_requested_at: new Date().toISOString(),
+          cancellation_requested_by: user?.id,
+          cancellation_decided_at: new Date().toISOString(),
+          cancellation_decided_by: user?.id,
+          pipeline_stage: 'cancelada',
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', job.id);
+      setBusy(false);
+      setCancelRequestOpen(false);
+      setCancelReason('');
+      if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({ title: 'Vaga cancelada', description: 'A vaga foi movida para Canceladas.' });
+      refresh();
+      onClose();
+      return;
+    }
+
+    // Plano Pro: fluxo de aprovação pelo gestor responsável
     let approverId = job.approver_id;
     if (!approverId) {
       const { data: tenant } = await supabase
@@ -555,7 +586,7 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
                 onClick={() => setCancelRequestOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-rose-200 hover:border-rose-500 hover:bg-rose-50 text-sm font-medium text-rose-700 transition-colors"
               >
-                <Ban className="h-4 w-4" /> Solicitar cancelamento
+                <Ban className="h-4 w-4" /> {isPro ? 'Solicitar cancelamento' : 'Cancelar vaga'}
               </button>
             )}
             {!isCancelled && cancellationStatus === 'pending' && !isApprover && (
@@ -796,14 +827,16 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
         </DialogContent>
       </Dialog>
 
-      {/* Modal de solicitação de cancelamento */}
+      {/* Modal de cancelamento (Starter cancela direto, Pro envia ao gestor) */}
       <Dialog open={cancelRequestOpen} onOpenChange={setCancelRequestOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Solicitar cancelamento da vaga</DialogTitle>
+            <DialogTitle>{isPro ? 'Solicitar cancelamento da vaga' : 'Cancelar vaga'}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Como esta vaga já foi publicada, o cancelamento precisa ser aprovado pelo gestor responsável.
+            {isPro
+              ? 'Como esta vaga já foi publicada, o cancelamento precisa ser aprovado pelo gestor responsável.'
+              : 'Esta vaga será movida para Canceladas e ficará indisponível para novas candidaturas.'}
           </p>
           <Textarea
             placeholder="Motivo do cancelamento (obrigatório)"
@@ -813,10 +846,16 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelRequestOpen(false)} disabled={busy}>
-              Cancelar
+              Voltar
             </Button>
-            <Button onClick={handleRequestCancellation} disabled={busy || !cancelReason.trim()}>
-              {busy ? 'Enviando...' : 'Enviar para o gestor'}
+            <Button
+              variant={isPro ? 'default' : 'destructive'}
+              onClick={handleRequestCancellation}
+              disabled={busy || !cancelReason.trim()}
+            >
+              {busy
+                ? isPro ? 'Enviando...' : 'Cancelando...'
+                : isPro ? 'Enviar para o gestor' : 'Cancelar vaga'}
             </Button>
           </DialogFooter>
         </DialogContent>
