@@ -312,7 +312,7 @@ export default function JobForm() {
       }
       if (error) throw error;
 
-      const validQuestions = questions.filter(q => q.question.trim());
+      const validQuestions = questions.filter(q => q.question.trim()).slice(0, 10);
       if (jobId) {
         await supabase.from('screening_questions').delete().eq('job_id', jobId);
         if (validQuestions.length > 0) {
@@ -324,6 +324,7 @@ export default function JobForm() {
               question_type: q.question_type,
               required: q.required,
               order_position: i,
+              options: q.question_type === 'multiple_choice' && q.options ? q.options.filter(o => o.trim()) : null,
             })),
           );
         }
