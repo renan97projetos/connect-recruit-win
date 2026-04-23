@@ -80,6 +80,7 @@ export default function JobPipeline() {
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState('');
   const [applications, setApplications] = useState<Application[]>([]);
+  const [breakdowns, setBreakdowns] = useState<Record<string, ScoreBreakdown[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -96,7 +97,22 @@ export default function JobPipeline() {
           .order('applied_at', { ascending: false }),
       ]);
       if (jobRes.data) setJobTitle(jobRes.data.title);
-      if (appsRes.data) setApplications(appsRes.data as Application[]);
+      const apps = (appsRes.data ?? []) as Application[];
+      setApplications(apps);
+
+      const candidateIds = Array.from(new Set(apps.map((a) => a.candidate_id)));
+      if (candidateIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, phone, city, state, summary, experiences, educations, skills, cv_url')
+          .in('id', candidateIds);
+        const map: Record<string, ScoreBreakdown[]> = {};
+        (profiles ?? []).forEach((p: any) => {
+          map[p.id] = calculateScoreBreakdown(p);
+        });
+        setBreakdowns(map);
+      }
+
       setLoading(false);
     };
 
