@@ -19,6 +19,7 @@ interface ScreeningQuestion {
   question_type: string;
   required: boolean;
   order_position: number;
+  options: string[] | null;
 }
 
 export default function JobDetails() {
@@ -74,10 +75,10 @@ export default function JobDetails() {
       // Fetch screening questions
       const { data: qs } = await supabase
         .from('screening_questions')
-        .select('id, question, question_type, required, order_position')
+        .select('id, question, question_type, required, order_position, options')
         .eq('job_id', id)
         .order('order_position');
-      setQuestions((qs as ScreeningQuestion[]) || []);
+      setQuestions((qs as any as ScreeningQuestion[]) || []);
       
       // Check user role and if has applied
       if (user) {
@@ -433,6 +434,48 @@ export default function JobDetails() {
                                   </Label>
                                 </div>
                               </RadioGroup>
+                            ) : q.question_type === 'multiple_choice' ? (
+                              <RadioGroup
+                                value={answers[q.id] || ''}
+                                onValueChange={(val) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: val }))
+                                }
+                                className="flex flex-col gap-2"
+                              >
+                                {(q.options || []).map((opt, oi) => (
+                                  <div key={oi} className="flex items-center gap-2">
+                                    <RadioGroupItem value={opt} id={`${q.id}-opt-${oi}`} />
+                                    <Label
+                                      htmlFor={`${q.id}-opt-${oi}`}
+                                      className="font-normal cursor-pointer"
+                                    >
+                                      {opt}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            ) : q.question_type === 'scale_1_5' ? (
+                              <div className="flex gap-2">
+                                {[1, 2, 3, 4, 5].map((n) => {
+                                  const selected = answers[q.id] === String(n);
+                                  return (
+                                    <button
+                                      key={n}
+                                      type="button"
+                                      onClick={() =>
+                                        setAnswers((prev) => ({ ...prev, [q.id]: String(n) }))
+                                      }
+                                      className={`h-10 w-10 rounded-md border text-sm font-semibold transition-colors ${
+                                        selected
+                                          ? 'bg-primary text-primary-foreground border-primary'
+                                          : 'bg-background hover:bg-muted border-input'
+                                      }`}
+                                    >
+                                      {n}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             ) : (
                               <Textarea
                                 value={answers[q.id] || ''}
