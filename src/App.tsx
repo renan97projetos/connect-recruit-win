@@ -25,6 +25,7 @@ import CompanyDashboard from "./pages/company/Dashboard";
 import CompanyHub from "./pages/company/Hub";
 import JobForm from "./pages/company/JobForm";
 import JobPipeline from "./pages/company/JobPipeline";
+import CandidateView from "./pages/company/CandidateView";
 
 // SelectionProcess removed — replaced by Dashboard pipeline
 import WorkflowConfiguration from "./pages/company/WorkflowConfiguration";
@@ -109,6 +110,7 @@ const App = () => {
               <Route path="/company/jobs/:id/edit" element={<ProtectedRoute requiredRole="company"><JobForm /></ProtectedRoute>} />
               <Route path="/company/jobs/:id" element={<ProtectedRoute requiredRole="company"><JobPipeline /></ProtectedRoute>} />
               <Route path="/company/jobs/:id/candidates" element={<ProtectedRoute requiredRole="company"><JobPipeline /></ProtectedRoute>} />
+              <Route path="/company/candidates/:id" element={<ProtectedRoute requiredRole="company"><CandidateView /></ProtectedRoute>} />
               <Route path="/company/selection-process" element={<Navigate to="/company" replace />} />
               <Route path="/company/workflow/:id" element={<ProtectedRoute requiredRole="company"><WorkflowConfiguration /></ProtectedRoute>} />
               <Route path="/company/assessments" element={<ProtectedRoute requiredRole="company"><Assessments /></ProtectedRoute>} />
