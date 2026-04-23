@@ -39,7 +39,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PhoneInput } from '@/components/PhoneInput';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
-import { INTEREST_AREAS, ROLE_GROUPS, ALL_ROLES, OTHER_OPTION } from '@/lib/candidateRoles';
+import { INTEREST_AREAS, ALL_ROLES, OTHER_OPTION, getRolesForArea } from '@/lib/candidateRoles';
 
 const CANDIDATE_PREREGISTRATION_KEY = 'candidate_preregistration';
 
@@ -1149,13 +1149,20 @@ export default function CandidateProfile() {
                         queryClient.setQueryData(['candidate-profile', user?.id], {
                           ...profile,
                           interest_area: '',
+                          desired_role: '',
                         });
+                        setDesiredRoleOther(false);
                       } else {
                         setInterestAreaOther(false);
                         queryClient.setQueryData(['candidate-profile', user?.id], {
                           ...profile,
                           interest_area: value,
+                          // Reset cargo when area changes (unless current cargo belongs to new area)
+                          desired_role: getRolesForArea(value).includes(profile.desired_role || '')
+                            ? profile.desired_role
+                            : '',
                         });
+                        setDesiredRoleOther(false);
                       }
                     }}
                   >
@@ -1185,59 +1192,86 @@ export default function CandidateProfile() {
 
                 <div className="space-y-2">
                   <Label htmlFor="desired_role">Cargo</Label>
-                  <Select
-                    value={
-                      desiredRoleOther
-                        ? OTHER_OPTION
-                        : profile.desired_role && ALL_ROLES.includes(profile.desired_role)
-                          ? profile.desired_role
-                          : ''
+                  {(() => {
+                    const availableRoles = interestAreaOther
+                      ? []
+                      : getRolesForArea(profile.interest_area);
+                    const hasArea = interestAreaOther || !!profile.interest_area;
+                    const canUseSelect = !interestAreaOther && availableRoles.length > 0;
+
+                    if (!canUseSelect) {
+                      // Free text when no area selected, area is "Outros", or area has no predefined roles
+                      return (
+                        <Input
+                          id="desired_role"
+                          placeholder={
+                            hasArea
+                              ? 'Digite o cargo'
+                              : 'Selecione uma área de interesse primeiro'
+                          }
+                          disabled={!hasArea}
+                          value={profile.desired_role || ''}
+                          onChange={(e) => {
+                            queryClient.setQueryData(['candidate-profile', user?.id], {
+                              ...profile,
+                              desired_role: e.target.value,
+                            });
+                          }}
+                        />
+                      );
                     }
-                    onValueChange={(value) => {
-                      if (value === OTHER_OPTION) {
-                        setDesiredRoleOther(true);
-                        queryClient.setQueryData(['candidate-profile', user?.id], {
-                          ...profile,
-                          desired_role: '',
-                        });
-                      } else {
-                        setDesiredRoleOther(false);
-                        queryClient.setQueryData(['candidate-profile', user?.id], {
-                          ...profile,
-                          desired_role: value,
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger id="desired_role">
-                      <SelectValue placeholder="Selecione um cargo" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {ROLE_GROUPS.map((group) => (
-                        <div key={group.label}>
-                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
-                            {group.label}
-                          </div>
-                          {group.items.map((role) => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
-                          ))}
-                        </div>
-                      ))}
-                      <SelectItem value={OTHER_OPTION}>{OTHER_OPTION}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {desiredRoleOther && (
-                    <Input
-                      placeholder="Digite o cargo"
-                      value={profile.desired_role || ''}
-                      onChange={(e) => {
-                        queryClient.setQueryData(['candidate-profile', user?.id], {
-                          ...profile,
-                          desired_role: e.target.value,
-                        });
-                      }}
-                    />
-                  )}
+
+                    return (
+                      <>
+                        <Select
+                          value={
+                            desiredRoleOther
+                              ? OTHER_OPTION
+                              : profile.desired_role && availableRoles.includes(profile.desired_role)
+                                ? profile.desired_role
+                                : ''
+                          }
+                          onValueChange={(value) => {
+                            if (value === OTHER_OPTION) {
+                              setDesiredRoleOther(true);
+                              queryClient.setQueryData(['candidate-profile', user?.id], {
+                                ...profile,
+                                desired_role: '',
+                              });
+                            } else {
+                              setDesiredRoleOther(false);
+                              queryClient.setQueryData(['candidate-profile', user?.id], {
+                                ...profile,
+                                desired_role: value,
+                              });
+                            }
+                          }}
+                        >
+                          <SelectTrigger id="desired_role">
+                            <SelectValue placeholder="Selecione um cargo" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            {availableRoles.map((role) => (
+                              <SelectItem key={role} value={role}>{role}</SelectItem>
+                            ))}
+                            <SelectItem value={OTHER_OPTION}>{OTHER_OPTION}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {desiredRoleOther && (
+                          <Input
+                            placeholder="Digite o cargo"
+                            value={profile.desired_role || ''}
+                            onChange={(e) => {
+                              queryClient.setQueryData(['candidate-profile', user?.id], {
+                                ...profile,
+                                desired_role: e.target.value,
+                              });
+                            }}
+                          />
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
