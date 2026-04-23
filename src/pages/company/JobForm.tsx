@@ -22,6 +22,7 @@ import { ProFeatureGate } from '@/components/ProFeatureGate';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 import { REQUIREMENT_CATEGORIES } from '@/lib/jobRequirements';
 import { JobScoreConfig, ScoreConfig } from '@/components/jobs/JobScoreConfig';
+import { usePlanType } from '@/hooks/usePlanType';
 
 interface FormErrors {
   title?: string;
@@ -35,6 +36,7 @@ interface FormErrors {
 export default function JobForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isPro } = usePlanType();
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const isEditing = !!id;
@@ -1073,33 +1075,35 @@ export default function JobForm() {
             </Card>
             </ProFeatureGate>
 
-            {/* Aprovação */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Aprovação antes da publicação</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.requiresApproval}
-                    onChange={(e) => setFormData({ ...formData, requiresApproval: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Esta vaga exige aprovação</p>
-                    <p className="text-xs text-muted-foreground">
-                      Ao publicar, a vaga ficará "Aguardando aprovação" e o aprovador padrão receberá um e-mail.
-                    </p>
-                  </div>
-                </label>
-                {formData.requiresApproval && !hasDefaultApprover && (
-                  <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-900">
-                    Configure um aprovador padrão em <strong>Perfil da Empresa → Aprovação de Vagas</strong>.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Aprovação - apenas Pro */}
+            {isPro && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Aprovação antes da publicação</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.requiresApproval}
+                      onChange={(e) => setFormData({ ...formData, requiresApproval: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Esta vaga exige aprovação</p>
+                      <p className="text-xs text-muted-foreground">
+                        Ao publicar, a vaga ficará "Aguardando aprovação" e o aprovador padrão receberá um e-mail.
+                      </p>
+                    </div>
+                  </label>
+                  {formData.requiresApproval && !hasDefaultApprover && (
+                    <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                      Configure um aprovador padrão em <strong>Perfil da Empresa → Aprovação de Vagas</strong>.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Rodapé sticky com 2 CTAs */}
             <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">

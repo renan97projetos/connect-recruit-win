@@ -15,6 +15,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { PlanSection } from '@/components/company/PlanSection';
 import { ApprovalSettingsCard } from '@/components/company/ApprovalSettingsCard';
+import { usePlanType } from '@/hooks/usePlanType';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -32,6 +33,7 @@ type ImageKind = 'avatar' | 'logo';
 
 export default function CompanyProfile() {
   const { user } = useSupabaseAuth();
+  const { isPro } = usePlanType();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -534,7 +536,7 @@ export default function CompanyProfile() {
           </CardContent>
         </Card>
 
-        <ApprovalSettingsCard />
+        {isPro && <ApprovalSettingsCard />}
 
         <PlanSection />
 
