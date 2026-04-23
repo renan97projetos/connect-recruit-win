@@ -898,6 +898,8 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
+            <JobScoreConfig value={scoreConfig} onChange={setScoreConfig} />
+
             <ProFeatureGate featureName="Perguntas de Triagem">
             <Card>
               <CardHeader className="pb-2">
@@ -929,65 +931,140 @@ export default function JobForm() {
                     Nenhuma pergunta. Clique em "Adicionar" para criar.
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {questions.map((q, i) => (
-                      <div key={i} className="flex gap-2 items-start">
-                        <Input
-                          ref={(el) => { questionRefs.current[i] = el; }}
-                          placeholder={`Pergunta ${i + 1}`}
-                          value={q.question}
-                          onChange={(e) =>
-                            setQuestions(prev =>
-                              prev.map((item, idx) =>
-                                idx === i ? { ...item, question: e.target.value } : item,
-                              ),
-                            )
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              if (q.question.trim()) {
-                                setQuestions(prev => [
-                                  ...prev,
-                                  { question: '', question_type: 'text', required: true },
-                                ]);
-                                setFocusTarget({ list: 'q', index: i + 1 });
-                              }
+                      <div key={i} className="rounded-md border p-3 space-y-2 bg-muted/20">
+                        <div className="flex gap-2 items-start">
+                          <Input
+                            ref={(el) => { questionRefs.current[i] = el; }}
+                            placeholder={`Pergunta ${i + 1}`}
+                            value={q.question}
+                            onChange={(e) =>
+                              setQuestions(prev =>
+                                prev.map((item, idx) =>
+                                  idx === i ? { ...item, question: e.target.value } : item,
+                                ),
+                              )
                             }
-                          }}
-                          className="flex-1 text-sm"
-                        />
-                        <Select
-                          value={q.question_type}
-                          onValueChange={(val) =>
-                            setQuestions(prev =>
-                              prev.map((item, idx) =>
-                                idx === i
-                                  ? { ...item, question_type: val as 'text' | 'yes_no' }
-                                  : item,
-                              ),
-                            )
-                          }
-                        >
-                          <SelectTrigger className="w-32 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">Texto livre</SelectItem>
-                            <SelectItem value="yes_no">Sim / Não</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={() =>
-                            setQuestions(prev => prev.filter((_, idx) => idx !== i))
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                            className="flex-1 text-sm"
+                          />
+                          <Select
+                            value={q.question_type}
+                            onValueChange={(val) =>
+                              setQuestions(prev =>
+                                prev.map((item, idx) =>
+                                  idx === i
+                                    ? {
+                                        ...item,
+                                        question_type: val as ScreeningQuestion['question_type'],
+                                        options: val === 'multiple_choice' ? (item.options || ['', '']) : undefined,
+                                      }
+                                    : item,
+                                ),
+                              )
+                            }
+                          >
+                            <SelectTrigger className="w-40 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">Texto livre</SelectItem>
+                              <SelectItem value="yes_no">Sim / Não</SelectItem>
+                              <SelectItem value="multiple_choice">Múltipla escolha</SelectItem>
+                              <SelectItem value="scale_1_5">Escala 1 a 5</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() =>
+                              setQuestions(prev => prev.filter((_, idx) => idx !== i))
+                            }
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {q.question_type === 'multiple_choice' && (
+                          <div className="space-y-1.5 pl-1">
+                            <Label className="text-xs text-muted-foreground">Opções</Label>
+                            {(q.options || ['', '']).map((opt, optIdx) => (
+                              <div key={optIdx} className="flex gap-2">
+                                <Input
+                                  value={opt}
+                                  placeholder={`Opção ${optIdx + 1}`}
+                                  onChange={(e) =>
+                                    setQuestions(prev =>
+                                      prev.map((item, idx) => {
+                                        if (idx !== i) return item;
+                                        const next = [...(item.options || [])];
+                                        next[optIdx] = e.target.value;
+                                        return { ...item, options: next };
+                                      }),
+                                    )
+                                  }
+                                  className="text-sm h-8"
+                                />
+                                {(q.options?.length || 0) > 2 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() =>
+                                      setQuestions(prev =>
+                                        prev.map((item, idx) => {
+                                          if (idx !== i) return item;
+                                          return {
+                                            ...item,
+                                            options: (item.options || []).filter((_, oi) => oi !== optIdx),
+                                          };
+                                        }),
+                                      )
+                                    }
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() =>
+                                setQuestions(prev =>
+                                  prev.map((item, idx) =>
+                                    idx === i
+                                      ? { ...item, options: [...(item.options || []), ''] }
+                                      : item,
+                                  ),
+                                )
+                              }
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Adicionar opção
+                            </Button>
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer pl-1">
+                          <input
+                            type="checkbox"
+                            checked={q.required}
+                            onChange={(e) =>
+                              setQuestions(prev =>
+                                prev.map((item, idx) =>
+                                  idx === i ? { ...item, required: e.target.checked } : item,
+                                ),
+                              )
+                            }
+                            className="h-3.5 w-3.5 rounded border-input"
+                          />
+                          Resposta obrigatória
+                        </label>
                       </div>
                     ))}
                   </div>

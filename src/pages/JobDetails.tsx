@@ -19,6 +19,7 @@ interface ScreeningQuestion {
   question_type: string;
   required: boolean;
   order_position: number;
+  options: string[] | null;
 }
 
 export default function JobDetails() {
@@ -74,10 +75,10 @@ export default function JobDetails() {
       // Fetch screening questions
       const { data: qs } = await supabase
         .from('screening_questions')
-        .select('id, question, question_type, required, order_position')
+        .select('id, question, question_type, required, order_position, options')
         .eq('job_id', id)
         .order('order_position');
-      setQuestions((qs as ScreeningQuestion[]) || []);
+      setQuestions((qs as any as ScreeningQuestion[]) || []);
       
       // Check user role and if has applied
       if (user) {
@@ -145,54 +146,12 @@ export default function JobDetails() {
     setApplying(true);
 
     try {
-      // Get candidate profile with all details
+      // Get candidate profile (apenas para nome no insert; score é calculado por trigger)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('name')
         .eq('id', user.id)
         .single();
-
-      // Calculate score based on profile completeness and data
-      let calculatedScore = 0;
-      
-      if (profile) {
-        // Profile basic info (20 points max)
-        let profileScore = 0;
-        if (profile.name) profileScore += 5;
-        if (profile.phone) profileScore += 5;
-        if (profile.city && profile.state) profileScore += 5;
-        if (profile.summary) profileScore += 5;
-        calculatedScore += profileScore;
-        
-        // Experience (30 points max)
-        const experiences = profile.experiences || [];
-        if (Array.isArray(experiences)) {
-          const expPoints = Math.min(experiences.length * 10, 30);
-          calculatedScore += expPoints;
-        }
-        
-        // Education (20 points max)
-        const educations = profile.educations || [];
-        if (Array.isArray(educations)) {
-          const eduPoints = Math.min(educations.length * 10, 20);
-          calculatedScore += eduPoints;
-        }
-        
-        // Skills (20 points max)
-        const skills = profile.skills || [];
-        if (Array.isArray(skills)) {
-          const skillPoints = Math.min(skills.length * 2, 20);
-          calculatedScore += skillPoints;
-        }
-        
-        // CV uploaded (10 points)
-        if (profile.cv_url) {
-          calculatedScore += 10;
-        }
-      }
-      
-      // Ensure score is between 0 and 100
-      const finalScore = Math.min(Math.max(calculatedScore, 0), 100);
 
       // Detectar source da URL
       const searchParams = new URLSearchParams(window.location.search);
@@ -209,13 +168,13 @@ export default function JobDetails() {
           candidate_email: user.email || '',
           status: 'pending',
           current_stage: 'triagem',
-          score: finalScore,
           source,
         })
-        .select('id')
+        .select('id, score')
         .single();
 
       if (error) throw error;
+      const finalScore = appInserted?.score ?? 0;
 
       // Salvar respostas das perguntas de triagem
       if (appInserted?.id && questions.length > 0) {
@@ -433,6 +392,48 @@ export default function JobDetails() {
                                   </Label>
                                 </div>
                               </RadioGroup>
+                            ) : q.question_type === 'multiple_choice' ? (
+                              <RadioGroup
+                                value={answers[q.id] || ''}
+                                onValueChange={(val) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: val }))
+                                }
+                                className="flex flex-col gap-2"
+                              >
+                                {(q.options || []).map((opt, oi) => (
+                                  <div key={oi} className="flex items-center gap-2">
+                                    <RadioGroupItem value={opt} id={`${q.id}-opt-${oi}`} />
+                                    <Label
+                                      htmlFor={`${q.id}-opt-${oi}`}
+                                      className="font-normal cursor-pointer"
+                                    >
+                                      {opt}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            ) : q.question_type === 'scale_1_5' ? (
+                              <div className="flex gap-2">
+                                {[1, 2, 3, 4, 5].map((n) => {
+                                  const selected = answers[q.id] === String(n);
+                                  return (
+                                    <button
+                                      key={n}
+                                      type="button"
+                                      onClick={() =>
+                                        setAnswers((prev) => ({ ...prev, [q.id]: String(n) }))
+                                      }
+                                      className={`h-10 w-10 rounded-md border text-sm font-semibold transition-colors ${
+                                        selected
+                                          ? 'bg-primary text-primary-foreground border-primary'
+                                          : 'bg-background hover:bg-muted border-input'
+                                      }`}
+                                    >
+                                      {n}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             ) : (
                               <Textarea
                                 value={answers[q.id] || ''}

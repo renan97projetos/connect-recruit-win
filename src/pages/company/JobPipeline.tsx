@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Mail, Calendar, User, Info } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, Mail, Calendar, User, Info, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -21,58 +22,23 @@ interface Application {
   candidate_email: string;
   status: string;
   score: number | null;
+  adherence_score: number | null;
+  profile_completeness: number | null;
+  score_breakdown: any;
   applied_at: string;
 }
 
-interface ScoreBreakdown {
-  label: string;
-  earned: number;
-  max: number;
-}
+const CATEGORY_LABELS: Record<string, string> = {
+  skills: 'Habilidades',
+  experience: 'Experiência',
+  education: 'Formação',
+  location: 'Localização',
+};
 
-const calculateScoreBreakdown = (profile: any): ScoreBreakdown[] => {
-  const breakdown: ScoreBreakdown[] = [];
-
-  // Informações básicas (20 pts)
-  let basic = 0;
-  if (profile?.name) basic += 5;
-  if (profile?.phone) basic += 5;
-  if (profile?.city && profile?.state) basic += 5;
-  if (profile?.summary) basic += 5;
-  breakdown.push({ label: 'Informações básicas', earned: basic, max: 20 });
-
-  // Experiências (30 pts)
-  const experiences = Array.isArray(profile?.experiences) ? profile.experiences : [];
-  breakdown.push({
-    label: `Experiências (${experiences.length})`,
-    earned: Math.min(experiences.length * 10, 30),
-    max: 30,
-  });
-
-  // Formação (20 pts)
-  const educations = Array.isArray(profile?.educations) ? profile.educations : [];
-  breakdown.push({
-    label: `Formação (${educations.length})`,
-    earned: Math.min(educations.length * 10, 20),
-    max: 20,
-  });
-
-  // Habilidades (20 pts)
-  const skills = Array.isArray(profile?.skills) ? profile.skills : [];
-  breakdown.push({
-    label: `Habilidades (${skills.length})`,
-    earned: Math.min(skills.length * 2, 20),
-    max: 20,
-  });
-
-  // Currículo anexado (10 pts)
-  breakdown.push({
-    label: 'Currículo anexado',
-    earned: profile?.cv_url ? 10 : 0,
-    max: 10,
-  });
-
-  return breakdown;
+const getScoreClassification = (score: number) => {
+  if (score >= 80) return { label: 'Alto', color: 'text-success', bg: 'bg-success', badge: 'bg-success/10 text-success border-success/20' };
+  if (score >= 50) return { label: 'Médio', color: 'text-warning', bg: 'bg-warning', badge: 'bg-warning/10 text-warning border-warning/20' };
+  return { label: 'Baixo', color: 'text-destructive', bg: 'bg-destructive', badge: 'bg-destructive/10 text-destructive border-destructive/20' };
 };
 
 export default function JobPipeline() {
@@ -80,7 +46,6 @@ export default function JobPipeline() {
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState('');
   const [applications, setApplications] = useState<Application[]>([]);
-  const [breakdowns, setBreakdowns] = useState<Record<string, ScoreBreakdown[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -92,27 +57,13 @@ export default function JobPipeline() {
         supabase.from('jobs').select('title').eq('id', id).maybeSingle(),
         supabase
           .from('applications')
-          .select('id, candidate_id, candidate_name, candidate_email, status, score, applied_at')
+          .select('id, candidate_id, candidate_name, candidate_email, status, score, adherence_score, profile_completeness, score_breakdown, applied_at')
           .eq('job_id', id)
+          .order('adherence_score', { ascending: false })
           .order('applied_at', { ascending: false }),
       ]);
       if (jobRes.data) setJobTitle(jobRes.data.title);
-      const apps = (appsRes.data ?? []) as Application[];
-      setApplications(apps);
-
-      const candidateIds = Array.from(new Set(apps.map((a) => a.candidate_id)));
-      if (candidateIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, name, phone, city, state, summary, experiences, educations, skills, cv_url')
-          .in('id', candidateIds);
-        const map: Record<string, ScoreBreakdown[]> = {};
-        (profiles ?? []).forEach((p: any) => {
-          map[p.id] = calculateScoreBreakdown(p);
-        });
-        setBreakdowns(map);
-      }
-
+      setApplications((appsRes.data ?? []) as Application[]);
       setLoading(false);
     };
 
@@ -148,6 +99,12 @@ export default function JobPipeline() {
         <p className="text-muted-foreground">
           {applications.length} {applications.length === 1 ? 'candidato' : 'candidatos'}
         </p>
+        <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-2.5 text-xs text-muted-foreground">
+          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-warning" />
+          <span>
+            O score de aderência é uma estimativa para auxiliar a triagem — não substitui a análise humana.
+          </span>
+        </div>
       </div>
 
       {loading ? (
@@ -161,8 +118,11 @@ export default function JobPipeline() {
         <TooltipProvider delayDuration={150}>
           <div className="grid gap-3">
             {applications.map((app) => {
-              const breakdown = breakdowns[app.candidate_id];
-              const total = breakdown?.reduce((acc, b) => acc + b.earned, 0) ?? app.score ?? 0;
+              const score = app.adherence_score ?? app.score ?? 0;
+              const completeness = app.profile_completeness ?? 0;
+              const classification = getScoreClassification(score);
+              const breakdown = app.score_breakdown || {};
+
               return (
                 <Card
                   key={app.id}
@@ -185,55 +145,83 @@ export default function JobPipeline() {
                           {new Date(app.applied_at).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
+                      <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Perfil {completeness}% completo</span>
+                        <div className="flex-1 max-w-[120px]">
+                          <Progress value={completeness} className="h-1" />
+                        </div>
+                      </div>
                     </div>
-                    {app.score != null && app.score > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            variant="secondary"
-                            className="gap-1 cursor-help"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Score: {app.score}
-                            <Info className="h-3 w-3" />
+
+                    {/* Score de Aderência destacado */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className="flex flex-col items-end gap-1 min-w-[140px] cursor-help"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-lg font-bold tabular-nums ${classification.color}`}>
+                              {score}
+                            </span>
+                            <span className="text-xs text-muted-foreground">/100</span>
+                            <Info className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                          <div className="w-full">
+                            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className={`h-full ${classification.bg} transition-all`}
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                          </div>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${classification.badge}`}>
+                            {classification.label}
                           </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="end" className="max-w-xs p-3">
-                          <p className="font-semibold text-xs mb-2">
-                            Como o score foi calculado
-                          </p>
-                          {breakdown ? (
-                            <>
-                              <ul className="space-y-1 text-xs">
-                                {breakdown.map((b) => (
-                                  <li
-                                    key={b.label}
-                                    className="flex items-center justify-between gap-3"
-                                  >
-                                    <span className="text-muted-foreground">{b.label}</span>
-                                    <span
-                                      className={
-                                        b.earned > 0 ? 'font-medium' : 'text-muted-foreground'
-                                      }
-                                    >
-                                      {b.earned}/{b.max}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" align="start" className="max-w-xs p-3">
+                        <p className="font-semibold text-xs mb-2">Detalhamento do score</p>
+                        {Object.keys(breakdown).length > 0 ? (
+                          <>
+                            <ul className="space-y-1.5 text-xs">
+                              {(['skills', 'experience', 'education', 'location'] as const).map((key) => {
+                                const item = breakdown[key];
+                                if (!item) return null;
+                                const earned = item.earned ?? 0;
+                                const max = item.max ?? 0;
+                                const extra =
+                                  key === 'skills' && item.matched != null && item.required != null
+                                    ? ` (${item.matched}/${item.required} skills)`
+                                    : key === 'experience' && item.years != null
+                                      ? ` (${item.years} anos)`
+                                      : '';
+                                return (
+                                  <li key={key} className="flex items-center justify-between gap-3">
+                                    <span className="text-muted-foreground">
+                                      {CATEGORY_LABELS[key]}
+                                      <span className="text-[10px]">{extra}</span>
+                                    </span>
+                                    <span className={earned > 0 ? 'font-medium' : 'text-muted-foreground'}>
+                                      {earned}/{max}
                                     </span>
                                   </li>
-                                ))}
-                              </ul>
-                              <div className="mt-2 pt-2 border-t flex items-center justify-between text-xs font-semibold">
-                                <span>Total</span>
-                                <span>{total}/100</span>
-                              </div>
-                            </>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">
-                              Detalhes do perfil indisponíveis.
-                            </p>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                                );
+                              })}
+                            </ul>
+                            <div className="mt-2 pt-2 border-t flex items-center justify-between text-xs font-semibold">
+                              <span>Total</span>
+                              <span>{score}/100</span>
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            Score ainda não calculado. Configure os requisitos da vaga e o sistema recalculará automaticamente.
+                          </p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+
                     <Badge variant="outline" className="capitalize">
                       {app.status === 'pending' ? 'pendente' : app.status}
                     </Badge>
