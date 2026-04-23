@@ -72,6 +72,13 @@ export default function JobDetails() {
         }
       }
 
+      // Garante que perguntas auto-geradas existam (idempotente)
+      try {
+        await (supabase as any).rpc('generate_screening_questions', { _job_id: id });
+      } catch (genErr) {
+        console.warn('Não foi possível gerar perguntas automáticas:', genErr);
+      }
+
       // Fetch screening questions
       const { data: qs } = await supabase
         .from('screening_questions')
@@ -187,6 +194,14 @@ export default function JobDetails() {
           }));
         if (answerRows.length > 0) {
           await supabase.from('screening_answers').insert(answerRows);
+          // Aplicar respostas no score (bônus/penalidade)
+          try {
+            await (supabase as any).rpc('apply_screening_answers_to_score', {
+              _application_id: appInserted.id,
+            });
+          } catch (scoreErr) {
+            console.warn('Não foi possível aplicar score das respostas:', scoreErr);
+          }
         }
       }
 
