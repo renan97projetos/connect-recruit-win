@@ -26,7 +26,7 @@ export default function CandidateDashboard() {
         .from('applications')
         .select(`
           *,
-          jobs (
+          jobs!inner (
             id,
             title,
             company_name,
