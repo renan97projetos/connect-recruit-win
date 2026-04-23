@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { usePlanType } from '@/hooks/usePlanType';
+import { useUpgradeModal } from '@/contexts/UpgradeModalContext';
 import { useJarvisContext } from '@/hooks/useJarvisContext';
 import { JarvisFab } from '@/components/jarvis/JarvisFab';
 import { JarvisPanel } from '@/components/jarvis/JarvisPanel';
@@ -66,6 +67,7 @@ export default function CompanyDashboard() {
   const navigate = useNavigate();
   const { companyId, loading: roleLoading } = useCompanyRole();
   const { isPro } = usePlanType();
+  const { openUpgradeModal } = useUpgradeModal();
   const { context: jarvisContext } = useJarvisContext();
   const [jarvisOpen, setJarvisOpen] = useState(false);
   const [showBriefing, setShowBriefing] = useState(false);
@@ -474,7 +476,7 @@ export default function CompanyDashboard() {
                   </p>
                   <Button
                     size="sm"
-                    onClick={() => navigate('/company/profile?tab=plan')}
+                    onClick={() => openUpgradeModal({ featureName: 'Aprovação de vagas' })}
                     className="bg-amber-600 hover:bg-amber-700 text-white"
                   >
                     <Crown className="h-3.5 w-3.5 mr-1.5" />
