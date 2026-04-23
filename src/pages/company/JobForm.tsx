@@ -898,6 +898,8 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
+            <JobScoreConfig value={scoreConfig} onChange={setScoreConfig} />
+
             <ProFeatureGate featureName="Perguntas de Triagem">
             <Card>
               <CardHeader className="pb-2">
