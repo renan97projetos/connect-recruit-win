@@ -4,9 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Mail, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Info } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface Application {
   id: string;
@@ -17,6 +23,57 @@ interface Application {
   score: number | null;
   applied_at: string;
 }
+
+interface ScoreBreakdown {
+  label: string;
+  earned: number;
+  max: number;
+}
+
+const calculateScoreBreakdown = (profile: any): ScoreBreakdown[] => {
+  const breakdown: ScoreBreakdown[] = [];
+
+  // Informações básicas (20 pts)
+  let basic = 0;
+  if (profile?.name) basic += 5;
+  if (profile?.phone) basic += 5;
+  if (profile?.city && profile?.state) basic += 5;
+  if (profile?.summary) basic += 5;
+  breakdown.push({ label: 'Informações básicas', earned: basic, max: 20 });
+
+  // Experiências (30 pts)
+  const experiences = Array.isArray(profile?.experiences) ? profile.experiences : [];
+  breakdown.push({
+    label: `Experiências (${experiences.length})`,
+    earned: Math.min(experiences.length * 10, 30),
+    max: 30,
+  });
+
+  // Formação (20 pts)
+  const educations = Array.isArray(profile?.educations) ? profile.educations : [];
+  breakdown.push({
+    label: `Formação (${educations.length})`,
+    earned: Math.min(educations.length * 10, 20),
+    max: 20,
+  });
+
+  // Habilidades (20 pts)
+  const skills = Array.isArray(profile?.skills) ? profile.skills : [];
+  breakdown.push({
+    label: `Habilidades (${skills.length})`,
+    earned: Math.min(skills.length * 2, 20),
+    max: 20,
+  });
+
+  // Currículo anexado (10 pts)
+  breakdown.push({
+    label: 'Currículo anexado',
+    earned: profile?.cv_url ? 10 : 0,
+    max: 10,
+  });
+
+  return breakdown;
+};
 
 export default function JobPipeline() {
   const { id } = useParams();
