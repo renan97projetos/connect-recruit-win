@@ -72,6 +72,13 @@ export default function JobDetails() {
         }
       }
 
+      // Garante que perguntas auto-geradas existam (idempotente)
+      try {
+        await (supabase as any).rpc('generate_screening_questions', { _job_id: id });
+      } catch (genErr) {
+        console.warn('Não foi possível gerar perguntas automáticas:', genErr);
+      }
+
       // Fetch screening questions
       const { data: qs } = await supabase
         .from('screening_questions')
