@@ -33,6 +33,7 @@ type ImageKind = 'avatar' | 'logo';
 
 export default function CompanyProfile() {
   const { user } = useSupabaseAuth();
+  const { isPro } = usePlanType();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
