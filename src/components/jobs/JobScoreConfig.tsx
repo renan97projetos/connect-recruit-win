@@ -235,7 +235,7 @@ export function JobScoreConfig({ value, onChange }: Props) {
           })}
 
           {totalWeight !== 100 && (
-            <div className="flex items-start gap-2 rounded bg-amber-50 dark:bg-amber-950/30 p-2 text-xs text-amber-900 dark:text-amber-200">
+            <div className="flex items-start gap-2 rounded border border-warning/30 bg-warning/10 p-2 text-xs text-warning-foreground">
               <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
               <span>Os pesos somam {totalWeight}. Recomendamos manter em 100 para o score ficar sempre entre 0–100.</span>
             </div>
