@@ -66,10 +66,21 @@ export default function JobForm() {
 
   type ScreeningQuestion = {
     question: string;
-    question_type: 'text' | 'yes_no';
+    question_type: 'text' | 'yes_no' | 'multiple_choice' | 'scale_1_5';
     required: boolean;
+    options?: string[];
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+
+  const [scoreConfig, setScoreConfig] = useState<ScoreConfig>({
+    required_skills: [],
+    job_area: '',
+    required_education_level: '',
+    required_education_area: '',
+    min_experience_years: 0,
+    is_remote: false,
+    score_weights: { skills: 40, experience: 30, education: 20, location: 10 },
+  });
 
   const requirementRefs = useRef<(HTMLInputElement | null)[]>([]);
   const responsibilityRefs = useRef<(HTMLInputElement | null)[]>([]);
