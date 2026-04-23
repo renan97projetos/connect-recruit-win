@@ -146,54 +146,12 @@ export default function JobDetails() {
     setApplying(true);
 
     try {
-      // Get candidate profile with all details
+      // Get candidate profile (apenas para nome no insert; score é calculado por trigger)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('name')
         .eq('id', user.id)
         .single();
-
-      // Calculate score based on profile completeness and data
-      let calculatedScore = 0;
-      
-      if (profile) {
-        // Profile basic info (20 points max)
-        let profileScore = 0;
-        if (profile.name) profileScore += 5;
-        if (profile.phone) profileScore += 5;
-        if (profile.city && profile.state) profileScore += 5;
-        if (profile.summary) profileScore += 5;
-        calculatedScore += profileScore;
-        
-        // Experience (30 points max)
-        const experiences = profile.experiences || [];
-        if (Array.isArray(experiences)) {
-          const expPoints = Math.min(experiences.length * 10, 30);
-          calculatedScore += expPoints;
-        }
-        
-        // Education (20 points max)
-        const educations = profile.educations || [];
-        if (Array.isArray(educations)) {
-          const eduPoints = Math.min(educations.length * 10, 20);
-          calculatedScore += eduPoints;
-        }
-        
-        // Skills (20 points max)
-        const skills = profile.skills || [];
-        if (Array.isArray(skills)) {
-          const skillPoints = Math.min(skills.length * 2, 20);
-          calculatedScore += skillPoints;
-        }
-        
-        // CV uploaded (10 points)
-        if (profile.cv_url) {
-          calculatedScore += 10;
-        }
-      }
-      
-      // Ensure score is between 0 and 100
-      const finalScore = Math.min(Math.max(calculatedScore, 0), 100);
 
       // Detectar source da URL
       const searchParams = new URLSearchParams(window.location.search);
@@ -210,13 +168,13 @@ export default function JobDetails() {
           candidate_email: user.email || '',
           status: 'pending',
           current_stage: 'triagem',
-          score: finalScore,
           source,
         })
-        .select('id')
+        .select('id, score')
         .single();
 
       if (error) throw error;
+      const finalScore = appInserted?.score ?? 0;
 
       // Salvar respostas das perguntas de triagem
       if (appInserted?.id && questions.length > 0) {
