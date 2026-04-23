@@ -157,13 +157,53 @@ export default function CompanyDashboard() {
     setLoading(false);
   };
 
-  const getCountForStage = (stageId: PipelineStageId) =>
-    jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+  const getCountForStage = (stageId: PipelineStageId) => {
+    if (stageId === 'aguardando') {
+      return jobs.filter(
+        (j) =>
+          j.is_active &&
+          (j.pipeline_stage || 'aberta') === 'aberta' &&
+          (!j.applications || j.applications.length === 0)
+      ).length;
+    }
+    if (stageId === 'aberta') {
+      // 'Vaga aberta' agora exclui as que estão em 'aguardando' (sem candidatos e ativas)
+      return jobs.filter((j) => {
+        const stage = j.pipeline_stage || 'aberta';
+        if (stage !== 'aberta') return false;
+        const isAguardando =
+          j.is_active && (!j.applications || j.applications.length === 0);
+        return !isAguardando;
+      }).length;
+    }
+    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+  };
 
-  const jobsInActiveStage = useMemo(
-    () => jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage),
-    [jobs, activeStage]
+  const visibleStages = useMemo(
+    () => PIPELINE_STAGES.filter((s) => s.id !== 'aguardando' || getCountForStage('aguardando') > 0),
+    [jobs]
   );
+
+  const jobsInActiveStage = useMemo(() => {
+    if (activeStage === 'aguardando') {
+      return jobs.filter(
+        (j) =>
+          j.is_active &&
+          (j.pipeline_stage || 'aberta') === 'aberta' &&
+          (!j.applications || j.applications.length === 0)
+      );
+    }
+    if (activeStage === 'aberta') {
+      return jobs.filter((j) => {
+        const stage = j.pipeline_stage || 'aberta';
+        if (stage !== 'aberta') return false;
+        const isAguardando =
+          j.is_active && (!j.applications || j.applications.length === 0);
+        return !isAguardando;
+      });
+    }
+    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage);
+  }, [jobs, activeStage]);
 
   const activeStageLabel = PIPELINE_STAGES.find((s) => s.id === activeStage)?.label || '';
 
