@@ -167,13 +167,13 @@ export default function CompanyDashboard() {
       ).length;
     }
     if (stageId === 'aberta') {
-      // 'Vaga aberta' agora exclui as que estão em 'aguardando' (sem candidatos e ativas)
+      // 'Vagas' = rascunho + aguardando aprovação + pausadas (exclui aguardando 1º candidato)
       return jobs.filter((j) => {
         const stage = j.pipeline_stage || 'aberta';
         if (stage !== 'aberta') return false;
-        const isAguardando =
+        const isAguardandoCand =
           j.is_active && (!j.applications || j.applications.length === 0);
-        return !isAguardando;
+        return !isAguardandoCand;
       }).length;
     }
     return jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
