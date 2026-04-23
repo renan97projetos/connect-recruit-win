@@ -99,12 +99,6 @@ export default function JobPipeline() {
         <p className="text-muted-foreground">
           {applications.length} {applications.length === 1 ? 'candidato' : 'candidatos'}
         </p>
-        <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-2.5 text-xs text-muted-foreground">
-          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-warning" />
-          <span>
-            O score de aderência é uma estimativa para auxiliar a triagem — não substitui a análise humana.
-          </span>
-        </div>
       </div>
 
       {loading ? (
