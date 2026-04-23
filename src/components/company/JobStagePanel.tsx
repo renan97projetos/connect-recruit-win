@@ -401,7 +401,48 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
           </section>
         )}
 
-        {/* Ações desta etapa */}
+        {/* Cancelamento - solicitação pendente */}
+        {cancellationStatus === 'pending' && !isCancelled && (
+          <section className="px-6 py-4 bg-amber-50/60 border-b border-amber-100">
+            <p className="text-[11px] uppercase tracking-wide text-amber-700 font-semibold mb-1">
+              Cancelamento solicitado
+            </p>
+            {job.cancellation_reason && (
+              <p className="text-[13px] text-amber-900 mb-1">{job.cancellation_reason}</p>
+            )}
+            <p className="text-[11px] text-amber-700">
+              {isApprover ? 'Aguardando sua decisão.' : 'Aguardando aprovação do gestor.'}
+            </p>
+          </section>
+        )}
+
+        {/* Cancelamento - recusado */}
+        {cancellationStatus === 'rejected' && job.cancellation_rejection_reason && !isCancelled && (
+          <section className="px-6 py-4 bg-red-50/40 border-b border-red-100">
+            <p className="text-[11px] uppercase tracking-wide text-red-700 font-semibold mb-1">
+              Cancelamento recusado pelo gestor
+            </p>
+            <p className="text-[13px] text-red-900">{job.cancellation_rejection_reason}</p>
+          </section>
+        )}
+
+        {/* Cancelamento - aprovado (vaga cancelada) */}
+        {isCancelled && (
+          <section className="px-6 py-4 bg-rose-50/60 border-b border-rose-100">
+            <p className="text-[11px] uppercase tracking-wide text-rose-700 font-semibold mb-1">
+              Vaga cancelada
+            </p>
+            {job.cancellation_reason && (
+              <p className="text-[13px] text-rose-900">{job.cancellation_reason}</p>
+            )}
+            {job.cancellation_decided_at && (
+              <p className="text-[11px] text-rose-700 mt-1">
+                em {new Date(job.cancellation_decided_at).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+          </section>
+        )}
+
         <section className="px-6 py-5 border-b border-gray-200">
           <p className="text-[11px] uppercase tracking-wide text-gray-500 font-semibold mb-3">
             Ações
