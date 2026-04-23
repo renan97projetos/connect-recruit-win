@@ -140,12 +140,12 @@ export default function JobForm() {
   useEffect(() => {
     const load = async () => {
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name, company_name')
-          .eq('id', user.id)
-          .single();
+        const [{ data: profile }, { data: tenant }] = await Promise.all([
+          supabase.from('profiles').select('name, company_name').eq('id', user.id).single(),
+          supabase.from('tenants').select('default_approver_id').eq('company_id', user.id).maybeSingle(),
+        ]);
         setCompanyName(profile?.company_name || profile?.name || 'Sua empresa');
+        setHasDefaultApprover(!!(tenant as any)?.default_approver_id);
       }
       if (isEditing && id) {
         const { data: job, error } = await supabase
@@ -165,6 +165,7 @@ export default function JobForm() {
             salaryMax: job.salary_max?.toString() || '',
             experienceLevel: (job as any).experience_level || '',
             isActive: job.is_active,
+            requiresApproval: !!(job as any).requires_approval,
           });
           setRequirements(job.requirements?.length > 0 ? job.requirements : ['']);
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
@@ -236,7 +237,11 @@ export default function JobForm() {
       const filteredResponsibilities = responsibilities.filter(r => r.trim() !== '');
       const filteredBenefits = benefits.filter(b => b.trim() !== '');
 
-      const jobData = {
+      // Se exige aprovação e está publicando, NÃO ativa direto - vai para draft pendente
+      const willPublish = mode === 'publish';
+      const requiresApproval = formData.requiresApproval;
+
+      const jobData: any = {
         company_id: user.id,
         company_name: companyName || user.email || 'Empresa',
         title: formData.title,
@@ -252,7 +257,11 @@ export default function JobForm() {
         salary_currency: 'BRL',
         benefits: filteredBenefits,
         experience_level: formData.experienceLevel || null,
-        is_active: mode === 'publish',
+        is_active: willPublish && !requiresApproval,
+        requires_approval: requiresApproval,
+        approval_status: requiresApproval
+          ? (willPublish ? 'pending_approval' : 'draft')
+          : 'not_required',
       };
 
       let error;
