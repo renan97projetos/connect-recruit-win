@@ -27,6 +27,7 @@ import { JarvisCommandBar } from '@/components/jarvis/JarvisCommandBar';
 
 type PipelineStageId =
   | 'aberta'
+  | 'aguardando'
   | 'triagem'
   | 'entrevista'
   | 'avaliacao'
@@ -37,6 +38,7 @@ type PipelineStageId =
 
 const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
   { id: 'aberta', label: 'Vaga aberta', color: 'text-violet-600' },
+  { id: 'aguardando', label: 'Aguardando 1º candidato', color: 'text-purple-600' },
   { id: 'triagem', label: 'Triagem', color: 'text-gray-600' },
   { id: 'entrevista', label: 'Entrevista', color: 'text-blue-600' },
   { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
@@ -155,13 +157,53 @@ export default function CompanyDashboard() {
     setLoading(false);
   };
 
-  const getCountForStage = (stageId: PipelineStageId) =>
-    jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+  const getCountForStage = (stageId: PipelineStageId) => {
+    if (stageId === 'aguardando') {
+      return jobs.filter(
+        (j) =>
+          j.is_active &&
+          (j.pipeline_stage || 'aberta') === 'aberta' &&
+          (!j.applications || j.applications.length === 0)
+      ).length;
+    }
+    if (stageId === 'aberta') {
+      // 'Vaga aberta' agora exclui as que estão em 'aguardando' (sem candidatos e ativas)
+      return jobs.filter((j) => {
+        const stage = j.pipeline_stage || 'aberta';
+        if (stage !== 'aberta') return false;
+        const isAguardando =
+          j.is_active && (!j.applications || j.applications.length === 0);
+        return !isAguardando;
+      }).length;
+    }
+    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+  };
 
-  const jobsInActiveStage = useMemo(
-    () => jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage),
-    [jobs, activeStage]
+  const visibleStages = useMemo(
+    () => PIPELINE_STAGES.filter((s) => s.id !== 'aguardando' || getCountForStage('aguardando') > 0),
+    [jobs]
   );
+
+  const jobsInActiveStage = useMemo(() => {
+    if (activeStage === 'aguardando') {
+      return jobs.filter(
+        (j) =>
+          j.is_active &&
+          (j.pipeline_stage || 'aberta') === 'aberta' &&
+          (!j.applications || j.applications.length === 0)
+      );
+    }
+    if (activeStage === 'aberta') {
+      return jobs.filter((j) => {
+        const stage = j.pipeline_stage || 'aberta';
+        if (stage !== 'aberta') return false;
+        const isAguardando =
+          j.is_active && (!j.applications || j.applications.length === 0);
+        return !isAguardando;
+      });
+    }
+    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage);
+  }, [jobs, activeStage]);
 
   const activeStageLabel = PIPELINE_STAGES.find((s) => s.id === activeStage)?.label || '';
 
@@ -290,7 +332,7 @@ export default function CompanyDashboard() {
 
       {/* Pipeline — contadores clicáveis */}
       <div data-tour="pipeline-stages" className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {PIPELINE_STAGES.map((stage) => {
+        {visibleStages.map((stage) => {
           const isActive = activeStage === stage.id;
           const count = getCountForStage(stage.id);
           return (

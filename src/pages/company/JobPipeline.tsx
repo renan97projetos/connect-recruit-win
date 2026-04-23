@@ -66,6 +66,11 @@ export default function JobPipeline() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted px-2 py-0.5 rounded">
+            Triagem
+          </span>
+        </div>
         <h1 className="text-3xl font-bold">{jobTitle || 'Vaga'}</h1>
         <p className="text-muted-foreground">
           {applications.length} {applications.length === 1 ? 'candidato' : 'candidatos'}
