@@ -2,16 +2,27 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, ClipboardList, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CandidateProfileView } from '@/components/CandidateProfileView';
+
+interface ScreeningItem {
+  id: string;
+  question: string;
+  question_type: string;
+  source_key: string | null;
+  answer: string | null;
+}
 
 export default function CandidateView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any | null>(null);
   const [email, setEmail] = useState<string | undefined>();
+  const [screening, setScreening] = useState<ScreeningItem[]>([]);
+  const [jobTitle, setJobTitle] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,10 +36,10 @@ export default function CandidateView() {
         .eq('id', id)
         .maybeSingle();
 
-      // Pega o e-mail mais recente da tabela applications
+      // Pega a candidatura mais recente do candidato
       const { data: appData } = await supabase
         .from('applications')
-        .select('candidate_email')
+        .select('id, candidate_email, job_id, jobs(title)')
         .eq('candidate_id', id)
         .order('applied_at', { ascending: false })
         .limit(1)
@@ -43,11 +54,51 @@ export default function CandidateView() {
         });
       }
       if (appData?.candidate_email) setEmail(appData.candidate_email);
+      if ((appData as any)?.jobs?.title) setJobTitle((appData as any).jobs.title);
+
+      // Busca perguntas e respostas do screening da candidatura
+      if (appData?.id) {
+        const { data: answersData } = await supabase
+          .from('screening_answers')
+          .select('id, answer, question_id, screening_questions(question, question_type, source_key, order_position)')
+          .eq('application_id', appData.id);
+
+        if (answersData) {
+          const items: ScreeningItem[] = (answersData as any[])
+            .map((row) => ({
+              id: row.id,
+              answer: row.answer,
+              question: row.screening_questions?.question ?? '',
+              question_type: row.screening_questions?.question_type ?? 'text',
+              source_key: row.screening_questions?.source_key ?? null,
+              order_position: row.screening_questions?.order_position ?? 0,
+            }))
+            .sort((a: any, b: any) => a.order_position - b.order_position);
+          setScreening(items);
+        }
+      }
 
       setLoading(false);
     };
     load();
   }, [id]);
+
+  const renderAnswerBadge = (item: ScreeningItem) => {
+    const a = (item.answer ?? '').trim();
+    if (!a) {
+      return <span className="text-sm text-muted-foreground italic">Sem resposta</span>;
+    }
+    if (item.question_type === 'yes_no') {
+      const isYes = a.toLowerCase() === 'sim';
+      return (
+        <Badge variant={isYes ? 'default' : 'destructive'} className="gap-1">
+          {isYes ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+          {a}
+        </Badge>
+      );
+    }
+    return <Badge variant="secondary">{a}</Badge>;
+  };
 
   return (
     <CompanyLayout>
@@ -76,7 +127,40 @@ export default function CandidateView() {
           </p>
         </Card>
       ) : (
-        <CandidateProfileView profile={profile} email={email} />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <CandidateProfileView profile={profile} email={email} />
+          </div>
+          <aside className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <ClipboardList className="h-5 w-5" />
+                  Respostas do Screening
+                </CardTitle>
+                {jobTitle && (
+                  <p className="text-xs text-muted-foreground">Vaga: {jobTitle}</p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {screening.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Este candidato ainda não respondeu perguntas customizadas.
+                  </p>
+                ) : (
+                  screening.map((item) => (
+                    <div key={item.id} className="border-l-2 border-primary/40 pl-3">
+                      <p className="text-sm font-medium mb-1.5 leading-snug">
+                        {item.question}
+                      </p>
+                      <div>{renderAnswerBadge(item)}</div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
       )}
     </CompanyLayout>
   );
