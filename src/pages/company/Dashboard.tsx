@@ -171,16 +171,23 @@ export default function CompanyDashboard() {
       ).length;
     }
     if (stageId === 'aberta') {
-      // 'Vagas' = rascunho + aguardando aprovação + pausadas (exclui aguardando 1º candidato)
+      // 'Vagas' = vagas ativas publicadas em 'aberta' que JÁ receberam candidatos,
+      // ou pausadas. Exclui drafts (is_active=false), arquivadas e aguardando 1º candidato.
       return jobs.filter((j) => {
         const stage = j.pipeline_stage || 'aberta';
         if (stage !== 'aberta') return false;
-        const isAguardandoCand =
-          j.is_active && (!j.applications || j.applications.length === 0);
-        return !isAguardandoCand;
+        if (j.is_archived) return false;
+        const hasApps = j.applications && j.applications.length > 0;
+        // pausadas contam aqui mesmo sem candidatos
+        if (j.is_paused) return true;
+        // ativas só contam se já tiverem candidatos (senão vão para "Aguardando 1º candidato")
+        return j.is_active && hasApps;
       }).length;
     }
-    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+    return jobs.filter((j) => {
+      if (j.is_archived) return false;
+      return (j.pipeline_stage || 'aberta') === stageId;
+    }).length;
   };
 
   const visibleStages = useMemo(
@@ -201,12 +208,16 @@ export default function CompanyDashboard() {
       return jobs.filter((j) => {
         const stage = j.pipeline_stage || 'aberta';
         if (stage !== 'aberta') return false;
-        const isAguardando =
-          j.is_active && (!j.applications || j.applications.length === 0);
-        return !isAguardando;
+        if (j.is_archived) return false;
+        const hasApps = j.applications && j.applications.length > 0;
+        if (j.is_paused) return true;
+        return j.is_active && hasApps;
       });
     }
-    return jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage);
+    return jobs.filter((j) => {
+      if (j.is_archived) return false;
+      return (j.pipeline_stage || 'aberta') === activeStage;
+    });
   }, [jobs, activeStage]);
 
   const activeStageLabel = PIPELINE_STAGES.find((s) => s.id === activeStage)?.label || '';
