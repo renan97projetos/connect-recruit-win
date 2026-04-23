@@ -64,6 +64,11 @@ export default function CandidateDashboard() {
       return;
     }
     
+    // Atualização otimista: remove imediatamente do estado local
+    // para que todos os indicadores e abas sincronizem na hora.
+    setApplications((prev) => prev.filter((a) => a.id !== applicationId));
+    
+    // Recarrega do servidor para garantir consistência
     loadApplications();
     
     toast({
