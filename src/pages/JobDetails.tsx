@@ -117,7 +117,7 @@ export default function JobDetails() {
         description: 'Você precisa estar logado como candidato',
         variant: 'destructive',
       });
-      navigate('/login');
+      navigate(`/login?as=candidate&redirect=${encodeURIComponent(location.pathname)}`);
       return;
     }
 
@@ -481,7 +481,7 @@ export default function JobDetails() {
                 ) : (
                   <>
                     <Button
-                      onClick={() => navigate('/login')}
+                      onClick={() => navigate(`/login?as=candidate&redirect=${encodeURIComponent(location.pathname)}`)}
                       size="lg"
                       className="w-full sm:w-auto"
                     >
