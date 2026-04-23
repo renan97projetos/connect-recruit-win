@@ -11,7 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Users, MapPin, Clock, Download } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Users, MapPin, Clock, Download, Crown, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { JobStagePanel } from '@/components/company/JobStagePanel';
 import { useToast } from '@/hooks/use-toast';
@@ -400,7 +400,7 @@ export default function CompanyDashboard() {
               };
               const badge = job.is_paused
                 ? { text: 'Pausada', cls: 'bg-yellow-50 text-yellow-700' }
-                : job.requires_approval && approvalLabel[job.approval_status]
+                : isPro && job.requires_approval && approvalLabel[job.approval_status]
                   ? approvalLabel[job.approval_status]
                   : job.is_active
                     ? { text: 'Ativa', cls: 'bg-green-50 text-green-700' }
@@ -452,15 +452,50 @@ export default function CompanyDashboard() {
               </section>
             );
 
-            const hasAny = pausadas.length + aguardando.length + rascunhos.length > 0;
+            const renderApprovalUpgradeCard = () => (
+              <section key="approval-upgrade">
+                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  <h3 className="text-sm font-semibold text-gray-700">Aguardando aprovação</h3>
+                  <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                    <Lock className="h-3 w-3" /> Pro
+                  </span>
+                </div>
+                <div className="rounded-xl border-2 border-dashed border-amber-200 bg-gradient-to-br from-amber-50/60 to-transparent p-6 text-center">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 mb-3">
+                    <Crown className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                    Fluxo de aprovação de vagas
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-4 max-w-md mx-auto">
+                    Exija a aprovação de um gestor antes de publicar uma vaga, defina prazos e
+                    acompanhe o status em tempo real. Disponível no plano Pro.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate('/company/profile?tab=plan')}
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <Crown className="h-3.5 w-3.5 mr-1.5" />
+                    Fazer upgrade para Pro
+                  </Button>
+                </div>
+              </section>
+            );
+
+            const hasAny =
+              pausadas.length + (isPro ? aguardando.length : 0) + rascunhos.length > 0;
 
             return (
               <div className="space-y-8">
-                {aguardando.length > 0 && renderGroup('Aguardando aprovação', 'bg-amber-500', aguardando)}
+                {isPro
+                  ? aguardando.length > 0 && renderGroup('Aguardando aprovação', 'bg-amber-500', aguardando)
+                  : renderApprovalUpgradeCard()}
                 {rascunhos.length > 0 && renderGroup('Rascunho', 'bg-gray-400', rascunhos)}
                 {pausadas.length > 0 && renderGroup('Pausadas', 'bg-yellow-500', pausadas)}
 
-                {!hasAny && (
+                {!hasAny && isPro && (
                   <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center bg-white/50">
                     <p className="text-gray-400 text-sm mb-1">Nenhuma vaga em rascunho, aguardando ou pausada</p>
                     <Button
