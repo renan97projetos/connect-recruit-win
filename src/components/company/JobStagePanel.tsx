@@ -244,6 +244,113 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
     onClose();
   };
 
+  // Excluir vaga (apenas rascunho)
+  const handleDelete = async () => {
+    setBusy(true);
+    const { error } = await supabase.from('jobs').delete().eq('id', job.id);
+    setBusy(false);
+    setDeleteOpen(false);
+    if (error) return toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+    toast({ title: 'Vaga excluída', description: 'O rascunho foi removido.' });
+    refresh();
+    onClose();
+  };
+
+  // Solicitar cancelamento (vaga publicada) — vai para o gestor aprovar
+  const handleRequestCancellation = async () => {
+    if (!cancelReason.trim()) {
+      toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
+      return;
+    }
+    let approverId = job.approver_id;
+    if (!approverId) {
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('default_approver_id')
+        .eq('company_id', job.company_id)
+        .maybeSingle();
+      approverId = (tenant as any)?.default_approver_id;
+    }
+    if (!approverId) {
+      toast({
+        title: 'Configure um gestor',
+        description: 'Defina o aprovador padrão em Perfil da Empresa.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase
+      .from('jobs')
+      .update({
+        cancellation_status: 'pending',
+        cancellation_reason: cancelReason.trim(),
+        cancellation_requested_at: new Date().toISOString(),
+        cancellation_requested_by: user?.id,
+        approver_id: approverId,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq('id', job.id);
+    setBusy(false);
+    setCancelRequestOpen(false);
+    setCancelReason('');
+    if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    toast({
+      title: 'Solicitação enviada',
+      description: 'O gestor foi notificado para aprovar o cancelamento.',
+    });
+    refresh();
+    onClose();
+  };
+
+  // Aprovar cancelamento (gestor)
+  const handleApproveCancellation = async () => {
+    setBusy(true);
+    const { error } = await supabase
+      .from('jobs')
+      .update({
+        cancellation_status: 'approved',
+        cancellation_decided_at: new Date().toISOString(),
+        cancellation_decided_by: user?.id,
+        cancellation_rejection_reason: null,
+        pipeline_stage: 'cancelada',
+        is_active: false,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq('id', job.id);
+    setBusy(false);
+    if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    toast({ title: 'Cancelamento aprovado', description: 'A vaga foi movida para Canceladas.' });
+    refresh();
+    onClose();
+  };
+
+  // Recusar cancelamento (gestor)
+  const handleRejectCancellation = async () => {
+    if (!cancelRejectReason.trim()) {
+      toast({ title: 'Justificativa obrigatória', variant: 'destructive' });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase
+      .from('jobs')
+      .update({
+        cancellation_status: 'rejected',
+        cancellation_decided_at: new Date().toISOString(),
+        cancellation_decided_by: user?.id,
+        cancellation_rejection_reason: cancelRejectReason.trim(),
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq('id', job.id);
+    setBusy(false);
+    setCancelRejectOpen(false);
+    setCancelRejectReason('');
+    if (error) return toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    toast({ title: 'Cancelamento recusado', description: 'O recrutador foi notificado.' });
+    refresh();
+    onClose();
+  };
+
   const isOverdue =
     approvalStatus === 'pending_approval' &&
     job.approval_deadline_at &&
