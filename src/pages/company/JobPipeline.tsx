@@ -113,7 +113,7 @@ export default function JobPipeline() {
                   <Badge variant="secondary">Score: {app.score}</Badge>
                 )}
                 <Badge variant="outline" className="capitalize">
-                  {app.status}
+                  {app.status === 'pending' ? 'pendente' : app.status}
                 </Badge>
               </div>
             </Card>
