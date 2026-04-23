@@ -1017,6 +1017,13 @@ export type Database = {
           approval_submitted_at: string | null
           approver_id: string | null
           benefits: string[] | null
+          cancellation_decided_at: string | null
+          cancellation_decided_by: string | null
+          cancellation_reason: string | null
+          cancellation_rejection_reason: string | null
+          cancellation_requested_at: string | null
+          cancellation_requested_by: string | null
+          cancellation_status: string
           city: string | null
           company_id: string | null
           company_name: string
@@ -1061,6 +1068,13 @@ export type Database = {
           approval_submitted_at?: string | null
           approver_id?: string | null
           benefits?: string[] | null
+          cancellation_decided_at?: string | null
+          cancellation_decided_by?: string | null
+          cancellation_reason?: string | null
+          cancellation_rejection_reason?: string | null
+          cancellation_requested_at?: string | null
+          cancellation_requested_by?: string | null
+          cancellation_status?: string
           city?: string | null
           company_id?: string | null
           company_name: string
@@ -1105,6 +1119,13 @@ export type Database = {
           approval_submitted_at?: string | null
           approver_id?: string | null
           benefits?: string[] | null
+          cancellation_decided_at?: string | null
+          cancellation_decided_by?: string | null
+          cancellation_reason?: string | null
+          cancellation_rejection_reason?: string | null
+          cancellation_requested_at?: string | null
+          cancellation_requested_by?: string | null
+          cancellation_status?: string
           city?: string | null
           company_id?: string | null
           company_name?: string
