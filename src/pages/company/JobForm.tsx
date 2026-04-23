@@ -182,18 +182,31 @@ export default function JobForm() {
           setRequirements(job.requirements?.length > 0 ? job.requirements : ['']);
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
           setBenefits(job.benefits?.length > 0 ? job.benefits : ['']);
+          const j = job as any;
+          setScoreConfig({
+            required_skills: j.required_skills || [],
+            job_area: j.job_area || '',
+            required_education_level: j.required_education_level || '',
+            required_education_area: j.required_education_area || '',
+            min_experience_years: j.min_experience_years || 0,
+            is_remote: j.location === 'remote' || !!j.is_remote,
+            score_weights: j.score_weights || { skills: 40, experience: 30, education: 20, location: 10 },
+          });
         }
         const { data: qs } = await supabase
           .from('screening_questions')
-          .select('question, question_type, required, order_position')
+          .select('question, question_type, required, order_position, options')
           .eq('job_id', id)
           .order('order_position');
         if (qs && qs.length > 0) {
           setQuestions(
             qs.map((q: any) => ({
               question: q.question,
-              question_type: (q.question_type === 'yes_no' ? 'yes_no' : 'text') as 'text' | 'yes_no',
+              question_type: (['text', 'yes_no', 'multiple_choice', 'scale_1_5'].includes(q.question_type)
+                ? q.question_type
+                : 'text') as ScreeningQuestion['question_type'],
               required: !!q.required,
+              options: Array.isArray(q.options) ? q.options : undefined,
             })),
           );
         }
