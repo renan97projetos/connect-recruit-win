@@ -21,6 +21,7 @@ import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 import { ProFeatureGate } from '@/components/ProFeatureGate';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 import { REQUIREMENT_CATEGORIES } from '@/lib/jobRequirements';
+import { JobScoreConfig, ScoreConfig } from '@/components/jobs/JobScoreConfig';
 
 interface FormErrors {
   title?: string;
