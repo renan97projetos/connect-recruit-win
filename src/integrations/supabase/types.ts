@@ -997,6 +997,13 @@ export type Database = {
       }
       jobs: {
         Row: {
+          approval_deadline_at: string | null
+          approval_deadline_days: number | null
+          approval_decided_at: string | null
+          approval_rejection_reason: string | null
+          approval_status: Database["public"]["Enums"]["job_approval_status"]
+          approval_submitted_at: string | null
+          approver_id: string | null
           benefits: string[] | null
           city: string | null
           company_id: string | null
@@ -1009,11 +1016,15 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_archived: boolean | null
+          is_paused: boolean
           job_request_id: string | null
           job_type: string
           location: string
+          paused_at: string | null
+          paused_reason: string | null
           pipeline_stage: string
           requirements: string[] | null
+          requires_approval: boolean
           responsibilities: string[] | null
           salary_currency: string | null
           salary_max: number | null
@@ -1023,6 +1034,13 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          approval_deadline_at?: string | null
+          approval_deadline_days?: number | null
+          approval_decided_at?: string | null
+          approval_rejection_reason?: string | null
+          approval_status?: Database["public"]["Enums"]["job_approval_status"]
+          approval_submitted_at?: string | null
+          approver_id?: string | null
           benefits?: string[] | null
           city?: string | null
           company_id?: string | null
@@ -1035,11 +1053,15 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_archived?: boolean | null
+          is_paused?: boolean
           job_request_id?: string | null
           job_type: string
           location: string
+          paused_at?: string | null
+          paused_reason?: string | null
           pipeline_stage?: string
           requirements?: string[] | null
+          requires_approval?: boolean
           responsibilities?: string[] | null
           salary_currency?: string | null
           salary_max?: number | null
@@ -1049,6 +1071,13 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          approval_deadline_at?: string | null
+          approval_deadline_days?: number | null
+          approval_decided_at?: string | null
+          approval_rejection_reason?: string | null
+          approval_status?: Database["public"]["Enums"]["job_approval_status"]
+          approval_submitted_at?: string | null
+          approver_id?: string | null
           benefits?: string[] | null
           city?: string | null
           company_id?: string | null
@@ -1061,11 +1090,15 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_archived?: boolean | null
+          is_paused?: boolean
           job_request_id?: string | null
           job_type?: string
           location?: string
+          paused_at?: string | null
+          paused_reason?: string | null
           pipeline_stage?: string
           requirements?: string[] | null
+          requires_approval?: boolean
           responsibilities?: string[] | null
           salary_currency?: string | null
           salary_max?: number | null
@@ -1506,6 +1539,8 @@ export type Database = {
           current_employees_count: number | null
           current_jobs_count: number | null
           current_users_count: number | null
+          default_approval_deadline_days: number | null
+          default_approver_id: string | null
           id: string
           notes: string | null
           plan_id: string | null
@@ -1527,6 +1562,8 @@ export type Database = {
           current_employees_count?: number | null
           current_jobs_count?: number | null
           current_users_count?: number | null
+          default_approval_deadline_days?: number | null
+          default_approver_id?: string | null
           id?: string
           notes?: string | null
           plan_id?: string | null
@@ -1548,6 +1585,8 @@ export type Database = {
           current_employees_count?: number | null
           current_jobs_count?: number | null
           current_users_count?: number | null
+          default_approval_deadline_days?: number | null
+          default_approver_id?: string | null
           id?: string
           notes?: string | null
           plan_id?: string | null
@@ -1841,6 +1880,12 @@ export type Database = {
         | "afastado"
         | "desligado"
         | "aguardando_cadastro"
+      job_approval_status:
+        | "not_required"
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "rejected"
       job_request_status:
         | "draft"
         | "pending_approval"
@@ -2012,6 +2057,13 @@ export const Constants = {
         "afastado",
         "desligado",
         "aguardando_cadastro",
+      ],
+      job_approval_status: [
+        "not_required",
+        "draft",
+        "pending_approval",
+        "approved",
+        "rejected",
       ],
       job_request_status: [
         "draft",
