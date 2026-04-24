@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +27,8 @@ interface JobScreeningGroup {
 export default function CandidateView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const filterJobId = searchParams.get('jobId');
   const [profile, setProfile] = useState<any | null>(null);
   const [email, setEmail] = useState<string | undefined>();
   const [screeningGroups, setScreeningGroups] = useState<JobScreeningGroup[]>([]);
@@ -43,12 +45,16 @@ export default function CandidateView() {
         .eq('id', id)
         .maybeSingle();
 
-      // Pega TODAS as candidaturas do candidato
-      const { data: apps } = await supabase
+      // Pega candidaturas (filtra por vaga atual quando vier no contexto)
+      let appsQuery = supabase
         .from('applications')
         .select('id, candidate_email, job_id, jobs(title)')
         .eq('candidate_id', id)
         .order('applied_at', { ascending: false });
+      if (filterJobId) {
+        appsQuery = appsQuery.eq('job_id', filterJobId);
+      }
+      const { data: apps } = await appsQuery;
 
       if (profileData) {
         setProfile({
@@ -108,7 +114,7 @@ export default function CandidateView() {
       setLoading(false);
     };
     load();
-  }, [id]);
+  }, [id, filterJobId]);
 
   const renderAnswerBadge = (item: ScreeningItem) => {
     const a = (item.answer ?? '').trim();
