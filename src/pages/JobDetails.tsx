@@ -318,9 +318,9 @@ export default function JobDetails() {
       
       <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" asChild className="mb-6">
-          <Link to="/">
+          <Link to={userRole === 'company' || userRole === 'admin' ? '/company/dashboard' : '/'}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
+            {userRole === 'company' || userRole === 'admin' ? 'Voltar para Gestão de Vagas' : 'Voltar'}
           </Link>
         </Button>
 
