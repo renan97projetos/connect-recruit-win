@@ -191,6 +191,12 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [savingInterview, setSavingInterview] = useState(false);
   const [interviewTab, setInterviewTab] = useState<'agendar' | 'feedback'>('agendar');
 
+  // Notas internas
+  const [noteSheetOpen, setNoteSheetOpen] = useState(false);
+  const [noteApp, setNoteApp] = useState<ApplicationRow | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+
   useEffect(() => {
     if (!jobId) return;
     loadData();
