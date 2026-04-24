@@ -64,6 +64,8 @@ import {
   BriefcaseBusiness,
   Trash2,
   User as UserIcon,
+  FileText,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
