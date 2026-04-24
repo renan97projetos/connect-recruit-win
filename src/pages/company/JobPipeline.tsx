@@ -504,7 +504,7 @@ ${companyName}`;
     setInterviewSheetOpen(false);
   };
 
-
+  const statusLabels: Record<string, { label: string; className: string }> = {
     pending: { label: 'pendente', className: '' },
     approved: { label: 'aprovado', className: 'bg-success/10 text-success border-success/20' },
     rejected: { label: 'reprovado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
