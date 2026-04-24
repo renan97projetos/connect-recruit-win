@@ -290,6 +290,7 @@ function ScoreTooltip({
 }
 
 
+export default function JobPipeline() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
