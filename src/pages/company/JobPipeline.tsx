@@ -262,6 +262,9 @@ export default function JobPipeline() {
     const current = jobRow?.pipeline_stage || 'triagem';
     if ((STAGE_ORDER[highest] ?? 0) > (STAGE_ORDER[current] ?? 0)) {
       await supabase.from('jobs').update({ pipeline_stage: highest }).eq('id', id);
+      setJobStage(highest);
+    } else {
+      setJobStage(current);
     }
   };
 
