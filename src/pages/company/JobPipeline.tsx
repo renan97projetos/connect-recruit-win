@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown, Video, MapPin, Phone, Loader2, CalendarPlus } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown, Video, MapPin, Phone, Loader2, CalendarPlus, MessageCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -404,6 +404,50 @@ export default function JobPipeline() {
       setFeedbackScore(data.feedback_score || 0);
       if (data.status === 'done') setInterviewTab('feedback');
     }
+  };
+
+  const buildWhatsAppMessage = () => {
+    if (!interviewApp || !interviewData.scheduled_at) return '';
+    const dateFormatted = new Date(interviewData.scheduled_at).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    const formatLabels: Record<string, string> = {
+      video: 'Videochamada',
+      presencial: 'Presencial',
+      telefone: 'Ligação telefônica',
+    };
+    let msg = `Olá ${interviewApp.candidate_name}! 👋\n\n`;
+    msg += `Você avançou para a etapa de entrevista no processo seletivo da vaga *${jobTitle}* na ${companyName}.\n\n`;
+    msg += `*Detalhes do agendamento:*\n`;
+    msg += `📅 ${dateFormatted}\n`;
+    msg += `📋 ${formatLabels[interviewData.format] || interviewData.format}\n`;
+    if (interviewData.format === 'video' && interviewData.meeting_link) {
+      msg += `🔗 ${interviewData.meeting_link}\n`;
+    }
+    if (interviewData.format === 'presencial' && interviewData.location) {
+      msg += `📍 ${interviewData.location}\n`;
+    }
+    if (interviewData.interviewer_name) {
+      msg += `👤 Entrevistador: ${interviewData.interviewer_name}\n`;
+    }
+    msg += `\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
+    return msg;
+  };
+
+  const notifyByWhatsApp = () => {
+    if (!interviewApp || !interviewData.scheduled_at) {
+      toast.error('Preencha a data e horário antes de enviar.');
+      return;
+    }
+    const phoneDigits = sanitizePhone(interviewApp.candidate_phone);
+    if (!phoneDigits) {
+      toast.error('Candidato sem telefone cadastrado.');
+      return;
+    }
+    const message = buildWhatsAppMessage();
+    const url = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const saveInterview = async () => {
@@ -1133,11 +1177,27 @@ ${companyName}`;
                   >
                     {savingInterview ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
-                    ) : existingInterview ? 'Atualizar agendamento' : 'Agendar e notificar candidato'}
+                    ) : existingInterview ? 'Atualizar agendamento' : 'Agendar e notificar por e-mail'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={notifyByWhatsApp}
+                    disabled={!interviewData.scheduled_at || !interviewApp?.candidate_phone}
+                    className="w-full gap-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 hover:text-[#25D366]"
+                    title={!interviewApp?.candidate_phone ? 'Candidato sem telefone cadastrado' : 'Abrir WhatsApp com mensagem pronta'}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Notificar pelo WhatsApp
                   </Button>
                   <p className="text-[11px] text-muted-foreground text-center">
-                    Um e-mail com os detalhes será enviado automaticamente ao candidato.
+                    O e-mail é enviado automaticamente. O WhatsApp abre uma janela com a mensagem pronta para você revisar e enviar.
                   </p>
+                  {!interviewApp?.candidate_phone && (
+                    <p className="text-[11px] text-warning text-center">
+                      ⚠ Candidato não tem telefone cadastrado — botão WhatsApp indisponível.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
