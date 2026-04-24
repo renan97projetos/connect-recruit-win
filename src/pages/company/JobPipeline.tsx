@@ -577,7 +577,7 @@ ${companyName}`;
         </Button>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted px-2 py-0.5 rounded">
-            Triagem
+            {({ triagem: 'Triagem', entrevista: 'Entrevista', avaliacao: 'Avaliação', proposta: 'Proposta', admissao: 'Admissão', aprovado: 'Aprovado' } as Record<string, string>)[jobStage] || 'Triagem'}
           </span>
         </div>
         <h1 className="text-3xl font-bold">{jobTitle || 'Vaga'}</h1>
