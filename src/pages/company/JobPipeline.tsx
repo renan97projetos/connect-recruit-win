@@ -87,6 +87,7 @@ export default function JobPipeline() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState('');
+  const [jobStage, setJobStage] = useState<string>('triagem');
   const [companyName, setCompanyName] = useState('');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
