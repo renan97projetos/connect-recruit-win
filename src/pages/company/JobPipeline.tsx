@@ -220,20 +220,32 @@ export default function JobPipeline() {
     return true;
   };
 
-  const moveToInterview = async (app: any) => {
-    const ok = await updateApplication(app.id, { current_stage: 'entrevista', status: 'in-review' });
+  const moveToNextStage = async (app: any) => {
+    const currentStage = getCandidateStage(app);
+    const next = getNextStage(currentStage);
+    if (!next) {
+      toast({ title: 'Candidato já está na etapa final', variant: 'destructive' });
+      return;
+    }
+    const ok = await updateApplication(app.id, {
+      current_stage: next.id,
+      status: STATUS_FOR_STAGE[next.id],
+    });
     if (!ok) return;
-    toast({ title: `${app.candidate_name} movido para Entrevista` });
+    toast({ title: `${app.candidate_name} movido para ${next.label}` });
 
-    supabase.functions.invoke('send-candidate-status-email', {
-      body: {
-        candidateName: app.candidate_name,
-        candidateEmail: app.candidate_email,
-        jobTitle,
-        companyName: companyName || 'Sinapse RH',
-        newStatus: 'interview',
-      },
-    }).catch(console.error);
+    const emailStatus = EMAIL_STATUS_FOR_STAGE[next.id];
+    if (emailStatus) {
+      supabase.functions.invoke('send-candidate-status-email', {
+        body: {
+          candidateName: app.candidate_name,
+          candidateEmail: app.candidate_email,
+          jobTitle,
+          companyName: companyName || 'Sinapse RH',
+          newStatus: emailStatus,
+        },
+      }).catch(console.error);
+    }
   };
 
   const rejectCandidate = async (app: any) => {
