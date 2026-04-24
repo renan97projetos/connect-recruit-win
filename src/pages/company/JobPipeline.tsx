@@ -316,6 +316,57 @@ export default function JobPipeline() {
                       </div>
                     </div>
 
+                    {/* Ações de triagem: Aprovar / Reprovar / Mover para entrevista */}
+                    {app.status === 'pending' && (
+                      <div
+                        className="flex items-center gap-1 flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-success/40 text-success hover:bg-success/10 hover:border-success"
+                              onClick={() => handleUpdateStatus(app.id, 'approved')}
+                              aria-label="Aprovar candidato"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Aprovar</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-destructive/40 text-destructive hover:bg-destructive/10 hover:border-destructive"
+                              onClick={() => handleUpdateStatus(app.id, 'rejected')}
+                              aria-label="Reprovar candidato"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Reprovar</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary"
+                              onClick={() => handleUpdateStatus(app.id, 'interview')}
+                              aria-label="Mover para entrevista"
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Mover para entrevista</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    )}
+
                     {/* Ações: WhatsApp e Notas */}
                     <div
                       className="flex items-center gap-1 flex-shrink-0"
