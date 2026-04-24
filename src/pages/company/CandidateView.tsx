@@ -114,7 +114,7 @@ export default function CandidateView() {
       setLoading(false);
     };
     load();
-  }, [id]);
+  }, [id, filterJobId]);
 
   const renderAnswerBadge = (item: ScreeningItem) => {
     const a = (item.answer ?? '').trim();
