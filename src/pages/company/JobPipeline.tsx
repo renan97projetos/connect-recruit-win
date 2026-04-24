@@ -1078,7 +1078,7 @@ export default function JobPipeline() {
                             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                             onClick={() => rejectCandidate(app)}
                             disabled={actionLoading === app.id}
-                            title="Reprovar (envia e-mail)"
+                            title="Rejeitar (envia e-mail)"
                           >
                             <ThumbsDown className="h-4 w-4" />
                           </Button>
@@ -1376,7 +1376,7 @@ export default function JobPipeline() {
                           className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => rejectCandidate(app)}
                           disabled={actionLoading === app.id}
-                          title="Reprovar (envia e-mail)"
+                          title="Rejeitar (envia e-mail)"
                         >
                           <ThumbsDown className="h-3 w-3" />
                         </Button>
@@ -1515,7 +1515,7 @@ export default function JobPipeline() {
                       className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => rejectCandidate(app)}
                       disabled={actionLoading === app.id}
-                      title="Reprovar (envia e-mail)"
+                      title="Rejeitar (envia e-mail)"
                     >
                       <ThumbsDown className="h-3 w-3" />
                     </Button>
@@ -1780,7 +1780,7 @@ export default function JobPipeline() {
                           className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => rejectCandidate(app)}
                           disabled={actionLoading === app.id}
-                          title="Reprovar (envia e-mail)"
+                          title="Rejeitar (envia e-mail)"
                         >
                           <ThumbsDown className="h-3 w-3" />
                         </Button>
