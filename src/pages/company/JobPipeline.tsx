@@ -261,9 +261,10 @@ export default function JobPipeline() {
       if (apps.length) {
         const ids = Array.from(new Set(apps.map((a: any) => a.candidate_id)));
         const appIds = apps.map((a: any) => a.id);
-        const [profsRes, intRes] = await Promise.all([
+        const [profsRes, intRes, offersRes] = await Promise.all([
           supabase.from('profiles').select('id, avatar_url, phone').in('id', ids),
           supabase.from('interviews').select('*').in('application_id', appIds),
+          supabase.from('job_offers').select('*').in('application_id', appIds),
         ]);
         const map: Record<string, any> = {};
         (profsRes.data || []).forEach((p: any) => (map[p.id] = p));
@@ -271,6 +272,9 @@ export default function JobPipeline() {
         const intMap: Record<string, any> = {};
         (intRes.data || []).forEach((i: any) => (intMap[i.application_id] = i));
         setInterviewsByApp(intMap);
+        const offMap: Record<string, any> = {};
+        (offersRes.data || []).forEach((o: any) => (offMap[o.application_id] = o));
+        setOffersByApp(offMap);
       }
       setLoading(false);
     };
