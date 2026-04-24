@@ -174,33 +174,51 @@ export default function CandidateView() {
             <CandidateProfileView profile={profile} email={email} />
           </div>
           <aside className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ClipboardList className="h-5 w-5" />
-                  Respostas do Screening
-                </CardTitle>
-                {jobTitle && (
-                  <p className="text-xs text-muted-foreground">Vaga: {jobTitle}</p>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {screening.length === 0 ? (
+            {screeningGroups.length === 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <ClipboardList className="h-5 w-5" />
+                    Respostas do Screening
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Este candidato ainda não respondeu perguntas customizadas.
+                    Este candidato ainda não se candidatou a nenhuma vaga.
                   </p>
-                ) : (
-                  screening.map((item) => (
-                    <div key={item.id} className="border-l-2 border-primary/40 pl-3">
-                      <p className="text-sm font-medium mb-1.5 leading-snug">
-                        {item.question}
+                </CardContent>
+              </Card>
+            ) : (
+              screeningGroups.map((group) => (
+                <Card key={group.applicationId}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <ClipboardList className="h-5 w-5" />
+                      Respostas do Screening
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">Vaga: {group.jobTitle}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {group.items.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {group.totalQuestions === 0
+                          ? 'Esta vaga não possui perguntas de triagem configuradas.'
+                          : 'O candidato se candidatou sem responder às perguntas de triagem desta vaga.'}
                       </p>
-                      <div>{renderAnswerBadge(item)}</div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+                    ) : (
+                      group.items.map((item) => (
+                        <div key={item.id} className="border-l-2 border-primary/40 pl-3">
+                          <p className="text-sm font-medium mb-1.5 leading-snug">
+                            {item.question}
+                          </p>
+                          <div>{renderAnswerBadge(item)}</div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </aside>
         </div>
       )}
