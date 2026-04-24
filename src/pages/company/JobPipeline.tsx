@@ -417,19 +417,19 @@ export default function JobPipeline() {
       presencial: 'Presencial',
       telefone: 'Ligação telefônica',
     };
-    let msg = `Olá ${interviewApp.candidate_name}! 👋\n\n`;
+    let msg = `Olá ${interviewApp.candidate_name}!\n\n`;
     msg += `Você avançou para a etapa de entrevista no processo seletivo da vaga *${jobTitle}* na ${companyName}.\n\n`;
     msg += `*Detalhes do agendamento:*\n`;
-    msg += `📅 ${dateFormatted}\n`;
-    msg += `📋 ${formatLabels[interviewData.format] || interviewData.format}\n`;
+    msg += `- Data e horário: ${dateFormatted}\n`;
+    msg += `- Formato: ${formatLabels[interviewData.format] || interviewData.format}\n`;
     if (interviewData.format === 'video' && interviewData.meeting_link) {
-      msg += `🔗 ${interviewData.meeting_link}\n`;
+      msg += `- Link: ${interviewData.meeting_link}\n`;
     }
     if (interviewData.format === 'presencial' && interviewData.location) {
-      msg += `📍 ${interviewData.location}\n`;
+      msg += `- Local: ${interviewData.location}\n`;
     }
     if (interviewData.interviewer_name) {
-      msg += `👤 Entrevistador: ${interviewData.interviewer_name}\n`;
+      msg += `- Entrevistador: ${interviewData.interviewer_name}\n`;
     }
     msg += `\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
     return msg;
