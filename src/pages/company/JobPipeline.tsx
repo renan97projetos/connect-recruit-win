@@ -1719,7 +1719,7 @@ export default function JobPipeline() {
           if (!open) setNoteDialog({ app: null, open: false, value: '', saving: false });
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Notas internas</DialogTitle>
             <DialogDescription>
@@ -1728,24 +1728,107 @@ export default function JobPipeline() {
                 : 'Anotações privadas visíveis apenas para a equipe.'}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={noteDialog.value}
-            onChange={(e) => setNoteDialog((prev) => ({ ...prev, value: e.target.value }))}
-            placeholder="Escreva uma observação sobre o candidato..."
-            rows={6}
-            autoFocus
-          />
+
+          {/* Lista segmentada de notas */}
+          {(() => {
+            const items = getNotesList(noteDialog.app?.notes);
+            if (items.length === 0) {
+              return (
+                <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                  Nenhuma nota registrada ainda.
+                </div>
+              );
+            }
+            // mais recente primeiro
+            const ordered = [...items].sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+            return (
+              <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1">
+                {ordered.map((n) => {
+                  const isLegacy = n.id === 'legacy';
+                  const dt = isLegacy ? null : new Date(n.created_at);
+                  return (
+                    <div
+                      key={n.id}
+                      className="rounded-md border border-border bg-muted/20 p-3 text-sm space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <UserIcon className="h-3 w-3 shrink-0" />
+                          <span className="font-medium text-foreground/80 truncate">
+                            {n.author || 'Equipe'}
+                          </span>
+                          {dt && (
+                            <>
+                              <span>·</span>
+                              <span className="shrink-0">
+                                {dt.toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </>
+                          )}
+                          {isLegacy && (
+                            <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">
+                              antiga
+                            </Badge>
+                          )}
+                        </div>
+                        {!isLegacy && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteNote(n.id)}
+                            title="Excluir nota"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      <p className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
+                        {n.text}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* Adicionar nova nota */}
+          <div className="space-y-1.5 pt-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              Nova nota
+            </label>
+            <Textarea
+              value={noteDialog.value}
+              onChange={(e) => setNoteDialog((prev) => ({ ...prev, value: e.target.value }))}
+              placeholder="Escreva uma observação sobre o candidato..."
+              rows={3}
+              autoFocus
+            />
+          </div>
+
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setNoteDialog({ app: null, open: false, value: '', saving: false })}
               disabled={noteDialog.saving}
             >
-              Cancelar
+              Fechar
             </Button>
-            <Button onClick={saveNote} disabled={noteDialog.saving}>
+            <Button
+              onClick={saveNote}
+              disabled={noteDialog.saving || !noteDialog.value.trim()}
+            >
               {noteDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
+              Adicionar nota
             </Button>
           </DialogFooter>
         </DialogContent>
