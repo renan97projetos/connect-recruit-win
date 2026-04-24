@@ -37,8 +37,8 @@ const STATUS_MESSAGES: Record<StatusKey, { subject: string; body: string }> = {
     body: "Temos ótimas notícias! Você foi aprovado(a) no processo seletivo. Nossa equipe entrará em contato em breve com os próximos passos.",
   },
   rejected: {
-    subject: "Atualização sobre sua candidatura",
-    body: "Agradecemos seu interesse e o tempo dedicado ao processo seletivo. Após análise cuidadosa, não seguiremos com seu perfil neste momento. Guardamos seu currículo para oportunidades futuras.",
+    subject: "Obrigado pela sua candidatura",
+    body: "Agradecemos muito o seu interesse em fazer parte da {{empresa_nome}} e o tempo que dedicou ao nosso processo seletivo para a vaga de {{vaga_titulo}}.\n\nApós uma análise cuidadosa do seu perfil, optamos por seguir com outros candidatos cujas experiências estão mais alinhadas ao que buscamos neste momento.\n\nEssa decisão não diminui em nada o seu valor profissional. Guardamos o seu perfil e, caso surja uma oportunidade que combine com a sua trajetória, entraremos em contato.\n\nDesejamos muito sucesso na sua carreira.\n\nAtt,\nEquipe de Recrutamento SinapseRH",
   },
 };
 
