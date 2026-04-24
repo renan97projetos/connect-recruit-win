@@ -788,6 +788,213 @@ export default function JobPipeline() {
                 navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
               const isTerminal =
                 getCandidateStage(app) === 'aprovado' || getCandidateStage(app) === 'reprovado';
+              const interview = interviewsByApp[app.id];
+
+              // Card especializado para Entrevista
+              if (activeStage === 'entrevista') {
+                const noteText = app.notes
+                  ? typeof app.notes === 'string'
+                    ? app.notes
+                    : (app.notes as any)?.text || ''
+                  : '';
+                const hasNote = noteText.trim().length > 0;
+                const hasInterview = !!interview;
+                const interviewDone = interview?.status === 'done';
+                return (
+                  <div
+                    key={app.id}
+                    onClick={goToProfile}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                    }}
+                    className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarImage src={profile?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {initials(app.candidate_name || '?')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold group-hover:text-primary truncate">
+                          {app.candidate_name || 'Candidato'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          {app.candidate_email}
+                        </p>
+                      </div>
+                      {score > 0 && (
+                        <span
+                          className={cn(
+                            'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
+                            score >= 70
+                              ? 'bg-green-100 text-green-700'
+                              : score >= 40
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-red-100 text-red-600'
+                          )}
+                        >
+                          {Math.round(score)}%
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Status da entrevista */}
+                    {hasInterview && interview.scheduled_at && (
+                      <div className="mb-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-xs gap-1 font-medium',
+                            interviewDone
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : 'border-blue-200 bg-blue-50 text-blue-700'
+                          )}
+                        >
+                          {interviewDone ? (
+                            <CheckCircle2 className="h-3 w-3" />
+                          ) : (
+                            <Calendar className="h-3 w-3" />
+                          )}
+                          {interviewDone ? 'Entrevista realizada' : 'Agendada'} —{' '}
+                          {new Date(interview.scheduled_at).toLocaleString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Badge>
+                        {interview.feedback_score ? (
+                          <div className="flex items-center gap-0.5 mt-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={cn(
+                                  'h-3 w-3',
+                                  i < interview.feedback_score
+                                    ? 'fill-amber-400 text-amber-400'
+                                    : 'text-muted-foreground/30'
+                                )}
+                              />
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Há {daysAgo(app.applied_at)} dia(s) no processo
+                    </div>
+
+                    {/* Botões de ação */}
+                    <div
+                      className="flex items-center flex-wrap gap-1 pt-3 border-t border-border"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-500/10"
+                        onClick={() => openInterviewSheet(app, 'agendar')}
+                        title={hasInterview ? 'Reagendar entrevista' : 'Agendar entrevista'}
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0',
+                          interview?.feedback
+                            ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
+                            : 'text-purple-600 hover:bg-purple-500/10',
+                          !hasInterview && 'opacity-30'
+                        )}
+                        onClick={() => openInterviewSheet(app, 'feedback')}
+                        disabled={!hasInterview}
+                        title={interview?.feedback ? 'Editar feedback' : 'Registrar feedback'}
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                      </Button>
+                      {profile?.phone ? (
+                        <a
+                          href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                            `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-[#25D366] hover:bg-[#25D366]/10"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 opacity-30"
+                          disabled
+                          title="Sem telefone cadastrado"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0 relative',
+                          hasNote
+                            ? 'text-amber-600 bg-amber-500/10 hover:bg-amber-500/20'
+                            : 'text-amber-600 hover:bg-amber-500/10'
+                        )}
+                        onClick={() => openNoteDialog(app)}
+                        title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                      >
+                        <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
+                        {hasNote && (
+                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                        )}
+                      </Button>
+                      <div className="ml-auto flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs gap-1"
+                          onClick={() => moveToNextStage(app)}
+                          disabled={actionLoading === app.id || !next}
+                          title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                          {next?.label || 'Final'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => rejectCandidate(app)}
+                          disabled={actionLoading === app.id}
+                          title="Reprovar (envia e-mail)"
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={app.id}
