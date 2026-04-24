@@ -406,6 +406,50 @@ export default function JobPipeline() {
     }
   };
 
+  const buildWhatsAppMessage = () => {
+    if (!interviewApp || !interviewData.scheduled_at) return '';
+    const dateFormatted = new Date(interviewData.scheduled_at).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    const formatLabels: Record<string, string> = {
+      video: 'Videochamada',
+      presencial: 'Presencial',
+      telefone: 'Ligação telefônica',
+    };
+    let msg = `Olá ${interviewApp.candidate_name}! 👋\n\n`;
+    msg += `Você avançou para a etapa de entrevista no processo seletivo da vaga *${jobTitle}* na ${companyName}.\n\n`;
+    msg += `*Detalhes do agendamento:*\n`;
+    msg += `📅 ${dateFormatted}\n`;
+    msg += `📋 ${formatLabels[interviewData.format] || interviewData.format}\n`;
+    if (interviewData.format === 'video' && interviewData.meeting_link) {
+      msg += `🔗 ${interviewData.meeting_link}\n`;
+    }
+    if (interviewData.format === 'presencial' && interviewData.location) {
+      msg += `📍 ${interviewData.location}\n`;
+    }
+    if (interviewData.interviewer_name) {
+      msg += `👤 Entrevistador: ${interviewData.interviewer_name}\n`;
+    }
+    msg += `\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
+    return msg;
+  };
+
+  const notifyByWhatsApp = () => {
+    if (!interviewApp || !interviewData.scheduled_at) {
+      toast.error('Preencha a data e horário antes de enviar.');
+      return;
+    }
+    const phoneDigits = sanitizePhone(interviewApp.candidate_phone);
+    if (!phoneDigits) {
+      toast.error('Candidato sem telefone cadastrado.');
+      return;
+    }
+    const message = buildWhatsAppMessage();
+    const url = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   const saveInterview = async () => {
     if (!interviewApp || !interviewData.scheduled_at || !currentUser || !id) return;
     setSavingInterview(true);
