@@ -201,7 +201,7 @@ export default function CandidateView() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ClipboardList className="h-5 w-5" />
-                      Respostas do Screening
+                      Respostas da Triagem
                     </CardTitle>
                     <p className="text-xs text-muted-foreground">Vaga: {group.jobTitle}</p>
                   </CardHeader>
