@@ -1188,6 +1188,7 @@ export default function JobForm() {
                 </CardContent>
               </Card>
             )}
+            </div>
 
             {/* Rodapé sticky com 2 CTAs */}
             <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
