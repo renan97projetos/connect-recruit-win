@@ -231,7 +231,7 @@ export default function JobForm() {
         }
         const { data: qs } = await supabase
           .from('screening_questions')
-          .select('question, question_type, required, order_position, options')
+          .select('question, question_type, required, order_position, options, score_weight')
           .eq('job_id', id)
           .order('order_position');
         if (qs && qs.length > 0) {
@@ -247,6 +247,7 @@ export default function JobForm() {
                 : 'text') as ScreeningQuestion['question_type'],
               required: !!q.required,
               options: Array.isArray(q.options) ? q.options : undefined,
+              score_weight: typeof q.score_weight === 'number' ? q.score_weight : 0,
             })),
           );
         }
@@ -365,6 +366,7 @@ export default function JobForm() {
               required: q.required,
               order_position: i,
               options: QUESTION_TYPES_WITH_OPTIONS.includes(q.question_type) && q.options ? q.options.filter(o => o.trim()) : null,
+              score_weight: typeof q.score_weight === 'number' && q.score_weight > 0 ? q.score_weight : 0,
             })),
           );
         }
