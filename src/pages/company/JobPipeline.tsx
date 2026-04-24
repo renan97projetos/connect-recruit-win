@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -87,6 +88,8 @@ export default function JobPipeline() {
   const [newNote, setNewNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkMoving, setBulkMoving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -249,6 +252,54 @@ export default function JobPipeline() {
     }
   };
 
+  const pendingApps = applications.filter((a) => a.status === 'pending');
+  const allPendingSelected =
+    pendingApps.length > 0 && pendingApps.every((a) => selectedIds.has(a.id));
+
+  const toggleSelect = (appId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(appId)) next.delete(appId);
+      else next.add(appId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allPendingSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(pendingApps.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkMoveToInterview = async () => {
+    const ids = Array.from(selectedIds).filter((id) =>
+      applications.find((a) => a.id === id && a.status === 'pending'),
+    );
+    if (ids.length === 0) return;
+    setBulkMoving(true);
+    const { error } = await supabase
+      .from('applications')
+      .update({ status: 'interview' })
+      .in('id', ids);
+
+    if (error) {
+      toast.error('Erro ao mover candidatos');
+      setBulkMoving(false);
+      return;
+    }
+
+    setApplications((prev) =>
+      prev.map((a) => (ids.includes(a.id) ? { ...a, status: 'interview' } : a)),
+    );
+    setSelectedIds(new Set());
+    toast.success(
+      `${ids.length} ${ids.length === 1 ? 'candidato movido' : 'candidatos movidos'} para entrevista`,
+    );
+    setBulkMoving(false);
+  };
+
   const statusLabels: Record<string, { label: string; className: string }> = {
     pending: { label: 'pendente', className: '' },
     approved: { label: 'aprovado', className: 'bg-success/10 text-success border-success/20' },
@@ -288,6 +339,30 @@ export default function JobPipeline() {
         </Card>
       ) : (
         <TooltipProvider delayDuration={150}>
+          {pendingApps.length > 0 && (
+            <div className="mb-4 flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={allPendingSelected}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Selecionar todos os pendentes"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {selectedIds.size > 0
+                    ? `${selectedIds.size} selecionado${selectedIds.size === 1 ? '' : 's'}`
+                    : `Selecionar todos (${pendingApps.length} pendente${pendingApps.length === 1 ? '' : 's'})`}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleBulkMoveToInterview}
+                disabled={selectedIds.size === 0 || bulkMoving}
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Mover para entrevista
+              </Button>
+            </div>
+          )}
           <div className="grid gap-3">
             {applications.map((app, index) => {
               const rank = index + 1;
@@ -298,6 +373,8 @@ export default function JobPipeline() {
               const breakdown = app.score_breakdown || {};
               const noteCount = app.notes?.length || 0;
               const phoneDigits = sanitizePhone(app.candidate_phone);
+              const isSelectable = app.status === 'pending';
+              const isSelected = selectedIds.has(app.id);
 
               return (
                 <Card
@@ -306,6 +383,18 @@ export default function JobPipeline() {
                   onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
                 >
                   <div className="flex items-center gap-4">
+                    {/* Checkbox seleção */}
+                    <div
+                      className="flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(app.id)}
+                        disabled={!isSelectable}
+                        aria-label={`Selecionar ${app.candidate_name}`}
+                      />
+                    </div>
                     {/* Ranking */}
                     <div
                       className={`flex items-center justify-center min-w-[44px] h-11 rounded-lg border font-bold text-sm ${rankBadge.color}`}
