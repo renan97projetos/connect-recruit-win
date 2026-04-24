@@ -506,8 +506,8 @@ export default function JobPipeline() {
                       </TooltipContent>
                     </Tooltip>
 
-                    <Badge variant="outline" className="capitalize">
-                      {app.status === 'pending' ? 'pendente' : app.status}
+                    <Badge variant="outline" className={`capitalize ${statusLabels[app.status]?.className || ''}`}>
+                      {statusLabels[app.status]?.label || app.status}
                     </Badge>
                   </div>
                 </Card>
