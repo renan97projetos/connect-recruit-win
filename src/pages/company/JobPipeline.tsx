@@ -560,6 +560,44 @@ export default function JobPipeline() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={noteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) setNoteDialog({ app: null, open: false, value: '', saving: false });
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notas internas</DialogTitle>
+            <DialogDescription>
+              {noteDialog.app?.candidate_name
+                ? `Anotações privadas sobre ${noteDialog.app.candidate_name}. Visível apenas para a equipe.`
+                : 'Anotações privadas visíveis apenas para a equipe.'}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={noteDialog.value}
+            onChange={(e) => setNoteDialog((prev) => ({ ...prev, value: e.target.value }))}
+            placeholder="Escreva uma observação sobre o candidato..."
+            rows={6}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setNoteDialog({ app: null, open: false, value: '', saving: false })}
+              disabled={noteDialog.saving}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={saveNote} disabled={noteDialog.saving}>
+              {noteDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CompanyLayout>
   );
 }
