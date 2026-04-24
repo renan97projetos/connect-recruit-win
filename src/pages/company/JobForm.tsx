@@ -642,7 +642,7 @@ export default function JobForm() {
                         setFormData({ ...formData, city: v });
                         if (errors.city) setErrors({ ...errors, city: undefined });
                       }}
-                      disabled={!formData.state || citiesLoading}
+                      disabled={fieldsLocked || !formData.state || citiesLoading}
                     >
                       <SelectTrigger
                         id="city"
