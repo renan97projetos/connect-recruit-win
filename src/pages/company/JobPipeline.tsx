@@ -131,7 +131,7 @@ export default function JobPipeline() {
       }
 
       const [jobRes, appsRes] = await Promise.all([
-        supabase.from('jobs').select('title, company_name').eq('id', id).maybeSingle(),
+        supabase.from('jobs').select('title, company_name, pipeline_stage').eq('id', id).maybeSingle(),
         supabase
           .from('applications')
           .select('id, candidate_id, candidate_name, candidate_email, status, score, adherence_score, profile_completeness, score_breakdown, applied_at, notes')
@@ -143,6 +143,7 @@ export default function JobPipeline() {
       if (jobRes.data) {
         setJobTitle(jobRes.data.title);
         setCompanyName((jobRes.data as any).company_name || 'SinapseRH');
+        setJobStage((jobRes.data as any).pipeline_stage || 'triagem');
       }
 
       const apps = (appsRes.data ?? []) as any[];
