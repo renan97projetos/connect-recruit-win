@@ -14,6 +14,14 @@ interface ScreeningItem {
   question_type: string;
   source_key: string | null;
   answer: string | null;
+  order_position: number;
+}
+
+interface JobScreeningGroup {
+  applicationId: string;
+  jobTitle: string;
+  items: ScreeningItem[];
+  totalQuestions: number;
 }
 
 export default function CandidateView() {
@@ -21,8 +29,7 @@ export default function CandidateView() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any | null>(null);
   const [email, setEmail] = useState<string | undefined>();
-  const [screening, setScreening] = useState<ScreeningItem[]>([]);
-  const [jobTitle, setJobTitle] = useState<string | undefined>();
+  const [screeningGroups, setScreeningGroups] = useState<JobScreeningGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +43,12 @@ export default function CandidateView() {
         .eq('id', id)
         .maybeSingle();
 
-      // Pega a candidatura mais recente do candidato
-      const { data: appData } = await supabase
+      // Pega TODAS as candidaturas do candidato
+      const { data: apps } = await supabase
         .from('applications')
         .select('id, candidate_email, job_id, jobs(title)')
         .eq('candidate_id', id)
-        .order('applied_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('applied_at', { ascending: false });
 
       if (profileData) {
         setProfile({
@@ -53,18 +58,26 @@ export default function CandidateView() {
           skills: Array.isArray(profileData.skills) ? profileData.skills : [],
         });
       }
-      if (appData?.candidate_email) setEmail(appData.candidate_email);
-      if ((appData as any)?.jobs?.title) setJobTitle((appData as any).jobs.title);
+      if (apps && apps.length > 0 && apps[0].candidate_email) {
+        setEmail(apps[0].candidate_email);
+      }
 
-      // Busca perguntas e respostas do screening da candidatura
-      if (appData?.id) {
-        const { data: answersData } = await supabase
-          .from('screening_answers')
-          .select('id, answer, question_id, screening_questions(question, question_type, source_key, order_position)')
-          .eq('application_id', appData.id);
+      // Busca respostas e perguntas para cada candidatura
+      if (apps && apps.length > 0) {
+        const groups: JobScreeningGroup[] = [];
+        for (const app of apps) {
+          const [{ data: answersData }, { count: totalCount }] = await Promise.all([
+            supabase
+              .from('screening_answers')
+              .select('id, answer, question_id, screening_questions(question, question_type, source_key, order_position)')
+              .eq('application_id', app.id),
+            supabase
+              .from('screening_questions')
+              .select('id', { count: 'exact', head: true })
+              .eq('job_id', app.job_id),
+          ]);
 
-        if (answersData) {
-          const items: ScreeningItem[] = (answersData as any[])
+          const items: ScreeningItem[] = ((answersData as any[]) || [])
             .map((row) => ({
               id: row.id,
               answer: row.answer,
@@ -73,9 +86,16 @@ export default function CandidateView() {
               source_key: row.screening_questions?.source_key ?? null,
               order_position: row.screening_questions?.order_position ?? 0,
             }))
-            .sort((a: any, b: any) => a.order_position - b.order_position);
-          setScreening(items);
+            .sort((a, b) => a.order_position - b.order_position);
+
+          groups.push({
+            applicationId: app.id,
+            jobTitle: (app as any).jobs?.title ?? 'Vaga',
+            items,
+            totalQuestions: totalCount ?? 0,
+          });
         }
+        setScreeningGroups(groups);
       }
 
       setLoading(false);
