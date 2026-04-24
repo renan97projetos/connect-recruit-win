@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +33,11 @@ import {
   Loader2,
   X,
   DollarSign,
+  Calendar,
+  Video,
+  MapPin,
+  Phone,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -144,6 +151,28 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [offerNotes, setOfferNotes] = useState('');
   const [savingOffer, setSavingOffer] = useState(false);
 
+  // Interview scheduling
+  const [interviewSheetOpen, setInterviewSheetOpen] = useState(false);
+  const [interviewApp, setInterviewApp] = useState<ApplicationRow | null>(null);
+  const [interviewData, setInterviewData] = useState<{
+    scheduled_at: string;
+    format: string;
+    meeting_link: string;
+    location: string;
+    interviewer_name: string;
+  }>({
+    scheduled_at: '',
+    format: 'video',
+    meeting_link: '',
+    location: '',
+    interviewer_name: '',
+  });
+  const [existingInterview, setExistingInterview] = useState<any>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackScore, setFeedbackScore] = useState(0);
+  const [savingInterview, setSavingInterview] = useState(false);
+  const [interviewTab, setInterviewTab] = useState<'agendar' | 'feedback'>('agendar');
+
   useEffect(() => {
     if (!jobId) return;
     loadData();
@@ -211,6 +240,151 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     }
 
     setLoading(false);
+  };
+
+  const openInterviewSheet = async (app: ApplicationRow) => {
+    setInterviewApp(app);
+    setInterviewTab('agendar');
+    setFeedbackText('');
+    setFeedbackScore(0);
+    setInterviewData({
+      scheduled_at: '',
+      format: 'video',
+      meeting_link: '',
+      location: '',
+      interviewer_name: '',
+    });
+    setExistingInterview(null);
+    setInterviewSheetOpen(true);
+
+    const { data } = await (supabase as any)
+      .from('interviews')
+      .select('*')
+      .eq('application_id', app.id)
+      .maybeSingle();
+
+    if (data) {
+      setExistingInterview(data);
+      setInterviewData({
+        scheduled_at: data.scheduled_at
+          ? new Date(data.scheduled_at).toISOString().slice(0, 16)
+          : '',
+        format: data.format || 'video',
+        meeting_link: data.meeting_link || '',
+        location: data.location || '',
+        interviewer_name: data.interviewer_name || '',
+      });
+      setFeedbackText(data.feedback || '');
+      setFeedbackScore(data.feedback_score || 0);
+      if (data.status === 'done') setInterviewTab('feedback');
+    }
+  };
+
+  const saveInterview = async () => {
+    if (!interviewApp || !interviewData.scheduled_at || !user) return;
+    setSavingInterview(true);
+
+    const payload = {
+      application_id: interviewApp.id,
+      job_id: jobId,
+      company_id: user.id,
+      scheduled_at: new Date(interviewData.scheduled_at).toISOString(),
+      format: interviewData.format,
+      meeting_link: interviewData.meeting_link || null,
+      location: interviewData.location || null,
+      interviewer_name: interviewData.interviewer_name || null,
+      status: 'scheduled',
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existingInterview) {
+      await (supabase as any).from('interviews').update(payload).eq('id', existingInterview.id);
+    } else {
+      await (supabase as any).from('interviews').insert(payload);
+    }
+
+    const dateFormatted = new Date(interviewData.scheduled_at).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+
+    const formatLabels: Record<string, string> = {
+      video: 'Videochamada',
+      presencial: 'Presencial',
+      telefone: 'Ligação telefônica',
+    };
+
+    const { data: jobData } = await supabase
+      .from('jobs')
+      .select('company_name')
+      .eq('id', jobId)
+      .maybeSingle();
+
+    const companyName = jobData?.company_name || 'Sinapse RH';
+
+    const emailBody = `Olá ${interviewApp.candidate_name},
+
+Seu perfil foi selecionado e temos uma ótima notícia: você avançou para a etapa de entrevista no processo seletivo para a vaga de ${jobTitle}.
+
+Segue o agendamento:
+
+📅 Data e horário: ${dateFormatted}
+📋 Formato: ${formatLabels[interviewData.format] || interviewData.format}${
+      interviewData.format === 'video' && interviewData.meeting_link
+        ? `\n🔗 Link: ${interviewData.meeting_link}`
+        : ''
+    }${
+      interviewData.format === 'presencial' && interviewData.location
+        ? `\n📍 Local: ${interviewData.location}`
+        : ''
+    }${
+      interviewData.interviewer_name
+        ? `\n👤 Entrevistador: ${interviewData.interviewer_name}`
+        : ''
+    }
+
+Por favor, confirme sua presença respondendo este e-mail ou pelo WhatsApp.
+
+Em caso de imprevistos, entre em contato com antecedência.
+
+Att,
+Equipe de Recrutamento
+${companyName}`;
+
+    supabase.functions.invoke('send-candidate-status-email', {
+      body: {
+        candidateName: interviewApp.candidate_name,
+        candidateEmail: interviewApp.candidate_email,
+        jobTitle,
+        companyName,
+        newStatus: 'interview',
+        customSubject: `Entrevista agendada — ${jobTitle}`,
+        customBody: emailBody,
+      },
+    }).catch(console.error);
+
+    setSavingInterview(false);
+    toast({ title: 'Entrevista agendada!', description: `E-mail enviado para ${interviewApp.candidate_name}.` });
+    setInterviewSheetOpen(false);
+  };
+
+  const saveFeedback = async () => {
+    if (!interviewApp || !existingInterview) return;
+    setSavingInterview(true);
+
+    await (supabase as any)
+      .from('interviews')
+      .update({
+        feedback: feedbackText,
+        feedback_score: feedbackScore || null,
+        status: 'done',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingInterview.id);
+
+    setSavingInterview(false);
+    toast({ title: 'Feedback registrado!' });
+    setInterviewSheetOpen(false);
   };
 
   const openOfferDialog = (app: ApplicationRow) => {
@@ -632,6 +806,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                               >
                                 <Eye className="h-3.5 w-3.5 mr-1" /> Ver
                               </Button>
+                              {getStageBucket(app) === 'interview' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-500/10"
+                                  onClick={(e) => { e.stopPropagation(); openInterviewSheet(app); }}
+                                  aria-label="Agendar entrevista"
+                                  title="Agendar entrevista"
+                                >
+                                  <Calendar className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                               {getStageBucket(app) === 'approved' && (
                                 <ProFeatureGate compact featureName="Proposta">
                                   <Button
@@ -797,6 +983,202 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
         </div>
       </DialogContent>
     </Dialog>
+
+    <Sheet open={interviewSheetOpen} onOpenChange={setInterviewSheetOpen}>
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+              <Calendar className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div className="min-w-0">
+              <SheetTitle className="text-base">Entrevista</SheetTitle>
+              <p className="text-xs text-muted-foreground truncate">
+                {interviewApp?.candidate_name}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-1 bg-muted p-1 rounded-lg">
+            {(['agendar', 'feedback'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setInterviewTab(tab)}
+                className={cn(
+                  'flex-1 text-xs font-medium py-1.5 rounded-md transition-colors capitalize',
+                  interviewTab === tab
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab === 'agendar' ? 'Agendar' : 'Feedback'}
+              </button>
+            ))}
+          </div>
+        </SheetHeader>
+
+        <div className="mt-5 space-y-4">
+          {interviewTab === 'agendar' && (
+            <div className="space-y-4">
+              {existingInterview?.status === 'scheduled' && (
+                <div className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md px-3 py-2">
+                  ✓ Entrevista já agendada — edite abaixo se precisar alterar
+                </div>
+              )}
+
+              <div>
+                <Label className="text-xs">Data e horário *</Label>
+                <Input
+                  type="datetime-local"
+                  value={interviewData.scheduled_at}
+                  onChange={(e) => setInterviewData((p) => ({ ...p, scheduled_at: e.target.value }))}
+                  className="mt-1 h-9 text-sm"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Formato *</Label>
+                <Select
+                  value={interviewData.format}
+                  onValueChange={(v) => setInterviewData((p) => ({ ...p, format: v }))}
+                >
+                  <SelectTrigger className="mt-1 h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">
+                      <div className="flex items-center gap-2">
+                        <Video className="h-3.5 w-3.5" /> Videochamada
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="presencial">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5" /> Presencial
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="telefone">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5" /> Telefone
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {interviewData.format === 'video' && (
+                <div>
+                  <Label className="text-xs">Link da reunião</Label>
+                  <Input
+                    value={interviewData.meeting_link}
+                    onChange={(e) => setInterviewData((p) => ({ ...p, meeting_link: e.target.value }))}
+                    placeholder="https://meet.google.com/..."
+                    className="mt-1 h-9 text-sm"
+                  />
+                </div>
+              )}
+
+              {interviewData.format === 'presencial' && (
+                <div>
+                  <Label className="text-xs">Endereço / Local</Label>
+                  <Input
+                    value={interviewData.location}
+                    onChange={(e) => setInterviewData((p) => ({ ...p, location: e.target.value }))}
+                    placeholder="Rua das Flores, 123 — Sala 201"
+                    className="mt-1 h-9 text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label className="text-xs">Entrevistador</Label>
+                <Input
+                  value={interviewData.interviewer_name}
+                  onChange={(e) => setInterviewData((p) => ({ ...p, interviewer_name: e.target.value }))}
+                  placeholder="Nome de quem vai conduzir"
+                  className="mt-1 h-9 text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  onClick={saveInterview}
+                  disabled={!interviewData.scheduled_at || savingInterview}
+                  className="w-full"
+                >
+                  {savingInterview ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
+                  ) : existingInterview ? 'Atualizar agendamento' : 'Agendar e notificar candidato'}
+                </Button>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Um e-mail com os detalhes será enviado automaticamente ao candidato.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {interviewTab === 'feedback' && (
+            <div className="space-y-4">
+              {!existingInterview && (
+                <div className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-md px-3 py-2">
+                  Agende a entrevista primeiro antes de registrar o feedback.
+                </div>
+              )}
+
+              <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5" /> Avaliação geral
+                </Label>
+                <div className="flex items-center gap-2 mt-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setFeedbackScore(n)}
+                      disabled={!existingInterview}
+                      className={cn(
+                        'w-9 h-9 rounded-lg border text-sm font-bold transition-colors',
+                        feedbackScore >= n
+                          ? 'bg-amber-400 border-amber-400 text-white'
+                          : 'bg-muted border-border text-muted-foreground hover:border-amber-300'
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  {feedbackScore > 0 && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {['', 'Fraco', 'Regular', 'Bom', 'Muito bom', 'Excelente'][feedbackScore]}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs">Observações da entrevista</Label>
+                <Textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Pontos fortes, pontos de atenção, impressões gerais, próximos passos..."
+                  rows={6}
+                  className="mt-1 text-sm resize-none"
+                  disabled={!existingInterview}
+                />
+              </div>
+
+              <Button
+                onClick={saveFeedback}
+                disabled={!existingInterview || !feedbackText.trim() || savingInterview}
+                className="w-full"
+              >
+                {savingInterview ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
+                ) : 'Registrar feedback'}
+              </Button>
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
     </>
   );
 }
