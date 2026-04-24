@@ -27,7 +27,24 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Download, Search, Eye } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Download, Search, Eye, MoreHorizontal, Pause, Play, Ban, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -108,6 +125,146 @@ export default function CompanyDashboard() {
   const [metricsOpen, setMetricsOpen] = useState(false);
   const metricsRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // === Action dialogs ===
+  type ActionType = 'pause' | 'resume' | 'cancel' | 'delete' | 'cancel-request';
+  const [actionDialog, setActionDialog] = useState<{
+    open: boolean;
+    type: ActionType | null;
+    job: any | null;
+    reason: string;
+    saving: boolean;
+  }>({ open: false, type: null, job: null, reason: '', saving: false });
+
+  const openActionDialog = (type: ActionType, job: any) => {
+    setActionDialog({ open: true, type, job, reason: '', saving: false });
+  };
+
+  const closeActionDialog = () => {
+    setActionDialog({ open: false, type: null, job: null, reason: '', saving: false });
+  };
+
+  const notifyCandidates = async (
+    fnName: 'notify-candidates-job-cancelled' | 'notify-candidates-job-paused',
+    payload: Record<string, unknown>
+  ) => {
+    try {
+      await supabase.functions.invoke(fnName, { body: payload });
+    } catch (err) {
+      console.warn('[notifyCandidates]', fnName, err);
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, job, reason } = actionDialog;
+    if (!type || !job) return;
+    setActionDialog((p) => ({ ...p, saving: true }));
+    const candidateCount = job.applications?.length || 0;
+
+    try {
+      if (type === 'pause') {
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            is_paused: true,
+            paused_at: new Date().toISOString(),
+            paused_reason: reason || null,
+          })
+          .eq('id', job.id);
+        if (error) throw error;
+        if (candidateCount > 0) {
+          await notifyCandidates('notify-candidates-job-paused', {
+            jobId: job.id,
+            reason,
+            resumed: false,
+          });
+        }
+        toast({
+          title: 'Vaga pausada',
+          description:
+            candidateCount > 0
+              ? `Os ${candidateCount} candidatos foram notificados.`
+              : 'A vaga foi pausada.',
+        });
+      } else if (type === 'resume') {
+        const { error } = await supabase
+          .from('jobs')
+          .update({ is_paused: false, paused_reason: null })
+          .eq('id', job.id);
+        if (error) throw error;
+        if (candidateCount > 0) {
+          await notifyCandidates('notify-candidates-job-paused', {
+            jobId: job.id,
+            reason,
+            resumed: true,
+          });
+        }
+        toast({ title: 'Vaga reaberta' });
+      } else if (type === 'cancel') {
+        // Starter ou rascunho: cancela direto
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            is_active: false,
+            is_archived: true,
+            pipeline_stage: 'cancelada',
+            cancellation_reason: reason || null,
+            cancellation_status: 'approved',
+            cancellation_requested_by: user?.id,
+            cancellation_requested_at: new Date().toISOString(),
+            cancellation_decided_at: new Date().toISOString(),
+            cancellation_decided_by: user?.id,
+          })
+          .eq('id', job.id);
+        if (error) throw error;
+        if (candidateCount > 0) {
+          await notifyCandidates('notify-candidates-job-cancelled', {
+            jobId: job.id,
+            reason,
+          });
+        }
+        toast({
+          title: 'Vaga cancelada',
+          description:
+            candidateCount > 0
+              ? `Os ${candidateCount} candidatos foram notificados.`
+              : 'A vaga foi cancelada.',
+        });
+      } else if (type === 'cancel-request') {
+        // Pro com vaga publicada: solicita aprovação do gestor
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            cancellation_status: 'pending',
+            cancellation_reason: reason || null,
+            cancellation_requested_by: user?.id,
+            cancellation_requested_at: new Date().toISOString(),
+          })
+          .eq('id', job.id);
+        if (error) throw error;
+        toast({
+          title: 'Solicitação de cancelamento enviada',
+          description: 'Aguardando aprovação do gestor responsável.',
+        });
+      } else if (type === 'delete') {
+        const { error } = await supabase.from('jobs').delete().eq('id', job.id);
+        if (error) throw error;
+        toast({ title: 'Vaga excluída' });
+      }
+
+      closeActionDialog();
+      await loadData();
+    } catch (err: any) {
+      console.error('[handleConfirmAction]', err);
+      toast({
+        title: 'Erro ao executar ação',
+        description: err?.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+      setActionDialog((p) => ({ ...p, saving: false }));
+    }
+  };
+
 
   const handleExportPDF = async () => {
     if (!metricsRef.current) return;
@@ -429,16 +586,13 @@ export default function CompanyDashboard() {
                     <TableCell className="text-sm text-gray-600">
                       {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 text-xs text-primary hover:text-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/jobs/${job.id}`);
-                          }}
+                          onClick={() => navigate(`/jobs/${job.id}`)}
                           title="Ver dados e descrição da vaga"
                         >
                           <Eye className="h-3.5 w-3.5 mr-1" />
@@ -448,15 +602,91 @@ export default function CompanyDashboard() {
                           variant="ghost"
                           size="sm"
                           className="h-8 text-xs text-primary hover:text-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/company/jobs/${job.id}`);
-                          }}
+                          onClick={() => navigate(`/company/jobs/${job.id}`)}
                         >
                           Ver Processo
                         </Button>
+                        {(() => {
+                          const isDraft = !job.is_active && !job.is_archived;
+                          const isPublished = job.is_active && !job.is_archived;
+                          const isPaused = job.is_paused && !job.is_archived;
+                          const isCancelled = job.is_archived;
+                          const cancelPending = job.cancellation_status === 'pending';
+                          const candidateCount = job.applications?.length || 0;
+                          const canDelete = isDraft && candidateCount === 0;
+                          const canPause = !isCancelled && !isPaused && isPublished;
+                          const canResume = isPaused;
+                          // Cancelar:
+                          // - Starter: qualquer estado publicado/pausado/rascunho com candidatos
+                          // - Pro publicada: requer aprovação (cancel-request)
+                          // - Pro rascunho: cancela direto (sem candidatos)
+                          const canCancel = !isCancelled && !cancelPending && (isPublished || isPaused || (isDraft && candidateCount > 0));
+
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  title="Mais ações"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
+                                {canPause && (
+                                  <DropdownMenuItem onClick={() => openActionDialog('pause', job)}>
+                                    <Pause className="h-4 w-4 mr-2" />
+                                    Pausar (congelar) vaga
+                                  </DropdownMenuItem>
+                                )}
+                                {canResume && (
+                                  <DropdownMenuItem onClick={() => openActionDialog('resume', job)}>
+                                    <Play className="h-4 w-4 mr-2" />
+                                    Reabrir vaga
+                                  </DropdownMenuItem>
+                                )}
+                                {canCancel && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openActionDialog(
+                                        isPro && isPublished ? 'cancel-request' : 'cancel',
+                                        job,
+                                      )
+                                    }
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Ban className="h-4 w-4 mr-2" />
+                                    {isPro && isPublished ? 'Solicitar cancelamento' : 'Cancelar vaga'}
+                                  </DropdownMenuItem>
+                                )}
+                                {cancelPending && (
+                                  <DropdownMenuItem disabled>
+                                    <Ban className="h-4 w-4 mr-2" />
+                                    Cancelamento pendente
+                                  </DropdownMenuItem>
+                                )}
+                                {(canPause || canResume || canCancel) && canDelete && <DropdownMenuSeparator />}
+                                {canDelete && (
+                                  <DropdownMenuItem
+                                    onClick={() => openActionDialog('delete', job)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Excluir vaga (rascunho)
+                                  </DropdownMenuItem>
+                                )}
+                                {!canPause && !canResume && !canCancel && !canDelete && !cancelPending && (
+                                  <DropdownMenuItem disabled>Nenhuma ação disponível</DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                       </div>
                     </TableCell>
+
                   </TableRow>
                 );
               })
@@ -676,6 +906,103 @@ export default function CompanyDashboard() {
           )}
         </>
       )}
+
+      {/* Dialog de confirmação de ações na vaga */}
+      <Dialog
+        open={actionDialog.open}
+        onOpenChange={(open) => !open && !actionDialog.saving && closeActionDialog()}
+      >
+        <DialogContent>
+          {(() => {
+            const t = actionDialog.type;
+            const job = actionDialog.job;
+            const candidateCount = job?.applications?.length || 0;
+            const titles: Record<string, string> = {
+              pause: 'Pausar (congelar) vaga',
+              resume: 'Reabrir vaga',
+              cancel: 'Cancelar vaga',
+              'cancel-request': 'Solicitar cancelamento da vaga',
+              delete: 'Excluir vaga',
+            };
+            const descriptions: Record<string, string> = {
+              pause:
+                candidateCount > 0
+                  ? `A vaga será congelada e os ${candidateCount} candidatos serão notificados por e-mail.`
+                  : 'A vaga será congelada. Você pode reabri-la a qualquer momento.',
+              resume:
+                candidateCount > 0
+                  ? `A vaga voltará a ficar ativa e os ${candidateCount} candidatos serão notificados.`
+                  : 'A vaga voltará a ficar ativa.',
+              cancel:
+                candidateCount > 0
+                  ? `A vaga será cancelada e os ${candidateCount} candidatos serão notificados por e-mail.`
+                  : 'A vaga será cancelada e arquivada.',
+              'cancel-request':
+                'Como sua vaga já foi publicada, o cancelamento precisa ser aprovado pelo gestor responsável. Os candidatos serão notificados após a aprovação.',
+              delete:
+                'Esta vaga em rascunho será removida permanentemente. Esta ação não pode ser desfeita.',
+            };
+            const showReason = t === 'pause' || t === 'cancel' || t === 'cancel-request' || t === 'resume';
+            const reasonLabel =
+              t === 'cancel' || t === 'cancel-request'
+                ? 'Motivo do cancelamento'
+                : t === 'pause'
+                ? 'Motivo da pausa (opcional)'
+                : 'Mensagem aos candidatos (opcional)';
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{t ? titles[t] : ''}</DialogTitle>
+                  <DialogDescription>
+                    {t ? descriptions[t] : ''}
+                    {job?.title && (
+                      <span className="block mt-2 font-medium text-foreground">"{job.title}"</span>
+                    )}
+                  </DialogDescription>
+                </DialogHeader>
+
+                {showReason && (
+                  <div className="space-y-2">
+                    <Label htmlFor="action-reason">{reasonLabel}</Label>
+                    <Textarea
+                      id="action-reason"
+                      value={actionDialog.reason}
+                      onChange={(e) =>
+                        setActionDialog((p) => ({ ...p, reason: e.target.value }))
+                      }
+                      rows={3}
+                      placeholder="Descreva brevemente..."
+                      disabled={actionDialog.saving}
+                    />
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button
+                    variant="ghost"
+                    onClick={closeActionDialog}
+                    disabled={actionDialog.saving}
+                  >
+                    Voltar
+                  </Button>
+                  <Button
+                    variant={t === 'delete' || t === 'cancel' || t === 'cancel-request' ? 'destructive' : 'default'}
+                    onClick={handleConfirmAction}
+                    disabled={
+                      actionDialog.saving ||
+                      ((t === 'cancel' || t === 'cancel-request') && !actionDialog.reason.trim())
+                    }
+                  >
+                    {actionDialog.saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Confirmar
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </CompanyLayout>
   );
 }
