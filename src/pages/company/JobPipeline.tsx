@@ -97,6 +97,22 @@ export default function JobPipeline() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMoving, setBulkMoving] = useState(false);
 
+  // Estados de agendamento de entrevista
+  const [interviewSheetOpen, setInterviewSheetOpen] = useState(false);
+  const [interviewApp, setInterviewApp] = useState<Application | null>(null);
+  const [interviewData, setInterviewData] = useState({
+    scheduled_at: '',
+    format: 'video',
+    meeting_link: '',
+    location: '',
+    interviewer_name: '',
+  });
+  const [existingInterview, setExistingInterview] = useState<any>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackScore, setFeedbackScore] = useState(0);
+  const [savingInterview, setSavingInterview] = useState(false);
+  const [interviewTab, setInterviewTab] = useState<'agendar' | 'feedback'>('agendar');
+
   useEffect(() => {
     if (!id) return;
 
