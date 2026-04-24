@@ -586,16 +586,13 @@ export default function CompanyDashboard() {
                     <TableCell className="text-sm text-gray-600">
                       {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 text-xs text-primary hover:text-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/jobs/${job.id}`);
-                          }}
+                          onClick={() => navigate(`/jobs/${job.id}`)}
                           title="Ver dados e descrição da vaga"
                         >
                           <Eye className="h-3.5 w-3.5 mr-1" />
@@ -605,15 +602,91 @@ export default function CompanyDashboard() {
                           variant="ghost"
                           size="sm"
                           className="h-8 text-xs text-primary hover:text-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/company/jobs/${job.id}`);
-                          }}
+                          onClick={() => navigate(`/company/jobs/${job.id}`)}
                         >
                           Ver Processo
                         </Button>
+                        {(() => {
+                          const isDraft = !job.is_active && !job.is_archived;
+                          const isPublished = job.is_active && !job.is_archived;
+                          const isPaused = job.is_paused && !job.is_archived;
+                          const isCancelled = job.is_archived;
+                          const cancelPending = job.cancellation_status === 'pending';
+                          const candidateCount = job.applications?.length || 0;
+                          const canDelete = isDraft && candidateCount === 0;
+                          const canPause = !isCancelled && !isPaused && isPublished;
+                          const canResume = isPaused;
+                          // Cancelar:
+                          // - Starter: qualquer estado publicado/pausado/rascunho com candidatos
+                          // - Pro publicada: requer aprovação (cancel-request)
+                          // - Pro rascunho: cancela direto (sem candidatos)
+                          const canCancel = !isCancelled && !cancelPending && (isPublished || isPaused || (isDraft && candidateCount > 0));
+
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  title="Mais ações"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
+                                {canPause && (
+                                  <DropdownMenuItem onClick={() => openActionDialog('pause', job)}>
+                                    <Pause className="h-4 w-4 mr-2" />
+                                    Pausar (congelar) vaga
+                                  </DropdownMenuItem>
+                                )}
+                                {canResume && (
+                                  <DropdownMenuItem onClick={() => openActionDialog('resume', job)}>
+                                    <Play className="h-4 w-4 mr-2" />
+                                    Reabrir vaga
+                                  </DropdownMenuItem>
+                                )}
+                                {canCancel && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openActionDialog(
+                                        isPro && isPublished ? 'cancel-request' : 'cancel',
+                                        job,
+                                      )
+                                    }
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Ban className="h-4 w-4 mr-2" />
+                                    {isPro && isPublished ? 'Solicitar cancelamento' : 'Cancelar vaga'}
+                                  </DropdownMenuItem>
+                                )}
+                                {cancelPending && (
+                                  <DropdownMenuItem disabled>
+                                    <Ban className="h-4 w-4 mr-2" />
+                                    Cancelamento pendente
+                                  </DropdownMenuItem>
+                                )}
+                                {(canPause || canResume || canCancel) && canDelete && <DropdownMenuSeparator />}
+                                {canDelete && (
+                                  <DropdownMenuItem
+                                    onClick={() => openActionDialog('delete', job)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Excluir vaga (rascunho)
+                                  </DropdownMenuItem>
+                                )}
+                                {!canPause && !canResume && !canCancel && !canDelete && !cancelPending && (
+                                  <DropdownMenuItem disabled>Nenhuma ação disponível</DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                       </div>
                     </TableCell>
+
                   </TableRow>
                 );
               })
