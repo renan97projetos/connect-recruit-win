@@ -1,7 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -11,35 +27,31 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Users, MapPin, Clock } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Download, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { JobStagePanel } from '@/components/company/JobStagePanel';
-
-type PipelineStageId =
-  | 'aberta'
-  | 'triagem'
-  | 'entrevista'
-  | 'avaliacao'
-  | 'proposta'
-  | 'admissao'
-  | 'contratado'
-  | 'reprovado';
-
-const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
-  { id: 'aberta', label: 'Vaga aberta', color: 'text-violet-600' },
-  { id: 'triagem', label: 'Triagem', color: 'text-gray-600' },
-  { id: 'entrevista', label: 'Entrevista', color: 'text-blue-600' },
-  { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
-  { id: 'proposta', label: 'Proposta', color: 'text-orange-600' },
-  { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
-  { id: 'contratado', label: 'Contratado', color: 'text-green-600' },
-  { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
-];
+import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { usePlanType } from '@/hooks/usePlanType';
+import { useJarvisContext } from '@/hooks/useJarvisContext';
+import { JarvisFab } from '@/components/jarvis/JarvisFab';
+import { JarvisPanel } from '@/components/jarvis/JarvisPanel';
+import { JarvisStrip } from '@/components/jarvis/JarvisStrip';
+import { JarvisBriefing } from '@/components/jarvis/JarvisBriefing';
+import { JarvisCommandBar } from '@/components/jarvis/JarvisCommandBar';
 
 const LOCATION_LABELS: Record<string, string> = {
   remote: 'Remoto',
   onsite: 'Presencial',
   hybrid: 'Híbrido',
+};
+
+const JOB_TYPE_LABELS: Record<string, string> = {
+  'full-time': 'CLT',
+  'part-time': 'Meio período',
+  contract: 'PJ',
+  internship: 'Estágio',
+  temporary: 'Temporário',
 };
 
 const daysAgo = (date: string) => {
@@ -51,15 +63,75 @@ export default function CompanyDashboard() {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const { companyId, loading: roleLoading } = useCompanyRole();
+  const { isPro } = usePlanType();
+  const { context: jarvisContext } = useJarvisContext();
+  const [jarvisOpen, setJarvisOpen] = useState(false);
+  const [showBriefing, setShowBriefing] = useState(false);
+  const [commandBarOpen, setCommandBarOpen] = useState(false);
+  const [pendingExchange, setPendingExchange] = useState<{ question: string; answer: string } | null>(null);
+
+  // Mostrar briefing 1x por dia
+  useEffect(() => {
+    if (!isPro || !user?.id) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `jarvis_briefing_${user.id}_${today}`;
+    if (!localStorage.getItem(key)) setShowBriefing(true);
+  }, [isPro, user?.id]);
+
+  // Atalho Cmd/Ctrl + K
+  useEffect(() => {
+    if (!isPro) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandBarOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPro]);
+
+  const closeBriefing = () => {
+    if (user?.id) {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`jarvis_briefing_${user.id}_${today}`, '1');
+    }
+    setShowBriefing(false);
+  };
 
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeStage, setActiveStage] = useState<PipelineStageId>('aberta');
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
-  const [selectedJob, setSelectedJob] = useState<any | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
+  const metricsRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  const handleExportPDF = async () => {
+    if (!metricsRef.current) return;
+    try {
+      const canvas = await html2canvas(metricsRef.current, {
+        scale: 1.5,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 1.5, canvas.height / 1.5],
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 1.5, canvas.height / 1.5);
+      pdf.save(
+        `relatorio-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`
+      );
+    } catch (err) {
+      toast({ title: 'Erro ao exportar PDF', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     if (!user || !companyId || roleLoading) return;
@@ -71,9 +143,8 @@ export default function CompanyDashboard() {
     setLoading(true);
     const { data: jobsData } = await supabase
       .from('jobs')
-      .select('*, applications(id, status, current_stage, applied_at, updated_at)')
+      .select('id, title, is_active, is_archived, is_paused, pipeline_stage, created_at, city, location, job_type, applications(id, status, current_stage, applied_at, updated_at)')
       .eq('company_id', companyId)
-      .eq('is_archived', false)
       .order('created_at', { ascending: false });
 
     if (jobsData) {
@@ -84,20 +155,28 @@ export default function CompanyDashboard() {
     setLoading(false);
   };
 
-  const getCountForStage = (stageId: PipelineStageId) =>
-    jobs.filter((j) => (j.pipeline_stage || 'aberta') === stageId).length;
+  // === KPIs ===
+  const totalVagas = jobs.length;
+  const ativas = jobs.filter((j) => j.is_active && !j.is_archived && !j.is_paused).length;
+  const rascunho = jobs.filter((j) => !j.is_active && !j.is_archived).length;
+  const pausadas = jobs.filter((j) => j.is_paused && !j.is_archived).length;
+  const encerradas = jobs.filter((j) => j.is_archived).length;
 
-  const jobsInActiveStage = useMemo(
-    () => jobs.filter((j) => (j.pipeline_stage || 'aberta') === activeStage),
-    [jobs, activeStage]
-  );
-
-  const activeStageLabel = PIPELINE_STAGES.find((s) => s.id === activeStage)?.label || '';
-
-  const openJobPanel = (job: any) => {
-    setSelectedJob(job);
-    setPanelOpen(true);
+  const getJobStatus = (j: any) => {
+    if (j.is_archived) return 'encerrada';
+    if (j.is_paused) return 'pausada';
+    if (j.is_active) return 'ativa';
+    return 'rascunho';
   };
+
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((j) => {
+      const matchSearch = j.title.toLowerCase().includes(search.toLowerCase());
+      const status = getJobStatus(j);
+      const matchStatus = filterStatus === 'all' || status === filterStatus;
+      return matchSearch && matchStatus;
+    });
+  }, [jobs, search, filterStatus]);
 
   // === Dados de métricas (mantidos para o Sheet) ===
   const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -118,11 +197,6 @@ export default function CompanyDashboard() {
     }))
     .sort((a, b) => b.candidaturas - a.candidaturas)
     .slice(0, 5);
-
-  const stagesData = PIPELINE_STAGES.map((s) => ({
-    name: s.label,
-    value: getCountForStage(s.id),
-  })).filter((i) => i.value > 0);
 
   const statusData = [
     { name: 'Pendente', value: applications.filter((a) => a.status === 'pending').length, color: 'hsl(var(--warning))' },
@@ -145,7 +219,7 @@ export default function CompanyDashboard() {
     count: applications.filter((a) => a.current_stage === id || a.status === id).length,
   }));
 
-  // Tempo médio (dias) entre applied_at e updated_at por current_stage
+  // Tempo médio
   const avgDaysMap = useMemo(() => {
     const groups: Record<string, number[]> = {};
     applications.forEach((app) => {
@@ -178,152 +252,217 @@ export default function CompanyDashboard() {
     );
   }
 
+  const kpis = [
+    { label: 'Total de vagas', value: totalVagas, color: 'text-gray-900' },
+    { label: 'Ativas', value: ativas, color: 'text-green-600' },
+    { label: 'Rascunho', value: rascunho, color: 'text-gray-500' },
+    { label: 'Pausadas', value: pausadas, color: 'text-amber-600' },
+    { label: 'Encerradas', value: encerradas, color: 'text-red-500' },
+  ];
+
   return (
     <CompanyLayout>
-      {/* Header da página */}
+      {isPro && (
+        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-4">
+          <JarvisStrip
+            context={jarvisContext}
+            onOpenPanel={() => setJarvisOpen(true)}
+          />
+        </div>
+      )}
+
+      {/* SEÇÃO 4 — Header */}
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Gestão de Vagas</h1>
-          <p className="text-sm text-gray-500">Pipeline de recrutamento</p>
+          <p className="text-sm text-gray-500">
+            {jobs.length} {jobs.length === 1 ? 'vaga cadastrada' : 'vagas cadastradas'}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setMetricsOpen(true)}
-            className="gap-2 border-gray-200 shadow-none hover:bg-gray-50 text-gray-700 font-medium"
+        <Button
+          data-tour="metrics-btn"
+          variant="outline"
+          size="sm"
+          onClick={() => setMetricsOpen(true)}
+          className="gap-2 border-gray-200 shadow-none hover:bg-gray-50 text-gray-700 font-medium"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Métricas
+        </Button>
+      </div>
+
+      {/* SEÇÃO 1 — KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {kpis.map((kpi) => (
+          <div
+            key={kpi.label}
+            className="bg-white border border-gray-200 rounded-xl p-4"
           >
-            <BarChart3 className="h-4 w-4" />
-            Ver Métricas
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => navigate('/company/jobs/new')}
-            className="gap-2 bg-primary text-primary-foreground shadow-none border-transparent hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Nova Vaga
-          </Button>
-        </div>
+            <p className="text-xs text-gray-500 font-medium mb-1">{kpi.label}</p>
+            <p className={cn('text-2xl font-bold', kpi.color)}>{kpi.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Pipeline — contadores clicáveis */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {PIPELINE_STAGES.map((stage) => {
-          const isActive = activeStage === stage.id;
-          const count = getCountForStage(stage.id);
-          return (
-            <button
-              key={stage.id}
-              onClick={() => setActiveStage(stage.id)}
-              className={cn(
-                'flex-shrink-0 min-w-[110px] p-3 rounded-xl border text-left transition-all',
-                isActive
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                  : 'bg-white border-gray-200 hover:border-primary/50 hover:bg-primary/5'
-              )}
-            >
-              <div
-                className={cn(
-                  'text-2xl font-bold mb-0.5',
-                  isActive ? 'text-primary-foreground' : stage.color
-                )}
-              >
-                {count}
-              </div>
-              <div
-                className={cn(
-                  'text-xs font-medium',
-                  isActive ? 'text-primary-foreground/80' : 'text-gray-500'
-                )}
-              >
-                {stage.label}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Conteúdo da etapa selecionada */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-            {activeStageLabel} — {jobsInActiveStage.length} {jobsInActiveStage.length === 1 ? 'vaga' : 'vagas'}
-          </h2>
+      {/* SEÇÃO 2 — Barra de ações */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar vaga por título..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {jobsInActiveStage.map((job) => (
-            <button
-              key={job.id}
-              onClick={() => openJobPanel(job)}
-              className="bg-white border border-gray-200 rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
-            >
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <span className="text-sm font-semibold text-gray-900 group-hover:text-primary line-clamp-2">
-                  {job.title}
-                </span>
-                <span
-                  className={cn(
-                    'text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0',
-                    job.is_active
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-gray-100 text-gray-500'
-                  )}
-                >
-                  {job.is_active ? 'Ativa' : 'Inativa'}
-                </span>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <Users className="h-3 w-3" />
-                  {job.applications?.length || 0} candidatos
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <MapPin className="h-3 w-3" />
-                  {job.city || 'Sem localização'}
-                  {job.location && ` · ${LOCATION_LABELS[job.location] || job.location}`}
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                  <Clock className="h-3 w-3" />
-                  Há {daysAgo(job.created_at)} dia(s)
-                </div>
-              </div>
-            </button>
-          ))}
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[160px] h-9 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="ativa">Ativas</SelectItem>
+            <SelectItem value="rascunho">Rascunho</SelectItem>
+            <SelectItem value="pausada">Pausadas</SelectItem>
+            <SelectItem value="encerrada">Encerradas</SelectItem>
+          </SelectContent>
+        </Select>
 
-          {jobsInActiveStage.length === 0 && (
-            <div className="col-span-full border-2 border-dashed border-gray-200 rounded-xl p-12 text-center bg-white/50">
-              <p className="text-gray-400 text-sm mb-1">Nenhuma vaga nesta etapa</p>
-              {activeStage === 'aberta' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate('/company/jobs/new')}
-                  className="mt-3 border-gray-200 shadow-none hover:bg-gray-50 text-gray-700 font-medium"
-                >
-                  Criar primeira vaga
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+        <div className="flex-1" />
+
+        <Button
+          data-tour="new-job-btn"
+          size="sm"
+          onClick={() => navigate('/company/jobs/new')}
+          className="h-9 gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4" />
+          Nova vaga
+        </Button>
       </div>
 
-      {/* Sheet do painel da vaga */}
-      <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
-        <SheetContent side="right" className="w-[420px] sm:max-w-[420px] p-0 overflow-y-auto bg-white">
-          {selectedJob && <JobStagePanel job={selectedJob} onClose={() => setPanelOpen(false)} />}
-        </SheetContent>
-      </Sheet>
+      {/* SEÇÃO 3 — Tabela */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+              <TableHead className="text-xs font-semibold text-gray-700">Vaga</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">Localização</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">Tipo</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700 text-center">Candidatos</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700 text-center">Em processo</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">Status</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700">Criada em</TableHead>
+              <TableHead className="text-xs font-semibold text-gray-700"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredJobs.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-12 text-sm text-gray-400">
+                  Nenhuma vaga encontrada
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredJobs.map((job) => {
+                const totalCandidatos = job.applications?.length || 0;
+                const emProcesso = job.applications?.filter(
+                  (a: any) =>
+                    !['reprovado', 'rejected', 'contratado', 'approved'].includes(
+                      a.current_stage || a.status
+                    )
+                ).length || 0;
+
+                const statusInfo = job.is_archived
+                  ? { label: 'Encerrada', className: 'bg-red-50 text-red-600' }
+                  : job.is_paused
+                  ? { label: 'Pausada', className: 'bg-amber-50 text-amber-600' }
+                  : job.is_active
+                  ? { label: 'Ativa', className: 'bg-green-50 text-green-700' }
+                  : { label: 'Rascunho', className: 'bg-gray-100 text-gray-500' };
+
+                const jobType = JOB_TYPE_LABELS[job.job_type] || job.job_type || '—';
+                const created = daysAgo(job.created_at);
+
+                return (
+                  <TableRow
+                    key={job.id}
+                    onClick={() => navigate(`/company/jobs/${job.id}`)}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <TableCell>
+                      <p className="text-sm font-semibold text-gray-900">{job.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Criada {created === 0 ? 'hoje' : `há ${created} dia(s)`}
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">
+                      {job.city
+                        ? `${job.city}${job.location ? ` · ${LOCATION_LABELS[job.location] || job.location}` : ''}`
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">{jobType}</TableCell>
+                    <TableCell className="text-sm text-gray-700 text-center font-medium">
+                      {totalCandidatos}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={cn(
+                          'text-sm font-medium',
+                          emProcesso > 0 ? 'text-blue-600' : 'text-gray-400'
+                        )}
+                      >
+                        {emProcesso}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          'text-xs px-2 py-0.5 rounded-full font-medium',
+                          statusInfo.className
+                        )}
+                      >
+                        {statusInfo.label}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">
+                      {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-primary hover:text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/company/jobs/${job.id}`);
+                        }}
+                      >
+                        Ver candidatos
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Sheet de métricas */}
       <Sheet open={metricsOpen} onOpenChange={setMetricsOpen}>
         <SheetContent side="right" className="w-[520px] sm:max-w-[520px] overflow-y-auto bg-white">
           <SheetHeader>
-            <SheetTitle className="text-base font-semibold text-gray-900">Métricas</SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-base font-semibold text-gray-900">Métricas</SheetTitle>
+              <Button variant="outline" size="sm" onClick={handleExportPDF} className="h-7 text-xs">
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Exportar PDF
+              </Button>
+            </div>
           </SheetHeader>
-          <div className="mt-6">
+          <div ref={metricsRef} className="mt-6">
             <Tabs defaultValue="overview">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
@@ -373,25 +512,6 @@ export default function CompanyDashboard() {
                           <YAxis dataKey="title" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={130} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Bar dataKey="candidaturas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </div>
-                )}
-
-                {stagesData.length > 0 && (
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
-                      Vagas por etapa
-                    </p>
-                    <ChartContainer config={{ value: { label: 'Vagas' } }} className="h-[220px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stagesData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </ChartContainer>
@@ -512,6 +632,35 @@ export default function CompanyDashboard() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {isPro && (
+        <>
+          <JarvisFab onClick={() => setJarvisOpen(true)} />
+          <JarvisPanel
+            open={jarvisOpen}
+            onClose={() => setJarvisOpen(false)}
+            context={jarvisContext}
+            injectedExchange={pendingExchange}
+            onExchangeConsumed={() => setPendingExchange(null)}
+          />
+          <JarvisCommandBar
+            open={commandBarOpen}
+            onClose={() => setCommandBarOpen(false)}
+            context={jarvisContext}
+            onAnswer={(question, answer) => {
+              setPendingExchange({ question, answer });
+              setJarvisOpen(true);
+            }}
+          />
+          {showBriefing && (
+            <JarvisBriefing
+              context={jarvisContext}
+              userName={(user?.user_metadata as any)?.name?.split(' ')[0] || 'gestor'}
+              onClose={closeBriefing}
+            />
+          )}
+        </>
+      )}
     </CompanyLayout>
   );
 }
