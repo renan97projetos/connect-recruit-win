@@ -85,6 +85,46 @@ function getCandidateStage(app: any): CandidateStageId {
   return STAGE_ALIASES[key] || 'triagem';
 }
 
+// Sequência linear de progressão (exclui terminais aprovado/reprovado)
+const PROGRESSION: CandidateStageId[] = [
+  'triagem',
+  'entrevista',
+  'avaliacao',
+  'proposta',
+  'admissao',
+  'aprovado',
+];
+
+function getNextStage(current: CandidateStageId): { id: CandidateStageId; label: string } | null {
+  const idx = PROGRESSION.indexOf(current);
+  if (idx === -1 || idx === PROGRESSION.length - 1) return null;
+  const nextId = PROGRESSION[idx + 1];
+  const label = CANDIDATE_STAGES.find((s) => s.id === nextId)?.label || nextId;
+  return { id: nextId, label };
+}
+
+// Mapeia stage interno → status legado em applications.status
+const STATUS_FOR_STAGE: Record<CandidateStageId, string> = {
+  triagem: 'pending',
+  entrevista: 'in-review',
+  avaliacao: 'in-review',
+  proposta: 'in-review',
+  admissao: 'in-review',
+  aprovado: 'approved',
+  reprovado: 'rejected',
+};
+
+// Status do e-mail de notificação (mantém compatibilidade com send-candidate-status-email)
+const EMAIL_STATUS_FOR_STAGE: Record<CandidateStageId, string | null> = {
+  triagem: null,
+  entrevista: 'interview',
+  avaliacao: 'interview',
+  proposta: 'interview',
+  admissao: 'interview',
+  aprovado: 'approved',
+  reprovado: 'rejected',
+};
+
 const initials = (name: string) =>
   name
     .trim()
