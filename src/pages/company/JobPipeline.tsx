@@ -1177,11 +1177,27 @@ ${companyName}`;
                   >
                     {savingInterview ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
-                    ) : existingInterview ? 'Atualizar agendamento' : 'Agendar e notificar candidato'}
+                    ) : existingInterview ? 'Atualizar agendamento' : 'Agendar e notificar por e-mail'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={notifyByWhatsApp}
+                    disabled={!interviewData.scheduled_at || !interviewApp?.candidate_phone}
+                    className="w-full gap-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 hover:text-[#25D366]"
+                    title={!interviewApp?.candidate_phone ? 'Candidato sem telefone cadastrado' : 'Abrir WhatsApp com mensagem pronta'}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Notificar pelo WhatsApp
                   </Button>
                   <p className="text-[11px] text-muted-foreground text-center">
-                    Um e-mail com os detalhes será enviado automaticamente ao candidato.
+                    O e-mail é enviado automaticamente. O WhatsApp abre uma janela com a mensagem pronta para você revisar e enviar.
                   </p>
+                  {!interviewApp?.candidate_phone && (
+                    <p className="text-[11px] text-warning text-center">
+                      ⚠ Candidato não tem telefone cadastrado — botão WhatsApp indisponível.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
