@@ -38,7 +38,7 @@ type PipelineStageId =
   | 'reprovado';
 
 const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
-  { id: 'aberta', label: 'Vagas', color: 'text-violet-600' },
+  { id: 'aberta', label: 'Rascunho', color: 'text-violet-600' },
   { id: 'aguardando', label: 'Aguardando 1º candidato', color: 'text-purple-600' },
   { id: 'triagem', label: 'Triagem', color: 'text-gray-600' },
   { id: 'entrevista', label: 'Entrevista', color: 'text-blue-600' },
