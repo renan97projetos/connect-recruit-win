@@ -83,7 +83,7 @@ const CANDIDATE_STAGES: { id: CandidateStageId; label: string; color: string }[]
   { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
   { id: 'proposta', label: 'Proposta', color: 'text-orange-600' },
   { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
-  { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
+  { id: 'reprovado', label: 'Rejeitado', color: 'text-red-500' },
 ];
 
 const STAGE_ALIASES: Record<string, CandidateStageId> = {
