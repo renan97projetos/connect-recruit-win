@@ -313,6 +313,24 @@ export default function JobPipeline() {
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState<CandidateStageId>('triagem');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const waStorageKey = `wa_sent_${id || 'job'}`;
+  const [waSentByApp, setWaSentByApp] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(`wa_sent_${id || 'job'}`) : null;
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+  const markWaSent = (appId: string) => {
+    setWaSentByApp((prev) => {
+      const next = { ...prev, [appId]: true };
+      try {
+        window.localStorage.setItem(waStorageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
   const [noteDialog, setNoteDialog] = useState<{
     app: any | null;
     open: boolean;
