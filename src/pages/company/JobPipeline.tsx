@@ -459,16 +459,21 @@ export default function JobPipeline() {
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-0.5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
-                            onClick={() => moveToInterview(app)}
-                            disabled={actionLoading === app.id}
-                            title="Mover para Entrevista"
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
+                          {(() => {
+                            const next = getNextStage(getCandidateStage(app));
+                            return (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                                onClick={() => moveToNextStage(app)}
+                                disabled={actionLoading === app.id || !next}
+                                title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            );
+                          })()}
                           <Button
                             size="sm"
                             variant="ghost"
