@@ -332,8 +332,14 @@ export default function JobPipeline() {
                 {rankedCandidates.map((app, idx) => {
                   const profile = profilesById[app.candidate_id];
                   const score = app.adherence_score ?? app.score ?? 0;
+                  const goToProfile = () =>
+                    navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
                   return (
-                    <TableRow key={app.id}>
+                    <TableRow
+                      key={app.id}
+                      onClick={goToProfile}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
                       <TableCell className="font-bold text-muted-foreground">
                         {idx + 1}
                       </TableCell>
