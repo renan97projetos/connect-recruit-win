@@ -852,10 +852,12 @@ ${companyName}`;
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="flex-1 h-7 text-xs"
-                                onClick={() => navigate(`/company/jobs/${jobId}`)}
+                                className="h-7 px-2"
+                                onClick={(e) => { e.stopPropagation(); openNoteSheet(app); }}
+                                title="Adicionar nota"
+                                aria-label="Adicionar nota"
                               >
-                                <Eye className="h-3.5 w-3.5 mr-1" /> Ver
+                                <StickyNote className="h-3.5 w-3.5" />
                               </Button>
                               {getStageBucket(app) === 'interview' && (
                                 <Button
@@ -886,10 +888,15 @@ ${companyName}`;
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                                onClick={() => moveCandidate(app.id, 'approved')}
+                                className="flex-1 h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                                onClick={() => {
+                                  const bucket = getStageBucket(app);
+                                  const next = NEXT_STAGE[bucket] || 'approved';
+                                  moveCandidate(app.id, next);
+                                }}
                                 disabled={updating === app.id}
-                                aria-label="Aprovar"
+                                title={NEXT_STAGE_LABEL[getStageBucket(app)] || 'Avançar'}
+                                aria-label={NEXT_STAGE_LABEL[getStageBucket(app)] || 'Avançar'}
                               >
                                 <ThumbsUp className="h-3.5 w-3.5" />
                               </Button>
