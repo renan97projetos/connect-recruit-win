@@ -431,6 +431,8 @@ export default function JobPipeline() {
     if (interviewData.interviewer_name) {
       msg += `- Entrevistador: ${interviewData.interviewer_name}\n`;
     }
+    const jobUrl = `${window.location.origin}/jobs/${jobId}`;
+    msg += `\nDetalhes da vaga: ${jobUrl}\n`;
     msg += `\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
     return msg;
   };
