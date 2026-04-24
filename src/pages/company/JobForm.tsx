@@ -94,6 +94,7 @@ export default function JobForm() {
     question_type: ScreeningQuestionType;
     required: boolean;
     options?: string[];
+    score_weight?: number;
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
   const QUESTION_TYPES_WITH_OPTIONS: ScreeningQuestionType[] = ['multiple_choice', 'single_choice'];
