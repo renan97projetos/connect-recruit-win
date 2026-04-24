@@ -358,7 +358,7 @@ export default function JobForm() {
 
       const validQuestions = questions.filter(q => q.question.trim()).slice(0, 10);
       if (jobId) {
-        await supabase.from('screening_questions').delete().eq('job_id', jobId);
+        await supabase.from('screening_questions').delete().eq('job_id', jobId).eq('is_auto_generated', false);
         if (validQuestions.length > 0) {
           await supabase.from('screening_questions').insert(
             validQuestions.map((q, i) => ({
