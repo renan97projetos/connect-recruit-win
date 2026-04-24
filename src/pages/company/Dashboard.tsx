@@ -34,7 +34,6 @@ type PipelineStageId =
   | 'avaliacao'
   | 'proposta'
   | 'admissao'
-  | 'contratado'
   | 'reprovado';
 
 const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] = [
@@ -45,7 +44,6 @@ const PIPELINE_STAGES: { id: PipelineStageId; label: string; color: string }[] =
   { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
   { id: 'proposta', label: 'Proposta', color: 'text-orange-600' },
   { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
-  { id: 'contratado', label: 'Contratado', color: 'text-green-600' },
   { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
 ];
 

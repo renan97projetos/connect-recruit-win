@@ -47,7 +47,7 @@ export const COMPANY_TOURS: TourMeta[] = [
         popover: {
           title: 'Pipeline de Vagas',
           description:
-            'Cada card mostra quantas vagas estão em cada etapa: <b>Aberta</b>, <b>Triagem</b>, <b>Entrevista</b>, <b>Avaliação</b>, <b>Proposta</b>, <b>Admissão</b>, <b>Contratado</b> ou <b>Reprovado</b>. Clique para filtrar.',
+            'Cada card mostra quantas vagas estão em cada etapa: <b>Aberta</b>, <b>Triagem</b>, <b>Entrevista</b>, <b>Avaliação</b>, <b>Proposta</b>, <b>Admissão</b> ou <b>Reprovado</b>. Clique para filtrar.',
           ...popoverBase,
         },
       },

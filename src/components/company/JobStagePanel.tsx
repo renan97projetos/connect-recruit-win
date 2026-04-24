@@ -27,7 +27,6 @@ const STAGE_LABELS: Record<string, { label: string; color: string }> = {
   avaliacao: { label: 'Avaliação', color: 'bg-amber-50 text-amber-700' },
   proposta: { label: 'Proposta', color: 'bg-orange-50 text-orange-700' },
   admissao: { label: 'Admissão', color: 'bg-teal-50 text-teal-700' },
-  contratado: { label: 'Contratado', color: 'bg-green-50 text-green-700' },
   reprovado: { label: 'Reprovado', color: 'bg-red-50 text-red-700' },
   cancelada: { label: 'Cancelada', color: 'bg-rose-50 text-rose-700' },
 };
