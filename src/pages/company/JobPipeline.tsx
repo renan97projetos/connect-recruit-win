@@ -933,11 +933,40 @@ export default function JobPipeline() {
 
       {/* Conteúdo da etapa selecionada */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             {activeStageLabel} — {candidatesInActiveStage.length}{' '}
             {candidatesInActiveStage.length === 1 ? 'candidato' : 'candidatos'}
           </h2>
+          {(() => {
+            const next = getNextStage(activeStage);
+            const canBulk =
+              !!next && candidatesInActiveStage.length > 0;
+            return (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!canBulk || actionLoading === 'bulk'}
+                onClick={advanceAllInStage}
+                className="gap-2"
+                title={
+                  next
+                    ? `Mover todos para ${next.label}`
+                    : 'Etapa final — não há próxima etapa'
+                }
+              >
+                {actionLoading === 'bulk' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+                Avançar todos
+                {next && (
+                  <span className="text-muted-foreground">→ {next.label}</span>
+                )}
+              </Button>
+            );
+          })()}
         </div>
 
         {isTriagem ? (
