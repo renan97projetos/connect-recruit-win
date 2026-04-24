@@ -11,11 +11,15 @@ const corsHeaders = {
 };
 
 interface WelcomeEmailRequest {
+  // Novo padrão (candidato)
+  userId?: string;
   userName: string;
   userEmail: string;
-  companyId: string;
-  permissions: string[];
-  tempPassword: string;
+  companyName?: string;
+  // Padrão legado (usuário interno da empresa)
+  companyId?: string;
+  permissions?: string[];
+  tempPassword?: string;
 }
 
 const PERMISSION_LABELS: Record<string, string> = {
@@ -30,124 +34,131 @@ const PERMISSION_LABELS: Record<string, string> = {
   'manage_usuarios': 'Criar ou remover usuários (somente Master)',
 };
 
+const buildHtml = (content: string) => `
+  <!DOCTYPE html>
+  <html>
+    <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5;margin:0;padding:0;">
+      <div style="max-width:600px;margin:0 auto;background:white;">
+        <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 100%);color:white;padding:30px;text-align:center;">
+          <h1 style="margin:0;font-size:22px;font-weight:700;">SinapseRH</h1>
+          <p style="margin:6px 0 0;font-size:13px;opacity:0.8;">Recrutamento inteligente para PMEs</p>
+        </div>
+        <div style="padding:32px;">
+          ${content}
+        </div>
+        <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
+          <p style="margin:0;font-size:12px;color:#999;">
+            Este é um e-mail automático da plataforma SinapseRH. Por favor, não responda.
+          </p>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { userName, userEmail, companyId, permissions, tempPassword }: WelcomeEmailRequest = await req.json();
+    const body: WelcomeEmailRequest = await req.json();
+    const { userName, userEmail, companyId, permissions, tempPassword } = body;
+    let { companyName } = body;
 
     console.log('Sending welcome email to:', userEmail);
 
-    // Get company name from profiles
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Detecta fluxo: usuário interno da empresa (legacy) vs candidato
+    const isCompanyUserFlow = !!companyId && !!tempPassword && Array.isArray(permissions);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('company_name, name')
-      .eq('id', companyId)
-      .single();
+    if (isCompanyUserFlow) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const companyName = profile?.company_name || profile?.name || 'SinapseRH';
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_name, name')
+        .eq('id', companyId!)
+        .single();
+
+      companyName = profile?.company_name || profile?.name || 'SinapseRH';
+    }
+
+    const safeCompanyName = companyName || 'SinapseRH';
     const loginUrl = `https://www.sinapserh.com.br/login`;
+    const candidateUrl = `https://www.sinapserh.com.br/candidate`;
 
-    // Format permissions list
-    const permissionsList = permissions
-      .map(p => `<li>${PERMISSION_LABELS[p] || p}</li>`)
-      .join('');
-
-    // Configure SMTP client for Gmail
     const client = new SMTPClient({
       connection: {
         hostname: "smtp.gmail.com",
         port: 465,
         tls: true,
-        auth: {
-          username: GMAIL_USER!,
-          password: GMAIL_APP_PASSWORD!,
-        },
+        auth: { username: GMAIL_USER!, password: GMAIL_APP_PASSWORD! },
       },
     });
 
-    // Send welcome email
+    let subject: string;
+    let content: string;
+
+    if (isCompanyUserFlow) {
+      const permissionsList = (permissions || [])
+        .map((p) => `<li style="margin:6px 0;color:#374151;">${PERMISSION_LABELS[p] || p}</li>`)
+        .join('');
+
+      subject = `Bem-vindo ao Sistema ${safeCompanyName}!`;
+      content = `
+        <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Bem-vindo, ${userName}! 🎉</h2>
+        <p style="font-size:15px;color:#444;margin:0 0 14px;">
+          Você foi adicionado ao sistema de gestão da <strong>${safeCompanyName}</strong>.
+        </p>
+        <div style="background:#f5f3ff;border-left:4px solid #7c3aed;padding:14px 16px;border-radius:4px;margin:20px 0;">
+          <p style="margin:4px 0;font-size:14px;color:#4c1d95;"><strong>📧 E-mail de acesso:</strong> ${userEmail}</p>
+          <p style="margin:4px 0;font-size:14px;color:#4c1d95;"><strong>🔑 Senha temporária:</strong> ${tempPassword}</p>
+        </div>
+        <p style="font-size:14px;color:#444;margin:0 0 14px;">
+          <strong>Importante:</strong> recomendamos alterar sua senha após o primeiro acesso.
+        </p>
+        <div style="background:#f9f9f9;border-radius:8px;padding:16px;margin:20px 0;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#374151;">🔐 Permissões concedidas:</p>
+          <ul style="margin:0;padding:0 0 0 20px;font-size:14px;">${permissionsList}</ul>
+        </div>
+        <p style="margin:24px 0 0;text-align:center;">
+          <a href="${loginUrl}" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">
+            Acessar sistema →
+          </a>
+        </p>
+      `;
+    } else {
+      subject = `Bem-vindo ao SinapseRH, ${userName}!`;
+      content = `
+        <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Bem-vindo, ${userName}! 🎉</h2>
+        <p style="font-size:15px;color:#444;margin:0 0 14px;">
+          Sua conta no SinapseRH foi criada com sucesso. Agora você pode se candidatar a vagas, acompanhar seus processos seletivos e receber atualizações em tempo real.
+        </p>
+        <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:14px 16px;border-radius:4px;margin:20px 0;">
+          <p style="margin:0 0 6px;font-size:14px;color:#166534;font-weight:600;">Próximos passos:</p>
+          <p style="margin:0;font-size:14px;color:#166534;">
+            ✅ Complete seu perfil com experiências e habilidades<br/>
+            ✅ Adicione seu currículo<br/>
+            ✅ Explore as vagas disponíveis
+          </p>
+        </div>
+        <p style="margin:24px 0 0;text-align:center;">
+          <a href="${candidateUrl}" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">
+            Acessar meu painel →
+          </a>
+        </p>
+      `;
+    }
+
     await client.send({
       from: GMAIL_USER!,
       to: userEmail,
-      subject: `Bem-vindo ao Sistema ${companyName}!`,
+      subject,
       content: "auto",
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, hsl(222.2 47.4% 11.2%) 0%, hsl(222.2 47.4% 20%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .content { background: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; }
-              .button { display: inline-block; background: hsl(222.2 47.4% 11.2%); color: white !important; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
-              .footer { text-align: center; padding: 20px; color: #666; font-size: 14px; }
-              .permissions-box { background: #f9f9f9; padding: 20px; border-radius: 6px; margin: 20px 0; }
-              .permissions-box h3 { margin-top: 0; color: #333; }
-              .permissions-box ul { margin: 10px 0; padding-left: 20px; }
-              .permissions-box li { margin: 8px 0; }
-              .info-box { background: #e8f4ff; border-left: 4px solid #0066cc; padding: 15px; margin: 20px 0; border-radius: 4px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1 style="margin: 0;">🎉 Bem-vindo!</h1>
-                <p style="margin: 10px 0 0 0; opacity: 0.9;">Você foi adicionado ao sistema de gestão</p>
-              </div>
-              <div class="content">
-                <p>Olá <strong>${userName}</strong>,</p>
-                
-                <p>É com prazer que informamos que você foi adicionado ao sistema de gestão da <strong>${companyName}</strong>!</p>
-                
-                <div class="info-box">
-                  <p style="margin: 5px 0;"><strong>📧 Seu email de acesso:</strong> ${userEmail}</p>
-                  <p style="margin: 5px 0;"><strong>🔑 Sua senha temporária:</strong> ${tempPassword}</p>
-                </div>
-                
-                <p><strong>Importante:</strong> Após o primeiro login, recomendamos que você altere sua senha nas configurações da conta.</p>
-                
-                <p>Suas permissões no sistema:</p>
-                
-                <div class="permissions-box">
-                  <h3>🔐 Permissões Concedidas:</h3>
-                  <ul>
-                    ${permissionsList}
-                  </ul>
-                </div>
-                
-                <p style="text-align: center;">
-                  <a href="${loginUrl}" class="button">🚀 Acessar Sistema</a>
-                </p>
-                
-                <p style="font-size: 14px; color: #666; margin-top: 30px;">
-                  <strong>Atenção:</strong> Esta senha é temporária. Por motivos de segurança, recomendamos que você a altere após o primeiro acesso.
-                </p>
-                
-                <p>Caso tenha alguma dúvida, entre em contato com o gestor da sua empresa.</p>
-                
-                <p style="margin-top: 30px;">
-                  Atenciosamente,<br>
-                  <strong>Equipe ${companyName}</strong>
-                </p>
-              </div>
-              <div class="footer">
-                <p>Este é um email automático, por favor não responda.</p>
-                <p>© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
+      html: buildHtml(content),
     });
 
     await client.close();
@@ -155,23 +166,14 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Welcome email sent successfully via Gmail SMTP");
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Email de boas-vindas enviado com sucesso' }), 
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      }
+      JSON.stringify({ success: true, message: 'Email de boas-vindas enviado com sucesso' }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
     console.error("Error in send-user-welcome-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message || 'Erro ao enviar email' }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

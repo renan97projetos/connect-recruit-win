@@ -20,8 +20,28 @@ interface Body {
   notes?: string | null;
 }
 
-const formatBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const buildHtml = (content: string) => `
+  <!DOCTYPE html>
+  <html>
+    <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5;margin:0;padding:0;">
+      <div style="max-width:600px;margin:0 auto;background:white;">
+        <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 100%);color:white;padding:30px;text-align:center;">
+          <h1 style="margin:0;font-size:22px;font-weight:700;">SinapseRH</h1>
+          <p style="margin:6px 0 0;font-size:13px;opacity:0.8;">Recrutamento inteligente para PMEs</p>
+        </div>
+        <div style="padding:32px;">
+          ${content}
+        </div>
+        <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
+          <p style="margin:0;font-size:12px;color:#999;">
+            Este é um e-mail automático da plataforma SinapseRH. Por favor, não responda.
+          </p>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -36,7 +56,6 @@ const handler = async (req: Request): Promise<Response> => {
       companyName,
       offeredSalary,
       benefits,
-      notes,
     }: Body = await req.json();
 
     if (!candidateEmail || !jobTitle) {
@@ -55,35 +74,40 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
+    const salaryNum = offeredSalary != null ? Number(offeredSalary) : null;
+
+    const content = `
+      <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Você recebeu uma proposta! 🎉</h2>
+      <p style="font-size:15px;color:#444;margin:0 0 14px;">
+        Olá <strong>${candidateName || "candidato"}</strong>, a empresa <strong>${companyName || "Empresa"}</strong> registrou uma proposta para você na vaga de <strong>${jobTitle}</strong>.
+      </p>
+      ${salaryNum != null && !isNaN(salaryNum) ? `
+      <div style="background:#f5f3ff;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Salário ofertado</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#4c1d95;">R$ ${salaryNum.toLocaleString('pt-BR')}</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">por mês</p>
+      </div>` : ''}
+      ${benefits ? `
+      <div style="background:#f9f9f9;border-radius:8px;padding:16px;margin:0 0 20px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#374151;">Benefícios:</p>
+        <p style="margin:0;font-size:14px;color:#4b5563;">${benefits}</p>
+      </div>` : ''}
+      <p style="font-size:15px;color:#444;margin:0 0 24px;">
+        Entre em contato com a empresa para confirmar sua decisão.
+      </p>
+      <p style="margin:0;text-align:center;">
+        <a href="https://www.sinapserh.com.br/candidate" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">
+          Ver minha candidatura →
+        </a>
+      </p>
+    `;
+
     await client.send({
       from: GMAIL_USER!,
       to: candidateEmail,
-      subject: `🎉 Proposta de emprego — ${jobTitle}`,
+      subject: `🎉 Você recebeu uma proposta — ${jobTitle}`,
       content: "auto",
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <body style="font-family: Arial, sans-serif; background:#FFFEF7; padding:24px; color:#0D0D0D;">
-            <div style="max-width:560px; margin:0 auto; background:#ffffff; border:2px solid #0D0D0D; border-radius:12px; box-shadow:6px 6px 0 #0D0D0D; padding:32px;">
-              <h1 style="margin:0 0 16px;">🎉 Você recebeu uma proposta!</h1>
-              <p>Olá <strong>${candidateName || "candidato"}</strong>,</p>
-              <p>A empresa <strong>${companyName || "Empresa"}</strong> registrou uma proposta para você na vaga <strong>${jobTitle}</strong>.</p>
-
-              <div style="background:#F5F5F5; border:2px solid #0D0D0D; border-radius:8px; padding:16px; margin:20px 0;">
-                ${offeredSalary != null ? `<p style="margin:4px 0;"><strong>Salário proposto:</strong> ${formatBRL(Number(offeredSalary))}</p>` : ""}
-                ${benefits ? `<p style="margin:4px 0;"><strong>Benefícios:</strong> ${benefits}</p>` : ""}
-                ${notes ? `<p style="margin:4px 0;"><strong>Observações:</strong> ${notes}</p>` : ""}
-              </div>
-
-              <p>Acesse seu painel para visualizar todos os detalhes e responder à proposta.</p>
-              <p style="margin-top:24px;">
-                <a href="https://www.sinapserh.com.br/candidate" style="background:#7C3AED; color:#fff; padding:12px 22px; border:2px solid #0D0D0D; border-radius:8px; box-shadow:4px 4px 0 #0D0D0D; text-decoration:none; font-weight:bold;">Ver proposta</a>
-              </p>
-              <p style="font-size:12px; color:#737373; margin-top:32px;">SinapseRH — notificação automática.</p>
-            </div>
-          </body>
-        </html>
-      `,
+      html: buildHtml(content),
     });
 
     await client.close();

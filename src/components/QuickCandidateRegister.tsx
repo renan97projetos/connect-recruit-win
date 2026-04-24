@@ -143,6 +143,15 @@ export function QuickCandidateRegister() {
       state,
     });
 
+    // Envia e-mail de boas-vindas (não bloqueia o fluxo)
+    supabase.functions.invoke('send-user-welcome-email', {
+      body: {
+        userEmail: email,
+        userName: name || email,
+        companyName: 'SinapseRH',
+      },
+    }).catch((err) => console.error('Welcome email error:', err));
+
     // Aguarda criação do perfil pelo trigger e atualiza com dados extras
     try {
       // Faz login imediato para obter o user.id e poder atualizar o profile + upload
