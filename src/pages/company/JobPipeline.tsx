@@ -403,6 +403,8 @@ export default function JobPipeline() {
       variant: fail > 0 ? 'destructive' : 'default',
     });
   };
+
+  const rejectCandidate = async (app: any) => {
     if (!confirm(`Reprovar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
     if (!ok) return;
