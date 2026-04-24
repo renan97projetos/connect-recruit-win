@@ -1040,12 +1040,9 @@ export default function JobPipeline() {
 
               // Card especializado para Entrevista
               if (activeStage === 'entrevista') {
-                const noteText = app.notes
-                  ? typeof app.notes === 'string'
-                    ? app.notes
-                    : (app.notes as any)?.text || ''
-                  : '';
-                const hasNote = noteText.trim().length > 0;
+                const notesList = getNotesList(app.notes);
+                const hasNote = notesList.length > 0;
+                const lastNote = hasNote ? notesList[notesList.length - 1].text : '';
                 const hasInterview = !!interview;
                 const interviewDone = interview?.status === 'done';
                 return (
@@ -1208,11 +1205,17 @@ export default function JobPipeline() {
                             : 'text-amber-600 hover:bg-amber-500/10'
                         )}
                         onClick={() => openNoteDialog(app)}
-                        title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                        title={
+                          hasNote
+                            ? `${notesList.length} nota(s) — última: ${lastNote}`
+                            : 'Adicionar nota interna'
+                        }
                       >
                         <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
                         {hasNote && (
-                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-background flex items-center justify-center">
+                            {notesList.length}
+                          </span>
                         )}
                       </Button>
                       <div className="ml-auto flex items-center gap-1">
@@ -1289,12 +1292,9 @@ export default function JobPipeline() {
               );
 
               // Ações comuns reutilizáveis (WhatsApp, nota, mover, reprovar) + ações extras
-              const noteText = app.notes
-                ? typeof app.notes === 'string'
-                  ? app.notes
-                  : (app.notes as any)?.text || ''
-                : '';
-              const hasNote = noteText.trim().length > 0;
+              const notesList = getNotesList(app.notes);
+              const hasNote = notesList.length > 0;
+              const lastNote = hasNote ? notesList[notesList.length - 1].text : '';
 
               const renderStageActions = (extraButtons?: React.ReactNode) => (
                 <div
