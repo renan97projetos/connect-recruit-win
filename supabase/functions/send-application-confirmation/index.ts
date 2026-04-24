@@ -17,6 +17,29 @@ interface Body {
   companyName: string;
 }
 
+const buildHtml = (content: string) => `
+  <!DOCTYPE html>
+  <html>
+    <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5;margin:0;padding:0;">
+      <div style="max-width:600px;margin:0 auto;background:white;">
+        <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 100%);color:white;padding:30px;text-align:center;">
+          <h1 style="margin:0;font-size:22px;font-weight:700;">SinapseRH</h1>
+          <p style="margin:6px 0 0;font-size:13px;opacity:0.8;">Recrutamento inteligente para PMEs</p>
+        </div>
+        <div style="padding:32px;">
+          ${content}
+        </div>
+        <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
+          <p style="margin:0;font-size:12px;color:#999;">
+            Este é um e-mail automático da plataforma SinapseRH. Por favor, não responda.
+          </p>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,28 +64,32 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
+    const content = `
+      <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Olá, ${candidateName || "candidato"}! 👋</h2>
+      <p style="font-size:15px;color:#444;margin:0 0 14px;">
+        Recebemos a sua candidatura para a vaga de <strong>${jobTitle}</strong>${companyName ? ` na empresa <strong>${companyName}</strong>` : ""}.
+      </p>
+      <p style="font-size:15px;color:#444;margin:0 0 14px;">
+        Nossa equipe analisará o seu perfil e você receberá um e-mail a cada atualização no processo seletivo.
+      </p>
+      <div style="background:#f5f3ff;border-left:4px solid #7c3aed;padding:14px 16px;border-radius:4px;margin:20px 0;">
+        <p style="margin:0;font-size:14px;color:#4c1d95;">
+          💡 Dica: complete seu perfil para aumentar suas chances de aprovação. Candidatos com perfil 100% têm 3x mais chances de avançar.
+        </p>
+      </div>
+      <p style="margin:24px 0 0;text-align:center;">
+        <a href="https://www.sinapserh.com.br/candidate" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">
+          Acompanhar minha candidatura →
+        </a>
+      </p>
+    `;
+
     await client.send({
       from: GMAIL_USER!,
       to: candidateEmail,
-      subject: `Candidatura recebida: ${jobTitle}`,
+      subject: `Candidatura recebida — ${jobTitle}`,
       content: "auto",
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <body style="font-family: Arial, sans-serif; background:#FFFEF7; padding:24px; color:#0D0D0D;">
-            <div style="max-width:560px; margin:0 auto; background:#ffffff; border:2px solid #0D0D0D; border-radius:12px; box-shadow:6px 6px 0 #0D0D0D; padding:32px;">
-              <h1 style="margin:0 0 16px;">🎉 Candidatura recebida!</h1>
-              <p>Olá <strong>${candidateName || "candidato"}</strong>,</p>
-              <p>Confirmamos o recebimento da sua candidatura para a vaga <strong>${jobTitle}</strong>${companyName ? ` na empresa <strong>${companyName}</strong>` : ""}.</p>
-              <p>Nossa equipe analisará seu perfil e você receberá atualizações por email a cada movimentação no processo.</p>
-              <p style="margin-top:24px;">
-                <a href="https://www.sinapserh.com.br/candidate" style="background:#7C3AED; color:#fff; padding:12px 22px; border:2px solid #0D0D0D; border-radius:8px; box-shadow:4px 4px 0 #0D0D0D; text-decoration:none; font-weight:bold;">Acompanhar minhas candidaturas</a>
-              </p>
-              <p style="font-size:12px; color:#737373; margin-top:32px;">Este é um email automático do SinapseRH.</p>
-            </div>
-          </body>
-        </html>
-      `,
+      html: buildHtml(content),
     });
 
     await client.close();
