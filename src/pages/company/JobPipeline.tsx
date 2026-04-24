@@ -473,7 +473,7 @@ export default function JobPipeline() {
                                     ? 'text-amber-600 bg-amber-500/10 hover:bg-amber-500/20'
                                     : 'text-amber-600 hover:bg-amber-500/10'
                                 )}
-                                onClick={() => editNote(app)}
+                                onClick={() => openNoteDialog(app)}
                                 title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
                               >
                                 <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
