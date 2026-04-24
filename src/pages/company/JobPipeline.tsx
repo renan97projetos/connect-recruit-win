@@ -85,6 +85,46 @@ function getCandidateStage(app: any): CandidateStageId {
   return STAGE_ALIASES[key] || 'triagem';
 }
 
+// Sequência linear de progressão (exclui terminais aprovado/reprovado)
+const PROGRESSION: CandidateStageId[] = [
+  'triagem',
+  'entrevista',
+  'avaliacao',
+  'proposta',
+  'admissao',
+  'aprovado',
+];
+
+function getNextStage(current: CandidateStageId): { id: CandidateStageId; label: string } | null {
+  const idx = PROGRESSION.indexOf(current);
+  if (idx === -1 || idx === PROGRESSION.length - 1) return null;
+  const nextId = PROGRESSION[idx + 1];
+  const label = CANDIDATE_STAGES.find((s) => s.id === nextId)?.label || nextId;
+  return { id: nextId, label };
+}
+
+// Mapeia stage interno → status legado em applications.status
+const STATUS_FOR_STAGE: Record<CandidateStageId, string> = {
+  triagem: 'pending',
+  entrevista: 'in-review',
+  avaliacao: 'in-review',
+  proposta: 'in-review',
+  admissao: 'in-review',
+  aprovado: 'approved',
+  reprovado: 'rejected',
+};
+
+// Status do e-mail de notificação (mantém compatibilidade com send-candidate-status-email)
+const EMAIL_STATUS_FOR_STAGE: Record<CandidateStageId, string | null> = {
+  triagem: null,
+  entrevista: 'interview',
+  avaliacao: 'interview',
+  proposta: 'interview',
+  admissao: 'interview',
+  aprovado: 'approved',
+  reprovado: 'rejected',
+};
+
 const initials = (name: string) =>
   name
     .trim()
@@ -180,20 +220,32 @@ export default function JobPipeline() {
     return true;
   };
 
-  const moveToInterview = async (app: any) => {
-    const ok = await updateApplication(app.id, { current_stage: 'entrevista', status: 'in-review' });
+  const moveToNextStage = async (app: any) => {
+    const currentStage = getCandidateStage(app);
+    const next = getNextStage(currentStage);
+    if (!next) {
+      toast({ title: 'Candidato já está na etapa final', variant: 'destructive' });
+      return;
+    }
+    const ok = await updateApplication(app.id, {
+      current_stage: next.id,
+      status: STATUS_FOR_STAGE[next.id],
+    });
     if (!ok) return;
-    toast({ title: `${app.candidate_name} movido para Entrevista` });
+    toast({ title: `${app.candidate_name} movido para ${next.label}` });
 
-    supabase.functions.invoke('send-candidate-status-email', {
-      body: {
-        candidateName: app.candidate_name,
-        candidateEmail: app.candidate_email,
-        jobTitle,
-        companyName: companyName || 'Sinapse RH',
-        newStatus: 'interview',
-      },
-    }).catch(console.error);
+    const emailStatus = EMAIL_STATUS_FOR_STAGE[next.id];
+    if (emailStatus) {
+      supabase.functions.invoke('send-candidate-status-email', {
+        body: {
+          candidateName: app.candidate_name,
+          candidateEmail: app.candidate_email,
+          jobTitle,
+          companyName: companyName || 'Sinapse RH',
+          newStatus: emailStatus,
+        },
+      }).catch(console.error);
+    }
   };
 
   const rejectCandidate = async (app: any) => {
@@ -407,16 +459,21 @@ export default function JobPipeline() {
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-0.5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
-                            onClick={() => moveToInterview(app)}
-                            disabled={actionLoading === app.id}
-                            title="Mover para Entrevista"
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
+                          {(() => {
+                            const next = getNextStage(getCandidateStage(app));
+                            return (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                                onClick={() => moveToNextStage(app)}
+                                disabled={actionLoading === app.id || !next}
+                                title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            );
+                          })()}
                           <Button
                             size="sm"
                             variant="ghost"
@@ -504,11 +561,21 @@ export default function JobPipeline() {
               const score = app.adherence_score ?? app.score ?? 0;
               const rank = idx + 1;
               const profile = profilesById[app.candidate_id];
+              const next = getNextStage(getCandidateStage(app));
+              const goToProfile = () =>
+                navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
+              const isTerminal =
+                getCandidateStage(app) === 'aprovado' || getCandidateStage(app) === 'reprovado';
               return (
-                <button
+                <div
                   key={app.id}
-                  onClick={() => navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`)}
-                  className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
+                  onClick={goToProfile}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                  }}
+                  className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <Avatar className="h-10 w-10 flex-shrink-0">
@@ -527,7 +594,7 @@ export default function JobPipeline() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-xs mb-3">
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       Há {daysAgo(app.applied_at)} dia(s)
@@ -548,7 +615,35 @@ export default function JobPipeline() {
                       </span>
                     )}
                   </div>
-                </button>
+                  {!isTerminal && (
+                    <div
+                      className="flex items-center gap-2 pt-3 border-t border-border"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-8 text-xs gap-1"
+                        onClick={() => moveToNextStage(app)}
+                        disabled={actionLoading === app.id || !next}
+                        title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                        {next ? next.label : 'Final'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => rejectCandidate(app)}
+                        disabled={actionLoading === app.id}
+                        title="Reprovar (envia e-mail)"
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               );
             })}
 
