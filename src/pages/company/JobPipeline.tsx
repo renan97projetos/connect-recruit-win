@@ -339,6 +339,30 @@ export default function JobPipeline() {
         </Card>
       ) : (
         <TooltipProvider delayDuration={150}>
+          {pendingApps.length > 0 && (
+            <div className="mb-4 flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={allPendingSelected}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Selecionar todos os pendentes"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {selectedIds.size > 0
+                    ? `${selectedIds.size} selecionado${selectedIds.size === 1 ? '' : 's'}`
+                    : `Selecionar todos (${pendingApps.length} pendente${pendingApps.length === 1 ? '' : 's'})`}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleBulkMoveToInterview}
+                disabled={selectedIds.size === 0 || bulkMoving}
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Mover para entrevista
+              </Button>
+            </div>
+          )}
           <div className="grid gap-3">
             {applications.map((app, index) => {
               const rank = index + 1;
@@ -349,6 +373,8 @@ export default function JobPipeline() {
               const breakdown = app.score_breakdown || {};
               const noteCount = app.notes?.length || 0;
               const phoneDigits = sanitizePhone(app.candidate_phone);
+              const isSelectable = app.status === 'pending';
+              const isSelected = selectedIds.has(app.id);
 
               return (
                 <Card
@@ -357,6 +383,18 @@ export default function JobPipeline() {
                   onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
                 >
                   <div className="flex items-center gap-4">
+                    {/* Checkbox seleção */}
+                    <div
+                      className="flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(app.id)}
+                        disabled={!isSelectable}
+                        aria-label={`Selecionar ${app.candidate_name}`}
+                      />
+                    </div>
                     {/* Ranking */}
                     <div
                       className={`flex items-center justify-center min-w-[44px] h-11 rounded-lg border font-bold text-sm ${rankBadge.color}`}
