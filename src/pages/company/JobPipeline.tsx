@@ -368,7 +368,143 @@ export default function JobPipeline() {
     setBulkMoving(false);
   };
 
-  const statusLabels: Record<string, { label: string; className: string }> = {
+  const openInterviewSheet = async (app: Application) => {
+    setInterviewApp(app);
+    setInterviewTab('agendar');
+    setFeedbackText('');
+    setFeedbackScore(0);
+    setInterviewData({
+      scheduled_at: '',
+      format: 'video',
+      meeting_link: '',
+      location: '',
+      interviewer_name: '',
+    });
+    setExistingInterview(null);
+    setInterviewSheetOpen(true);
+
+    const { data } = await supabase
+      .from('interviews')
+      .select('*')
+      .eq('application_id', app.id)
+      .maybeSingle();
+
+    if (data) {
+      setExistingInterview(data);
+      setInterviewData({
+        scheduled_at: data.scheduled_at
+          ? new Date(data.scheduled_at).toISOString().slice(0, 16)
+          : '',
+        format: data.format || 'video',
+        meeting_link: data.meeting_link || '',
+        location: data.location || '',
+        interviewer_name: data.interviewer_name || '',
+      });
+      setFeedbackText(data.feedback || '');
+      setFeedbackScore(data.feedback_score || 0);
+      if (data.status === 'done') setInterviewTab('feedback');
+    }
+  };
+
+  const saveInterview = async () => {
+    if (!interviewApp || !interviewData.scheduled_at || !currentUser || !id) return;
+    setSavingInterview(true);
+
+    const payload = {
+      application_id: interviewApp.id,
+      job_id: id,
+      company_id: currentUser.id,
+      scheduled_at: new Date(interviewData.scheduled_at).toISOString(),
+      format: interviewData.format,
+      meeting_link: interviewData.meeting_link || null,
+      location: interviewData.location || null,
+      interviewer_name: interviewData.interviewer_name || null,
+      status: 'scheduled',
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existingInterview) {
+      await supabase.from('interviews').update(payload).eq('id', existingInterview.id);
+    } else {
+      await supabase.from('interviews').insert(payload);
+    }
+
+    const dateFormatted = new Date(interviewData.scheduled_at).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    const formatLabels: Record<string, string> = {
+      video: 'Videochamada',
+      presencial: 'Presencial',
+      telefone: 'Ligação telefônica',
+    };
+
+    const emailBody = `Olá ${interviewApp.candidate_name},
+
+Seu perfil foi selecionado e temos uma ótima notícia: você avançou para a etapa de entrevista no processo seletivo para a vaga de ${jobTitle}.
+
+Segue o agendamento:
+
+📅 Data e horário: ${dateFormatted}
+📋 Formato: ${formatLabels[interviewData.format] || interviewData.format}${
+      interviewData.format === 'video' && interviewData.meeting_link
+        ? `\n🔗 Link: ${interviewData.meeting_link}`
+        : ''
+    }${
+      interviewData.format === 'presencial' && interviewData.location
+        ? `\n📍 Local: ${interviewData.location}`
+        : ''
+    }${
+      interviewData.interviewer_name
+        ? `\n👤 Entrevistador: ${interviewData.interviewer_name}`
+        : ''
+    }
+
+Por favor, confirme sua presença respondendo este e-mail ou pelo WhatsApp.
+
+Em caso de imprevistos, entre em contato com antecedência.
+
+Att,
+Equipe de Recrutamento
+${companyName}`;
+
+    supabase.functions.invoke('send-candidate-status-email', {
+      body: {
+        candidateName: interviewApp.candidate_name,
+        candidateEmail: interviewApp.candidate_email,
+        jobTitle,
+        companyName,
+        newStatus: 'interview',
+        customSubject: `Entrevista agendada — ${jobTitle}`,
+        customBody: emailBody,
+      },
+    }).catch(console.error);
+
+    setSavingInterview(false);
+    toast.success(`Entrevista agendada! E-mail enviado para ${interviewApp.candidate_name}.`);
+    setInterviewSheetOpen(false);
+  };
+
+  const saveFeedback = async () => {
+    if (!interviewApp || !existingInterview) return;
+    setSavingInterview(true);
+
+    await supabase
+      .from('interviews')
+      .update({
+        feedback: feedbackText,
+        feedback_score: feedbackScore || null,
+        status: 'done',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingInterview.id);
+
+    setSavingInterview(false);
+    toast.success('Feedback registrado!');
+    setInterviewSheetOpen(false);
+  };
+
+
     pending: { label: 'pendente', className: '' },
     approved: { label: 'aprovado', className: 'bg-success/10 text-success border-success/20' },
     rejected: { label: 'reprovado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
