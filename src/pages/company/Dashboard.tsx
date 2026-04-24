@@ -906,6 +906,103 @@ export default function CompanyDashboard() {
           )}
         </>
       )}
+
+      {/* Dialog de confirmação de ações na vaga */}
+      <Dialog
+        open={actionDialog.open}
+        onOpenChange={(open) => !open && !actionDialog.saving && closeActionDialog()}
+      >
+        <DialogContent>
+          {(() => {
+            const t = actionDialog.type;
+            const job = actionDialog.job;
+            const candidateCount = job?.applications?.length || 0;
+            const titles: Record<string, string> = {
+              pause: 'Pausar (congelar) vaga',
+              resume: 'Reabrir vaga',
+              cancel: 'Cancelar vaga',
+              'cancel-request': 'Solicitar cancelamento da vaga',
+              delete: 'Excluir vaga',
+            };
+            const descriptions: Record<string, string> = {
+              pause:
+                candidateCount > 0
+                  ? `A vaga será congelada e os ${candidateCount} candidatos serão notificados por e-mail.`
+                  : 'A vaga será congelada. Você pode reabri-la a qualquer momento.',
+              resume:
+                candidateCount > 0
+                  ? `A vaga voltará a ficar ativa e os ${candidateCount} candidatos serão notificados.`
+                  : 'A vaga voltará a ficar ativa.',
+              cancel:
+                candidateCount > 0
+                  ? `A vaga será cancelada e os ${candidateCount} candidatos serão notificados por e-mail.`
+                  : 'A vaga será cancelada e arquivada.',
+              'cancel-request':
+                'Como sua vaga já foi publicada, o cancelamento precisa ser aprovado pelo gestor responsável. Os candidatos serão notificados após a aprovação.',
+              delete:
+                'Esta vaga em rascunho será removida permanentemente. Esta ação não pode ser desfeita.',
+            };
+            const showReason = t === 'pause' || t === 'cancel' || t === 'cancel-request' || t === 'resume';
+            const reasonLabel =
+              t === 'cancel' || t === 'cancel-request'
+                ? 'Motivo do cancelamento'
+                : t === 'pause'
+                ? 'Motivo da pausa (opcional)'
+                : 'Mensagem aos candidatos (opcional)';
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{t ? titles[t] : ''}</DialogTitle>
+                  <DialogDescription>
+                    {t ? descriptions[t] : ''}
+                    {job?.title && (
+                      <span className="block mt-2 font-medium text-foreground">"{job.title}"</span>
+                    )}
+                  </DialogDescription>
+                </DialogHeader>
+
+                {showReason && (
+                  <div className="space-y-2">
+                    <Label htmlFor="action-reason">{reasonLabel}</Label>
+                    <Textarea
+                      id="action-reason"
+                      value={actionDialog.reason}
+                      onChange={(e) =>
+                        setActionDialog((p) => ({ ...p, reason: e.target.value }))
+                      }
+                      rows={3}
+                      placeholder="Descreva brevemente..."
+                      disabled={actionDialog.saving}
+                    />
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button
+                    variant="ghost"
+                    onClick={closeActionDialog}
+                    disabled={actionDialog.saving}
+                  >
+                    Voltar
+                  </Button>
+                  <Button
+                    variant={t === 'delete' || t === 'cancel' || t === 'cancel-request' ? 'destructive' : 'default'}
+                    onClick={handleConfirmAction}
+                    disabled={
+                      actionDialog.saving ||
+                      ((t === 'cancel' || t === 'cancel-request') && !actionDialog.reason.trim())
+                    }
+                  >
+                    {actionDialog.saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Confirmar
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </CompanyLayout>
   );
 }
