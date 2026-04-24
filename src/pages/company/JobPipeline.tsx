@@ -788,6 +788,16 @@ export default function JobPipeline() {
                           <Button
                             size="sm"
                             variant="ghost"
+                            className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-500/10"
+                            onClick={() => openMoveDialog(app)}
+                            disabled={actionLoading === app.id}
+                            title="Mover para outra etapa"
+                          >
+                            <MoveHorizontal className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                             onClick={() => rejectCandidate(app)}
                             disabled={actionLoading === app.id}
