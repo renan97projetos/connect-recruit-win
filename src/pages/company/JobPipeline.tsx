@@ -87,6 +87,7 @@ export default function JobPipeline() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState('');
+  const [jobStage, setJobStage] = useState<string>('triagem');
   const [companyName, setCompanyName] = useState('');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,7 +131,7 @@ export default function JobPipeline() {
       }
 
       const [jobRes, appsRes] = await Promise.all([
-        supabase.from('jobs').select('title, company_name').eq('id', id).maybeSingle(),
+        supabase.from('jobs').select('title, company_name, pipeline_stage').eq('id', id).maybeSingle(),
         supabase
           .from('applications')
           .select('id, candidate_id, candidate_name, candidate_email, status, score, adherence_score, profile_completeness, score_breakdown, applied_at, notes')
@@ -142,6 +143,7 @@ export default function JobPipeline() {
       if (jobRes.data) {
         setJobTitle(jobRes.data.title);
         setCompanyName((jobRes.data as any).company_name || 'SinapseRH');
+        setJobStage((jobRes.data as any).pipeline_stage || 'triagem');
       }
 
       const apps = (appsRes.data ?? []) as any[];
@@ -260,6 +262,9 @@ export default function JobPipeline() {
     const current = jobRow?.pipeline_stage || 'triagem';
     if ((STAGE_ORDER[highest] ?? 0) > (STAGE_ORDER[current] ?? 0)) {
       await supabase.from('jobs').update({ pipeline_stage: highest }).eq('id', id);
+      setJobStage(highest);
+    } else {
+      setJobStage(current);
     }
   };
 
@@ -572,7 +577,7 @@ ${companyName}`;
         </Button>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted px-2 py-0.5 rounded">
-            Triagem
+            {({ triagem: 'Triagem', entrevista: 'Entrevista', avaliacao: 'Avaliação', proposta: 'Proposta', admissao: 'Admissão', aprovado: 'Aprovado' } as Record<string, string>)[jobStage] || 'Triagem'}
           </span>
         </div>
         <h1 className="text-3xl font-bold">{jobTitle || 'Vaga'}</h1>
