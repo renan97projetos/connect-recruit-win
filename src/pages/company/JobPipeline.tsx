@@ -338,6 +338,78 @@ export default function JobPipeline() {
     }).catch(console.error);
   };
 
+  const openMoveDialog = (app: any) => {
+    setMoveDialog({
+      open: true,
+      app,
+      targetStage: '',
+      reason: '',
+      notify: true,
+      saving: false,
+    });
+  };
+
+  const confirmMove = async () => {
+    const { app, targetStage, reason, notify } = moveDialog;
+    if (!app || !targetStage) return;
+    const current = getCandidateStage(app);
+    if (targetStage === current) {
+      toast({ title: 'O candidato já está nesta etapa', variant: 'destructive' });
+      return;
+    }
+
+    setMoveDialog((prev) => ({ ...prev, saving: true }));
+
+    const ok = await updateApplication(app.id, {
+      current_stage: targetStage,
+      status: STATUS_FOR_STAGE[targetStage as CandidateStageId],
+    });
+
+    if (!ok) {
+      setMoveDialog((prev) => ({ ...prev, saving: false }));
+      return;
+    }
+
+    const targetLabel =
+      CANDIDATE_STAGES.find((s) => s.id === targetStage)?.label || targetStage;
+
+    if (notify) {
+      const emailStatus = EMAIL_STATUS_FOR_STAGE[targetStage as CandidateStageId];
+      if (emailStatus) {
+        const reasonBlock = reason.trim()
+          ? `\n\nObservação da equipe:\n${reason.trim()}`
+          : '';
+        supabase.functions
+          .invoke('send-candidate-status-email', {
+            body: {
+              candidateName: app.candidate_name,
+              candidateEmail: app.candidate_email,
+              jobTitle,
+              companyName: companyName || 'Sinapse RH',
+              newStatus: emailStatus,
+              customSubject: `Atualização do processo seletivo — ${jobTitle}`,
+              customBody: `Olá ${app.candidate_name},\n\nSua candidatura foi movida para a etapa "${targetLabel}".${reasonBlock}\n\nQualquer dúvida, entre em contato.\n\nEquipe ${companyName || 'Sinapse RH'}`,
+            },
+          })
+          .catch(console.error);
+      }
+    }
+
+    setMoveDialog({
+      open: false,
+      app: null,
+      targetStage: '',
+      reason: '',
+      notify: true,
+      saving: false,
+    });
+
+    toast({
+      title: `${app.candidate_name} movido para ${targetLabel}`,
+      description: notify ? 'E-mail de notificação enviado.' : 'Sem notificação ao candidato.',
+    });
+  };
+
   const openInterviewSheet = async (app: any, tab: 'agendar' | 'feedback' = 'agendar') => {
     setInterviewSheet((prev) => ({
       ...prev,
