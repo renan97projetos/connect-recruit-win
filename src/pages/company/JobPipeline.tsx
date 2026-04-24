@@ -252,6 +252,54 @@ export default function JobPipeline() {
     }
   };
 
+  const pendingApps = applications.filter((a) => a.status === 'pending');
+  const allPendingSelected =
+    pendingApps.length > 0 && pendingApps.every((a) => selectedIds.has(a.id));
+
+  const toggleSelect = (appId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(appId)) next.delete(appId);
+      else next.add(appId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allPendingSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(pendingApps.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkMoveToInterview = async () => {
+    const ids = Array.from(selectedIds).filter((id) =>
+      applications.find((a) => a.id === id && a.status === 'pending'),
+    );
+    if (ids.length === 0) return;
+    setBulkMoving(true);
+    const { error } = await supabase
+      .from('applications')
+      .update({ status: 'interview' })
+      .in('id', ids);
+
+    if (error) {
+      toast.error('Erro ao mover candidatos');
+      setBulkMoving(false);
+      return;
+    }
+
+    setApplications((prev) =>
+      prev.map((a) => (ids.includes(a.id) ? { ...a, status: 'interview' } : a)),
+    );
+    setSelectedIds(new Set());
+    toast.success(
+      `${ids.length} ${ids.length === 1 ? 'candidato movido' : 'candidatos movidos'} para entrevista`,
+    );
+    setBulkMoving(false);
+  };
+
   const statusLabels: Record<string, { label: string; className: string }> = {
     pending: { label: 'pendente', className: '' },
     approved: { label: 'aprovado', className: 'bg-success/10 text-success border-success/20' },
