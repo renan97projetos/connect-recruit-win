@@ -405,10 +405,10 @@ export default function JobPipeline() {
   };
 
   const rejectCandidate = async (app: any) => {
-    if (!confirm(`Reprovar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
+    if (!confirm(`Rejeitar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
     if (!ok) return;
-    toast({ title: `${app.candidate_name} reprovado`, description: 'E-mail enviado.' });
+    toast({ title: `${app.candidate_name} rejeitado`, description: 'E-mail enviado.' });
 
     supabase.functions.invoke('send-candidate-status-email', {
       body: {
