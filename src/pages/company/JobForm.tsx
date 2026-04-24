@@ -77,13 +77,26 @@ export default function JobForm() {
   const [benefitInput, setBenefitInput] = useState('');
   const [selectedReqCategory, setSelectedReqCategory] = useState<string>('');
 
+  type ScreeningQuestionType =
+    | 'text'
+    | 'text_long'
+    | 'yes_no'
+    | 'single_choice'
+    | 'multiple_choice'
+    | 'scale_1_5'
+    | 'scale_1_10'
+    | 'numeric'
+    | 'date'
+    | 'email'
+    | 'url';
   type ScreeningQuestion = {
     question: string;
-    question_type: 'text' | 'yes_no' | 'multiple_choice' | 'scale_1_5';
+    question_type: ScreeningQuestionType;
     required: boolean;
     options?: string[];
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+  const QUESTION_TYPES_WITH_OPTIONS: ScreeningQuestionType[] = ['multiple_choice', 'single_choice'];
 
   const [scoreConfig, setScoreConfig] = useState<ScoreConfig>({
     required_skills: [],
