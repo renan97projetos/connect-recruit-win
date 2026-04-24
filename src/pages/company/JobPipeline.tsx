@@ -67,7 +67,6 @@ type CandidateStageId =
   | 'avaliacao'
   | 'proposta'
   | 'admissao'
-  | 'aprovado'
   | 'reprovado';
 
 const CANDIDATE_STAGES: { id: CandidateStageId; label: string; color: string }[] = [
@@ -76,7 +75,6 @@ const CANDIDATE_STAGES: { id: CandidateStageId; label: string; color: string }[]
   { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
   { id: 'proposta', label: 'Proposta', color: 'text-orange-600' },
   { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
-  { id: 'aprovado', label: 'Aprovado', color: 'text-green-600' },
   { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
 ];
 
@@ -100,8 +98,8 @@ const STAGE_ALIASES: Record<string, CandidateStageId> = {
   admissao: 'admissao',
   hiring: 'admissao',
   contratacao: 'admissao',
-  approved: 'aprovado',
-  aprovado: 'aprovado',
+  approved: 'admissao',
+  aprovado: 'admissao',
   rejected: 'reprovado',
   reprovado: 'reprovado',
 };
@@ -111,14 +109,13 @@ function getCandidateStage(app: any): CandidateStageId {
   return STAGE_ALIASES[key] || 'triagem';
 }
 
-// Sequência linear de progressão (exclui terminais aprovado/reprovado)
+// Sequência linear de progressão (exclui terminal reprovado)
 const PROGRESSION: CandidateStageId[] = [
   'triagem',
   'entrevista',
   'avaliacao',
   'proposta',
   'admissao',
-  'aprovado',
 ];
 
 function getNextStage(current: CandidateStageId): { id: CandidateStageId; label: string } | null {
@@ -135,8 +132,7 @@ const STATUS_FOR_STAGE: Record<CandidateStageId, string> = {
   entrevista: 'in-review',
   avaliacao: 'in-review',
   proposta: 'in-review',
-  admissao: 'in-review',
-  aprovado: 'approved',
+  admissao: 'approved',
   reprovado: 'rejected',
 };
 
@@ -146,8 +142,7 @@ const EMAIL_STATUS_FOR_STAGE: Record<CandidateStageId, string | null> = {
   entrevista: 'interview',
   avaliacao: 'interview',
   proposta: 'interview',
-  admissao: 'interview',
-  aprovado: 'approved',
+  admissao: 'approved',
   reprovado: 'rejected',
 };
 
