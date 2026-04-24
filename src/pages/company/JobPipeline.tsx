@@ -771,6 +771,44 @@ export default function JobPipeline() {
     });
   };
 
+  const openDocument = async (appId: string, fileName: string) => {
+    const { data, error } = await supabase.storage
+      .from('hiring-documents')
+      .createSignedUrl(`${appId}/${fileName}`, 60 * 10);
+    if (error || !data?.signedUrl) {
+      toast({
+        title: 'Erro ao abrir documento',
+        description: error?.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const formatDocLabel = (fileName: string) => {
+    // Padrão do upload: {docType}_{timestamp}_{nomeOriginal}
+    const parts = fileName.split('_');
+    if (parts.length >= 3) {
+      const docType = parts[0];
+      const original = parts.slice(2).join('_');
+      const labels: Record<string, string> = {
+        rg: 'RG',
+        cpf: 'CPF',
+        comprovante: 'Comprovante Residência',
+        ctps: 'Carteira de Trabalho',
+        titulo: 'Título de Eleitor',
+        reservista: 'Reservista',
+        escolaridade: 'Escolaridade',
+        certidao: 'Certidão',
+        foto: 'Foto 3x4',
+      };
+      const key = docType.toLowerCase().split('-')[0];
+      const friendly = labels[key] || docType.toUpperCase();
+      return `${friendly} — ${original}`;
+    }
+    return fileName;
+  };
   if (loading) {
     return (
       <CompanyLayout>
