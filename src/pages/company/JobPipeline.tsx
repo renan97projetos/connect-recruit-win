@@ -332,14 +332,14 @@ export default function JobPipeline() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="outline"
+                            variant={noteCount > 0 ? 'default' : 'outline'}
                             size="icon"
-                            className="h-9 w-9 relative"
+                            className={`h-9 w-9 relative ${noteCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90 ring-2 ring-primary/30' : ''}`}
                             onClick={() => setNotesModalApp(app)}
                           >
-                            <MessageSquare className="h-4 w-4" />
+                            <MessageSquare className={`h-4 w-4 ${noteCount > 0 ? 'fill-primary-foreground' : ''}`} />
                             {noteCount > 0 && (
-                              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                              <span className="absolute -top-1.5 -right-1.5 bg-warning text-warning-foreground text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center border border-background shadow-sm">
                                 {noteCount}
                               </span>
                             )}
