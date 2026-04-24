@@ -434,15 +434,33 @@ export default function JobPipeline() {
                               <MessageCircle className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-500/10"
-                            onClick={() => editNote(app)}
-                            title="Notas internas"
-                          >
-                            <StickyNote className="h-4 w-4" />
-                          </Button>
+                          {(() => {
+                            const noteText = app.notes
+                              ? typeof app.notes === 'string'
+                                ? app.notes
+                                : (app.notes as any)?.text || ''
+                              : '';
+                            const hasNote = noteText.trim().length > 0;
+                            return (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className={cn(
+                                  'h-8 w-8 p-0 relative',
+                                  hasNote
+                                    ? 'text-amber-600 bg-amber-500/10 hover:bg-amber-500/20'
+                                    : 'text-amber-600 hover:bg-amber-500/10'
+                                )}
+                                onClick={() => editNote(app)}
+                                title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                              >
+                                <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
+                                {hasNote && (
+                                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                                )}
+                              </Button>
+                            );
+                          })()}
                         </div>
                       </TableCell>
                     </TableRow>
