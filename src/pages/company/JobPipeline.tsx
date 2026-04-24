@@ -83,7 +83,7 @@ const CANDIDATE_STAGES: { id: CandidateStageId; label: string; color: string }[]
   { id: 'avaliacao', label: 'Avaliação', color: 'text-amber-600' },
   { id: 'proposta', label: 'Proposta', color: 'text-orange-600' },
   { id: 'admissao', label: 'Admissão', color: 'text-teal-600' },
-  { id: 'reprovado', label: 'Reprovado', color: 'text-red-500' },
+  { id: 'reprovado', label: 'Rejeitado', color: 'text-red-500' },
 ];
 
 const STAGE_ALIASES: Record<string, CandidateStageId> = {
@@ -405,10 +405,10 @@ export default function JobPipeline() {
   };
 
   const rejectCandidate = async (app: any) => {
-    if (!confirm(`Reprovar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
+    if (!confirm(`Rejeitar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
     if (!ok) return;
-    toast({ title: `${app.candidate_name} reprovado`, description: 'E-mail enviado.' });
+    toast({ title: `${app.candidate_name} rejeitado`, description: 'E-mail enviado.' });
 
     supabase.functions.invoke('send-candidate-status-email', {
       body: {
@@ -1078,7 +1078,7 @@ export default function JobPipeline() {
                             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                             onClick={() => rejectCandidate(app)}
                             disabled={actionLoading === app.id}
-                            title="Reprovar (envia e-mail)"
+                            title="Rejeitar (envia e-mail)"
                           >
                             <ThumbsDown className="h-4 w-4" />
                           </Button>
@@ -1376,7 +1376,7 @@ export default function JobPipeline() {
                           className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => rejectCandidate(app)}
                           disabled={actionLoading === app.id}
-                          title="Reprovar (envia e-mail)"
+                          title="Rejeitar (envia e-mail)"
                         >
                           <ThumbsDown className="h-3 w-3" />
                         </Button>
@@ -1515,7 +1515,7 @@ export default function JobPipeline() {
                       className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => rejectCandidate(app)}
                       disabled={actionLoading === app.id}
-                      title="Reprovar (envia e-mail)"
+                      title="Rejeitar (envia e-mail)"
                     >
                       <ThumbsDown className="h-3 w-3" />
                     </Button>
@@ -1780,7 +1780,7 @@ export default function JobPipeline() {
                           className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => rejectCandidate(app)}
                           disabled={actionLoading === app.id}
-                          title="Reprovar (envia e-mail)"
+                          title="Rejeitar (envia e-mail)"
                         >
                           <ThumbsDown className="h-3 w-3" />
                         </Button>
