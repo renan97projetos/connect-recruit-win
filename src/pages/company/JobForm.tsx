@@ -1188,19 +1188,48 @@ export default function JobForm() {
                             Resposta obrigatória
                           </label>
 
-                          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                          <label
+                            className={`flex items-center gap-2 text-xs cursor-pointer ${
+                              (q.score_weight ?? 0) === 0 &&
+                              questions.filter((x) => (x.score_weight ?? 0) > 0).length >= MAX_CUSTOM_SCORED_QUESTIONS
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'text-muted-foreground'
+                            }`}
+                          >
                             <input
                               type="checkbox"
                               checked={(q.score_weight ?? 0) > 0}
-                              onChange={(e) =>
-                                setQuestions(prev =>
+                              disabled={
+                                (q.score_weight ?? 0) === 0 &&
+                                questions.filter((x) => (x.score_weight ?? 0) > 0).length >= MAX_CUSTOM_SCORED_QUESTIONS
+                              }
+                              onChange={(e) => {
+                                if (
+                                  e.target.checked &&
+                                  questions.filter((x) => (x.score_weight ?? 0) > 0).length >= MAX_CUSTOM_SCORED_QUESTIONS
+                                ) {
+                                  toast({
+                                    title: 'Limite atingido',
+                                    description: `Você só pode pontuar até ${MAX_CUSTOM_SCORED_QUESTIONS} perguntas customizadas no Score de Aderência.`,
+                                    variant: 'destructive',
+                                  });
+                                  return;
+                                }
+                                setQuestions((prev) =>
                                   prev.map((item, idx) =>
                                     idx === i
-                                      ? { ...item, score_weight: e.target.checked ? (item.score_weight && item.score_weight > 0 ? item.score_weight : 5) : 0 }
+                                      ? {
+                                          ...item,
+                                          score_weight: e.target.checked
+                                            ? item.score_weight && item.score_weight > 0
+                                              ? item.score_weight
+                                              : 5
+                                            : 0,
+                                        }
                                       : item,
                                   ),
-                                )
-                              }
+                                );
+                              }}
                               className="h-3.5 w-3.5 rounded border-input"
                             />
                             Contar no Score de Aderência
@@ -1232,7 +1261,9 @@ export default function JobForm() {
 
                         {(q.score_weight ?? 0) > 0 && (
                           <p className="text-[11px] text-muted-foreground pl-1 italic">
-                            Esta pergunta entra na soma dos 100 pontos do score, junto com as categorias padrão (Habilidades, Experiência, Formação, Localização). Ajuste os pesos das categorias se necessário.
+                            Esta pergunta aparece como linha avulsa em <strong>Pesos das categorias</strong> (no Score
+                            de Aderência) e entra na soma dos 100 pontos. Use o botão{' '}
+                            <strong>Redistribuir para 100</strong> lá em cima para reequilibrar.
                           </p>
                         )}
                       </div>
