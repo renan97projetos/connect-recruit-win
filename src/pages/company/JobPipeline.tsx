@@ -1391,7 +1391,7 @@ export default function JobPipeline() {
                 })}
                 {rankedCandidates.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
                       Nenhum candidato em Triagem
                     </TableCell>
                   </TableRow>
