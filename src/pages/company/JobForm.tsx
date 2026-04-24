@@ -233,8 +233,9 @@ export default function JobForm() {
         }
         const { data: qs } = await supabase
           .from('screening_questions')
-          .select('question, question_type, required, order_position, options, score_weight')
+          .select('question, question_type, required, order_position, options, score_weight, is_auto_generated')
           .eq('job_id', id)
+          .eq('is_auto_generated', false)
           .order('order_position');
         if (qs && qs.length > 0) {
           const VALID_TYPES: ScreeningQuestionType[] = [
@@ -357,7 +358,7 @@ export default function JobForm() {
 
       const validQuestions = questions.filter(q => q.question.trim()).slice(0, 10);
       if (jobId) {
-        await supabase.from('screening_questions').delete().eq('job_id', jobId);
+        await supabase.from('screening_questions').delete().eq('job_id', jobId).eq('is_auto_generated', false);
         if (validQuestions.length > 0) {
           await supabase.from('screening_questions').insert(
             validQuestions.map((q, i) => ({
