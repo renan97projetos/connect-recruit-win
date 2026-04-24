@@ -862,6 +862,15 @@ ${companyName}`;
                               <p className="font-medium text-sm truncate">{app.candidate_name}</p>
                               <p className="text-xs text-muted-foreground truncate">{app.candidate_email}</p>
                             </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 text-xs"
+                              onClick={(e) => { e.stopPropagation(); openInterviewSheet(app); }}
+                            >
+                              <CalendarPlus className="h-3.5 w-3.5" />
+                              Agendar
+                            </Button>
                             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
                               Entrevista
                             </Badge>
