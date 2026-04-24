@@ -1204,6 +1204,26 @@ export default function JobPipeline() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={
+                        rankedCandidates.length > 0 &&
+                        rankedCandidates.every((a) => selectedIds.has(a.id))
+                          ? true
+                          : rankedCandidates.some((a) => selectedIds.has(a.id))
+                          ? 'indeterminate'
+                          : false
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds(new Set(rankedCandidates.map((a) => a.id)));
+                        } else {
+                          setSelectedIds(new Set());
+                        }
+                      }}
+                      aria-label="Selecionar todos"
+                    />
+                  </TableHead>
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead className="w-24">Score</TableHead>
@@ -1215,14 +1235,23 @@ export default function JobPipeline() {
                 {rankedCandidates.map((app, idx) => {
                   const profile = profilesById[app.candidate_id];
                   const score = app.adherence_score ?? app.score ?? 0;
+                  const isSelected = selectedIds.has(app.id);
                   const goToProfile = () =>
                     navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
                   return (
                     <TableRow
                       key={app.id}
                       onClick={goToProfile}
-                      className="cursor-pointer hover:bg-muted/50"
+                      data-state={isSelected ? 'selected' : undefined}
+                      className="cursor-pointer hover:bg-muted/50 data-[state=selected]:bg-primary/5"
                     >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelected(app.id)}
+                          aria-label={`Selecionar ${app.candidate_name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-bold text-muted-foreground">
                         {idx + 1}
                       </TableCell>
