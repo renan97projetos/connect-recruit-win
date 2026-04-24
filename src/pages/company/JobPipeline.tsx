@@ -1153,34 +1153,50 @@ export default function JobPipeline() {
                       </span>
                     )}
                   </div>
-                  {!isTerminal && (
-                    <div
-                      className="flex items-center gap-2 pt-3 border-t border-border"
-                      onClick={(e) => e.stopPropagation()}
+                  <div
+                    className="flex items-center gap-2 pt-3 border-t border-border"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {!isTerminal && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 h-8 text-xs gap-1"
+                          onClick={() => moveToNextStage(app)}
+                          disabled={actionLoading === app.id || !next}
+                          title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                          {next ? next.label : 'Final'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => rejectCandidate(app)}
+                          disabled={actionLoading === app.id}
+                          title="Reprovar (envia e-mail)"
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        'h-8 px-2 text-indigo-600 hover:bg-indigo-500/10',
+                        isTerminal && 'flex-1 text-xs gap-1'
+                      )}
+                      onClick={() => openMoveDialog(app)}
+                      disabled={actionLoading === app.id}
+                      title="Mover para outra etapa"
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 h-8 text-xs gap-1"
-                        onClick={() => moveToNextStage(app)}
-                        disabled={actionLoading === app.id || !next}
-                        title={next ? `Mover para ${next.label}` : 'Etapa final'}
-                      >
-                        <ArrowRight className="h-3 w-3" />
-                        {next ? next.label : 'Final'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => rejectCandidate(app)}
-                        disabled={actionLoading === app.id}
-                        title="Reprovar (envia e-mail)"
-                      >
-                        <ThumbsDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
+                      <MoveHorizontal className="h-3 w-3" />
+                      {isTerminal && 'Mover para outra etapa'}
+                    </Button>
+                  </div>
                 </div>
               );
             })}
