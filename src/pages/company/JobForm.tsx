@@ -1001,9 +1001,9 @@ export default function JobForm() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">Perguntas de triagem</CardTitle>
+                    <CardTitle className="text-base">Perguntas customizadas (triagem)</CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      O candidato responde ao se candidatar
+                      Crie perguntas próprias além das geradas pelo Score de Aderência. Tipos disponíveis: texto curto/longo, sim/não, escolha única, múltipla escolha, escala 1–5, escala 1–10, número, data, e-mail, link.
                     </p>
                   </div>
                   <Button
