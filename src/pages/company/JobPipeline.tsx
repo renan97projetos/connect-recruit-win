@@ -1023,6 +1023,185 @@ ${companyName}`;
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Sheet de agendamento e feedback de entrevista */}
+      <Sheet open={interviewSheetOpen} onOpenChange={setInterviewSheetOpen}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader className="pb-4 border-b">
+            <SheetTitle>Entrevista</SheetTitle>
+            <p className="text-sm text-muted-foreground">{interviewApp?.candidate_name}</p>
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1 mt-2">
+              {(['agendar', 'feedback'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setInterviewTab(tab)}
+                  className={cn(
+                    'flex-1 text-xs font-medium py-1.5 rounded-md transition-colors capitalize',
+                    interviewTab === tab
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {tab === 'agendar' ? 'Agendar' : 'Feedback'}
+                </button>
+              ))}
+            </div>
+          </SheetHeader>
+
+          <div className="py-4 space-y-4">
+            {interviewTab === 'agendar' && (
+              <div className="space-y-4">
+                {existingInterview?.status === 'scheduled' && (
+                  <div className="text-xs bg-success/10 text-success border border-success/20 rounded-md p-2.5">
+                    ✓ Entrevista já agendada — edite abaixo se precisar alterar
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-xs">Data e horário *</Label>
+                  <Input
+                    type="datetime-local"
+                    value={interviewData.scheduled_at}
+                    onChange={(e) => setInterviewData((p) => ({ ...p, scheduled_at: e.target.value }))}
+                    className="mt-1 h-9 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs">Formato *</Label>
+                  <Select
+                    value={interviewData.format}
+                    onValueChange={(v) => setInterviewData((p) => ({ ...p, format: v }))}
+                  >
+                    <SelectTrigger className="mt-1 h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="video">
+                        <div className="flex items-center gap-2"><Video className="h-3.5 w-3.5" /> Videochamada</div>
+                      </SelectItem>
+                      <SelectItem value="presencial">
+                        <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> Presencial</div>
+                      </SelectItem>
+                      <SelectItem value="telefone">
+                        <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> Telefone</div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {interviewData.format === 'video' && (
+                  <div>
+                    <Label className="text-xs">Link da reunião</Label>
+                    <Input
+                      value={interviewData.meeting_link}
+                      onChange={(e) => setInterviewData((p) => ({ ...p, meeting_link: e.target.value }))}
+                      placeholder="https://meet.google.com/..."
+                      className="mt-1 h-9 text-sm"
+                    />
+                  </div>
+                )}
+
+                {interviewData.format === 'presencial' && (
+                  <div>
+                    <Label className="text-xs">Endereço / Local</Label>
+                    <Input
+                      value={interviewData.location}
+                      onChange={(e) => setInterviewData((p) => ({ ...p, location: e.target.value }))}
+                      placeholder="Rua das Flores, 123 — Sala 201"
+                      className="mt-1 h-9 text-sm"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-xs">Entrevistador</Label>
+                  <Input
+                    value={interviewData.interviewer_name}
+                    onChange={(e) => setInterviewData((p) => ({ ...p, interviewer_name: e.target.value }))}
+                    placeholder="Nome de quem vai conduzir"
+                    className="mt-1 h-9 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Button
+                    onClick={saveInterview}
+                    disabled={!interviewData.scheduled_at || savingInterview}
+                    className="w-full"
+                  >
+                    {savingInterview ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
+                    ) : existingInterview ? 'Atualizar agendamento' : 'Agendar e notificar candidato'}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Um e-mail com os detalhes será enviado automaticamente ao candidato.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {interviewTab === 'feedback' && (
+              <div className="space-y-4">
+                {!existingInterview && (
+                  <div className="text-xs bg-warning/10 text-warning-foreground border border-warning/20 rounded-md p-2.5">
+                    Agende a entrevista primeiro antes de registrar o feedback.
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-xs">Avaliação geral</Label>
+                  <div className="flex items-center gap-2 mt-2">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setFeedbackScore(n)}
+                        className={cn(
+                          'w-9 h-9 rounded-lg border text-sm font-bold transition-colors',
+                          feedbackScore >= n
+                            ? 'bg-amber-400 border-amber-400 text-white'
+                            : 'bg-muted border-border text-muted-foreground hover:border-amber-300',
+                        )}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                    {feedbackScore > 0 && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {['', 'Fraco', 'Regular', 'Bom', 'Muito bom', 'Excelente'][feedbackScore]}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs">Observações da entrevista</Label>
+                  <Textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Pontos fortes, pontos de atenção, impressões gerais, próximos passos..."
+                    rows={6}
+                    className="mt-1 text-sm resize-none"
+                    disabled={!existingInterview}
+                  />
+                </div>
+
+                <Button
+                  onClick={saveFeedback}
+                  disabled={!existingInterview || !feedbackText.trim() || savingInterview}
+                  className="w-full"
+                >
+                  {savingInterview ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
+                  ) : 'Registrar feedback'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </CompanyLayout>
   );
 }
