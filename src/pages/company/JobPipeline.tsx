@@ -64,6 +64,8 @@ import {
   BriefcaseBusiness,
   Trash2,
   User as UserIcon,
+  FileText,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -216,6 +218,7 @@ export default function JobPipeline() {
   });
   const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
   const [offersByApp, setOffersByApp] = useState<Record<string, any>>({});
+  const [documentsByApp, setDocumentsByApp] = useState<Record<string, any[]>>({});
   const [offerDialog, setOfferDialog] = useState<{
     open: boolean;
     app: any | null;
@@ -282,6 +285,20 @@ export default function JobPipeline() {
         const offMap: Record<string, any> = {};
         (offersRes.data || []).forEach((o: any) => (offMap[o.application_id] = o));
         setOffersByApp(offMap);
+
+        // Carrega documentos enviados pelo candidato (bucket hiring-documents)
+        const docsMap: Record<string, any[]> = {};
+        await Promise.all(
+          appIds.map(async (appId: string) => {
+            const { data: files } = await supabase.storage
+              .from('hiring-documents')
+              .list(appId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+            if (files && files.length) {
+              docsMap[appId] = files.filter((f: any) => f.name && !f.name.startsWith('.'));
+            }
+          })
+        );
+        setDocumentsByApp(docsMap);
       }
       setLoading(false);
     };
@@ -754,6 +771,44 @@ export default function JobPipeline() {
     });
   };
 
+  const openDocument = async (appId: string, fileName: string) => {
+    const { data, error } = await supabase.storage
+      .from('hiring-documents')
+      .createSignedUrl(`${appId}/${fileName}`, 60 * 10);
+    if (error || !data?.signedUrl) {
+      toast({
+        title: 'Erro ao abrir documento',
+        description: error?.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const formatDocLabel = (fileName: string) => {
+    // Padrão do upload: {docType}_{timestamp}_{nomeOriginal}
+    const parts = fileName.split('_');
+    if (parts.length >= 3) {
+      const docType = parts[0];
+      const original = parts.slice(2).join('_');
+      const labels: Record<string, string> = {
+        rg: 'RG',
+        cpf: 'CPF',
+        comprovante: 'Comprovante Residência',
+        ctps: 'Carteira de Trabalho',
+        titulo: 'Título de Eleitor',
+        reservista: 'Reservista',
+        escolaridade: 'Escolaridade',
+        certidao: 'Certidão',
+        foto: 'Foto 3x4',
+      };
+      const key = docType.toLowerCase().split('-')[0];
+      const friendly = labels[key] || docType.toUpperCase();
+      return `${friendly} — ${original}`;
+    }
+    return fileName;
+  };
   if (loading) {
     return (
       <CompanyLayout>
@@ -1503,6 +1558,65 @@ export default function JobPipeline() {
                       <Calendar className="h-3 w-3" />
                       Há {daysAgo(app.applied_at)} dia(s) no processo
                     </div>
+
+                    {/* Documentos enviados pelo candidato */}
+                    {(() => {
+                      const docs = documentsByApp[app.id] || [];
+                      return (
+                        <div
+                          className="mb-3 rounded-lg border border-border bg-muted/30 p-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                              <FileText className="h-3.5 w-3.5 text-teal-600" />
+                              Documentos recebidos
+                            </div>
+                            <span
+                              className={cn(
+                                'text-[10px] font-semibold px-1.5 py-0.5 rounded',
+                                docs.length > 0
+                                  ? 'bg-teal-500/10 text-teal-700'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              {docs.length}
+                            </span>
+                          </div>
+                          {docs.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground italic">
+                              Nenhum documento enviado ainda.
+                            </p>
+                          ) : (
+                            <ul className="space-y-1 max-h-32 overflow-y-auto">
+                              {docs.map((file: any) => (
+                                <li
+                                  key={file.name}
+                                  className="flex items-center gap-1.5 text-[11px]"
+                                >
+                                  <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                  <span className="truncate flex-1" title={file.name}>
+                                    {formatDocLabel(file.name)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDocument(app.id, file.name);
+                                    }}
+                                    className="text-primary hover:text-primary/80 p-0.5 rounded"
+                                    title="Abrir / baixar"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {renderStageActions(
                       <Button
                         size="sm"
