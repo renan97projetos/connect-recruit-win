@@ -265,7 +265,7 @@ export default function JobPipeline() {
 
   const handleUpdateStatus = async (
     appId: string,
-    newStatus: 'approved' | 'rejected' | 'interview',
+    newStatus: 'approved' | 'rejected' | 'interview' | 'technical',
   ) => {
     const { error } = await supabase
       .from('applications')
