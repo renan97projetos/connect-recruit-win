@@ -58,6 +58,10 @@ import {
   Send,
   MoveHorizontal,
   AlertTriangle,
+  DollarSign,
+  FileCheck,
+  UserCheck,
+  BriefcaseBusiness,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -204,6 +208,22 @@ export default function JobPipeline() {
     feedbackScore: 0,
   });
   const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
+  const [offersByApp, setOffersByApp] = useState<Record<string, any>>({});
+  const [offerDialog, setOfferDialog] = useState<{
+    open: boolean;
+    app: any | null;
+    salary: string;
+    benefits: string;
+    notes: string;
+    saving: boolean;
+  }>({
+    open: false,
+    app: null,
+    salary: '',
+    benefits: '',
+    notes: '',
+    saving: false,
+  });
   const [moveDialog, setMoveDialog] = useState<{
     open: boolean;
     app: any | null;
@@ -241,9 +261,10 @@ export default function JobPipeline() {
       if (apps.length) {
         const ids = Array.from(new Set(apps.map((a: any) => a.candidate_id)));
         const appIds = apps.map((a: any) => a.id);
-        const [profsRes, intRes] = await Promise.all([
+        const [profsRes, intRes, offersRes] = await Promise.all([
           supabase.from('profiles').select('id, avatar_url, phone').in('id', ids),
           supabase.from('interviews').select('*').in('application_id', appIds),
+          supabase.from('job_offers').select('*').in('application_id', appIds),
         ]);
         const map: Record<string, any> = {};
         (profsRes.data || []).forEach((p: any) => (map[p.id] = p));
@@ -251,6 +272,9 @@ export default function JobPipeline() {
         const intMap: Record<string, any> = {};
         (intRes.data || []).forEach((i: any) => (intMap[i.application_id] = i));
         setInterviewsByApp(intMap);
+        const offMap: Record<string, any> = {};
+        (offersRes.data || []).forEach((o: any) => (offMap[o.application_id] = o));
+        setOffersByApp(offMap);
       }
       setLoading(false);
     };
@@ -565,6 +589,103 @@ export default function JobPipeline() {
     );
     setNoteDialog({ app: null, open: false, value: '', saving: false });
     toast({ title: 'Nota salva' });
+  };
+
+  const openOfferDialog = (app: any) => {
+    const existing = offersByApp[app.id];
+    setOfferDialog({
+      open: true,
+      app,
+      salary: existing?.offered_salary?.toString() || '',
+      benefits: existing?.benefits_offered || '',
+      notes: existing?.notes || '',
+      saving: false,
+    });
+  };
+
+  const saveOffer = async () => {
+    const { app, salary, benefits, notes } = offerDialog;
+    if (!app || !salary) return;
+    setOfferDialog((prev) => ({ ...prev, saving: true }));
+
+    const existing = offersByApp[app.id];
+    const userRes = await supabase.auth.getUser();
+    const payload: any = {
+      application_id: app.id,
+      job_id: id,
+      company_id: userRes.data.user?.id,
+      offered_salary: parseFloat(salary),
+      benefits_offered: benefits || null,
+      notes: notes || null,
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    };
+
+    let saved: any = null;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('job_offers')
+        .update(payload)
+        .eq('id', existing.id)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setOfferDialog((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar proposta', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    } else {
+      const { data, error } = await supabase
+        .from('job_offers')
+        .insert(payload)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setOfferDialog((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar proposta', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    }
+    if (saved) {
+      setOffersByApp((prev) => ({ ...prev, [app.id]: saved }));
+    }
+
+    supabase.functions
+      .invoke('send-job-offer-email', {
+        body: {
+          candidateName: app.candidate_name,
+          candidateEmail: app.candidate_email,
+          jobTitle,
+          companyName: companyName || 'Sinapse RH',
+          offeredSalary: parseFloat(salary),
+          benefits: benefits || '',
+        },
+      })
+      .catch(console.error);
+
+    setOfferDialog((prev) => ({ ...prev, saving: false, open: false }));
+    toast({
+      title: 'Proposta registrada!',
+      description: `E-mail enviado para ${app.candidate_name}.`,
+    });
+  };
+
+  const requestHiringDocuments = async (app: any) => {
+    await supabase.functions
+      .invoke('send-hiring-documents-email', {
+        body: {
+          candidateEmail: app.candidate_email,
+          candidateName: app.candidate_name,
+          jobTitle,
+        },
+      })
+      .catch(console.error);
+    toast({
+      title: 'Documentos solicitados!',
+      description: `E-mail enviado para ${app.candidate_name}.`,
+    });
   };
 
   if (loading) {
@@ -1065,6 +1186,266 @@ export default function JobPipeline() {
                 );
               }
 
+              // Header reutilizável (avatar + nome + email + score)
+              const renderCardHeader = () => (
+                <div className="flex items-start gap-3 mb-3">
+                  <Avatar className="h-10 w-10 flex-shrink-0">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                      {initials(app.candidate_name || '?')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold group-hover:text-primary truncate">
+                      {app.candidate_name || 'Candidato'}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                      <Mail className="h-3 w-3 flex-shrink-0" />
+                      {app.candidate_email}
+                    </p>
+                  </div>
+                  {score > 0 && (
+                    <span
+                      className={cn(
+                        'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
+                        score >= 70
+                          ? 'bg-green-100 text-green-700'
+                          : score >= 40
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-red-100 text-red-600'
+                      )}
+                    >
+                      {Math.round(score)}%
+                    </span>
+                  )}
+                </div>
+              );
+
+              // Ações comuns reutilizáveis (WhatsApp, nota, mover, reprovar) + ações extras
+              const noteText = app.notes
+                ? typeof app.notes === 'string'
+                  ? app.notes
+                  : (app.notes as any)?.text || ''
+                : '';
+              const hasNote = noteText.trim().length > 0;
+
+              const renderStageActions = (extraButtons?: React.ReactNode) => (
+                <div
+                  className="flex items-center flex-wrap gap-1 pt-3 border-t border-border"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {profile?.phone ? (
+                    <a
+                      href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                        `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-[#25D366] hover:bg-[#25D366]/10"
+                        title="WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 opacity-30"
+                      disabled
+                      title="Sem telefone cadastrado"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={cn(
+                      'h-8 w-8 p-0 relative',
+                      hasNote
+                        ? 'text-amber-600 bg-amber-500/10 hover:bg-amber-500/20'
+                        : 'text-amber-600 hover:bg-amber-500/10'
+                    )}
+                    onClick={() => openNoteDialog(app)}
+                    title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                  >
+                    <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
+                    {hasNote && (
+                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                    )}
+                  </Button>
+
+                  {extraButtons}
+
+                  <div className="ml-auto flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1"
+                      onClick={() => moveToNextStage(app)}
+                      disabled={actionLoading === app.id || !next}
+                      title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                      {next?.label || 'Final'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2 text-indigo-600 hover:bg-indigo-500/10"
+                      onClick={() => openMoveDialog(app)}
+                      disabled={actionLoading === app.id}
+                      title="Mover para outra etapa"
+                    >
+                      <MoveHorizontal className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => rejectCandidate(app)}
+                      disabled={actionLoading === app.id}
+                      title="Reprovar (envia e-mail)"
+                    >
+                      <ThumbsDown className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              );
+
+              // Card especializado AVALIAÇÃO
+              if (activeStage === 'avaliacao') {
+                return (
+                  <div
+                    key={app.id}
+                    onClick={goToProfile}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                    }}
+                    className="bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
+                  >
+                    {renderCardHeader()}
+                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Há {daysAgo(app.applied_at)} dia(s) no processo
+                    </div>
+                    {renderStageActions()}
+                  </div>
+                );
+              }
+
+              // Card especializado PROPOSTA
+              if (activeStage === 'proposta') {
+                const offer = offersByApp[app.id];
+                return (
+                  <div
+                    key={app.id}
+                    onClick={goToProfile}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                    }}
+                    className="bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
+                  >
+                    {renderCardHeader()}
+
+                    {offer && (
+                      <div className="mb-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-xs gap-1 font-medium',
+                            offer.status === 'accepted'
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : offer.status === 'declined'
+                              ? 'border-red-200 bg-red-50 text-red-600'
+                              : 'border-orange-200 bg-orange-50 text-orange-700'
+                          )}
+                        >
+                          <DollarSign className="h-3 w-3" />
+                          {offer.status === 'accepted'
+                            ? 'Proposta aceita'
+                            : offer.status === 'declined'
+                            ? 'Proposta recusada'
+                            : `Proposta: R$ ${Number(offer.offered_salary).toLocaleString('pt-BR')}`}
+                        </Badge>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Há {daysAgo(app.applied_at)} dia(s) no processo
+                    </div>
+
+                    {renderStageActions(
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0',
+                          offer
+                            ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
+                            : 'text-orange-600 hover:bg-orange-500/10'
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openOfferDialog(app);
+                        }}
+                        title={offer ? 'Editar proposta salarial' : 'Fazer proposta salarial'}
+                      >
+                        <DollarSign className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              }
+
+              // Card especializado ADMISSÃO
+              if (activeStage === 'admissao') {
+                return (
+                  <div
+                    key={app.id}
+                    onClick={goToProfile}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                    }}
+                    className="bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
+                  >
+                    {renderCardHeader()}
+                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Há {daysAgo(app.applied_at)} dia(s) no processo
+                    </div>
+                    {renderStageActions(
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-teal-600 hover:bg-teal-500/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestHiringDocuments(app);
+                        }}
+                        title="Solicitar documentos de contratação"
+                      >
+                        <FileCheck className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={app.id}
@@ -1170,6 +1551,92 @@ export default function JobPipeline() {
           </div>
         )}
       </div>
+
+      {/* Dialog de Proposta Salarial */}
+      <Dialog
+        open={offerDialog.open}
+        onOpenChange={(open) => setOfferDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-orange-600" />
+              Proposta salarial
+            </DialogTitle>
+            <DialogDescription>
+              {offerDialog.app?.candidate_name
+                ? `Registrar proposta para ${offerDialog.app.candidate_name} e enviar e-mail.`
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div>
+              <Label htmlFor="offerSalary" className="text-xs">
+                Salário ofertado (R$) *
+              </Label>
+              <Input
+                id="offerSalary"
+                type="number"
+                placeholder="5000"
+                value={offerDialog.salary}
+                onChange={(e) =>
+                  setOfferDialog((prev) => ({ ...prev, salary: e.target.value }))
+                }
+                className="mt-1 h-9 text-sm"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="offerBenefits" className="text-xs">
+                Benefícios
+              </Label>
+              <Input
+                id="offerBenefits"
+                placeholder="VR, VT, Plano de saúde..."
+                value={offerDialog.benefits}
+                onChange={(e) =>
+                  setOfferDialog((prev) => ({ ...prev, benefits: e.target.value }))
+                }
+                className="mt-1 h-9 text-sm"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="offerNotes" className="text-xs">
+                Observações
+              </Label>
+              <Textarea
+                id="offerNotes"
+                placeholder="Informações adicionais..."
+                value={offerDialog.notes}
+                onChange={(e) =>
+                  setOfferDialog((prev) => ({ ...prev, notes: e.target.value }))
+                }
+                rows={3}
+                className="mt-1 text-sm resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOfferDialog((prev) => ({ ...prev, open: false }))}
+              disabled={offerDialog.saving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={saveOffer}
+              disabled={!offerDialog.salary || offerDialog.saving}
+            >
+              {offerDialog.saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {offerDialog.saving ? 'Salvando...' : 'Registrar e enviar e-mail'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={noteDialog.open}
