@@ -446,6 +446,56 @@ export default function JobForm() {
 
         {!isEditing && <PlanLimitBanner resource="jobs" className="mb-4" />}
 
+        {fieldsLocked && (
+          <Card className="mb-4 border-amber-300 bg-amber-50">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Vaga publicada — apenas o título pode ser editado
+                  </p>
+                  <p className="text-xs text-amber-800 mt-0.5">
+                    {activeApplicationsCount > 0
+                      ? `Esta vaga tem ${activeApplicationsCount} candidatura${activeApplicationsCount > 1 ? 's' : ''} ativa${activeApplicationsCount > 1 ? 's' : ''} — as alterações não retroagem para quem já aplicou.`
+                      : 'Para alterar os demais campos, destrave a edição.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 border-amber-400 bg-white text-amber-900 hover:bg-amber-100"
+                onClick={() => setUnlockDialogOpen(true)}
+              >
+                <Unlock className="mr-1.5 h-3.5 w-3.5" />
+                Destravar edição
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {isPublishedJob && editUnlocked && (
+          <Card className="mb-4 border-blue-300 bg-blue-50">
+            <CardContent className="flex items-center gap-3 p-3">
+              <Unlock className="h-4 w-4 shrink-0 text-blue-700" />
+              <p className="text-xs text-blue-900 flex-1">
+                Edição completa habilitada. As alterações <strong>não retroagem</strong> para quem já aplicou.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-blue-800 hover:bg-blue-100"
+                onClick={() => setEditUnlocked(false)}
+              >
+                Bloquear novamente
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
           {/* COLUNA ESQUERDA — FORMULÁRIO */}
           <div className="space-y-5">
