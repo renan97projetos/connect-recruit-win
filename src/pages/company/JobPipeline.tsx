@@ -62,6 +62,8 @@ import {
   FileCheck,
   UserCheck,
   BriefcaseBusiness,
+  Trash2,
+  User as UserIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -174,7 +176,12 @@ export default function JobPipeline() {
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState<CandidateStageId>('triagem');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [noteDialog, setNoteDialog] = useState<{ app: any | null; open: boolean; value: string; saving: boolean }>({
+  const [noteDialog, setNoteDialog] = useState<{
+    app: any | null;
+    open: boolean;
+    value: string;
+    saving: boolean;
+  }>({
     app: null,
     open: false,
     value: '',
@@ -562,22 +569,57 @@ export default function JobPipeline() {
     toast({ title: 'Feedback registrado!' });
   };
 
+  // Normaliza notes em uma lista [{id, text, author, created_at}]
+  // Aceita formato antigo: string ou { text }
+  const getNotesList = (
+    notes: any
+  ): Array<{ id: string; text: string; author?: string | null; created_at: string }> => {
+    if (!notes) return [];
+    if (Array.isArray(notes)) return notes.filter((n) => n && (n.text || '').trim());
+    if (typeof notes === 'string') {
+      const t = notes.trim();
+      return t
+        ? [{ id: 'legacy', text: t, author: null, created_at: new Date(0).toISOString() }]
+        : [];
+    }
+    if (typeof notes === 'object') {
+      if (Array.isArray((notes as any).items)) {
+        return (notes as any).items.filter((n: any) => n && (n.text || '').trim());
+      }
+      const t = ((notes as any).text || '').trim();
+      return t ? [{ id: 'legacy', text: t, author: null, created_at: new Date(0).toISOString() }] : [];
+    }
+    return [];
+  };
+
   const openNoteDialog = (app: any) => {
-    const current = app.notes
-      ? typeof app.notes === 'string'
-        ? app.notes
-        : (app.notes as any)?.text || ''
-      : '';
-    setNoteDialog({ app, open: true, value: current, saving: false });
+    setNoteDialog({ app, open: true, value: '', saving: false });
   };
 
   const saveNote = async () => {
     if (!noteDialog.app) return;
+    const text = noteDialog.value.trim();
+    if (!text) return;
     setNoteDialog((prev) => ({ ...prev, saving: true }));
-    const next = noteDialog.value;
+
+    const existing = getNotesList(noteDialog.app.notes);
+    const { data: userData } = await supabase.auth.getUser();
+    const authorName =
+      (userData.user?.user_metadata as any)?.name ||
+      userData.user?.email ||
+      'Usuário';
+    const newEntry = {
+      id: crypto.randomUUID(),
+      text,
+      author: authorName,
+      created_at: new Date().toISOString(),
+    };
+    const nextItems = [...existing, newEntry];
+    const nextNotes = { items: nextItems } as any;
+
     const { error } = await supabase
       .from('applications')
-      .update({ notes: { text: next } as any })
+      .update({ notes: nextNotes })
       .eq('id', noteDialog.app.id);
     if (error) {
       setNoteDialog((prev) => ({ ...prev, saving: false }));
@@ -585,10 +627,34 @@ export default function JobPipeline() {
       return;
     }
     setApplications((prev) =>
-      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: { text: next } } : a))
+      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: nextNotes } : a))
     );
-    setNoteDialog({ app: null, open: false, value: '', saving: false });
-    toast({ title: 'Nota salva' });
+    setNoteDialog((prev) => ({
+      ...prev,
+      app: { ...prev.app, notes: nextNotes },
+      value: '',
+      saving: false,
+    }));
+    toast({ title: 'Nota adicionada' });
+  };
+
+  const deleteNote = async (noteId: string) => {
+    if (!noteDialog.app) return;
+    const existing = getNotesList(noteDialog.app.notes);
+    const nextItems = existing.filter((n) => n.id !== noteId);
+    const nextNotes = { items: nextItems } as any;
+    const { error } = await supabase
+      .from('applications')
+      .update({ notes: nextNotes })
+      .eq('id', noteDialog.app.id);
+    if (error) {
+      toast({ title: 'Erro ao excluir nota', variant: 'destructive' });
+      return;
+    }
+    setApplications((prev) =>
+      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: nextNotes } : a))
+    );
+    setNoteDialog((prev) => ({ ...prev, app: { ...prev.app, notes: nextNotes } }));
   };
 
   const openOfferDialog = (app: any) => {
@@ -918,12 +984,9 @@ export default function JobPipeline() {
                             </Button>
                           )}
                           {(() => {
-                            const noteText = app.notes
-                              ? typeof app.notes === 'string'
-                                ? app.notes
-                                : (app.notes as any)?.text || ''
-                              : '';
-                            const hasNote = noteText.trim().length > 0;
+                            const notesList = getNotesList(app.notes);
+                            const hasNote = notesList.length > 0;
+                            const lastNote = hasNote ? notesList[notesList.length - 1].text : '';
                             return (
                               <Button
                                 size="sm"
@@ -935,11 +998,17 @@ export default function JobPipeline() {
                                     : 'text-amber-600 hover:bg-amber-500/10'
                                 )}
                                 onClick={() => openNoteDialog(app)}
-                                title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                                title={
+                                  hasNote
+                                    ? `${notesList.length} nota(s) — última: ${lastNote}`
+                                    : 'Adicionar nota interna'
+                                }
                               >
                                 <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
                                 {hasNote && (
-                                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-background flex items-center justify-center">
+                                    {notesList.length}
+                                  </span>
                                 )}
                               </Button>
                             );
@@ -973,12 +1042,9 @@ export default function JobPipeline() {
 
               // Card especializado para Entrevista
               if (activeStage === 'entrevista') {
-                const noteText = app.notes
-                  ? typeof app.notes === 'string'
-                    ? app.notes
-                    : (app.notes as any)?.text || ''
-                  : '';
-                const hasNote = noteText.trim().length > 0;
+                const notesList = getNotesList(app.notes);
+                const hasNote = notesList.length > 0;
+                const lastNote = hasNote ? notesList[notesList.length - 1].text : '';
                 const hasInterview = !!interview;
                 const interviewDone = interview?.status === 'done';
                 return (
@@ -1141,11 +1207,17 @@ export default function JobPipeline() {
                             : 'text-amber-600 hover:bg-amber-500/10'
                         )}
                         onClick={() => openNoteDialog(app)}
-                        title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                        title={
+                          hasNote
+                            ? `${notesList.length} nota(s) — última: ${lastNote}`
+                            : 'Adicionar nota interna'
+                        }
                       >
                         <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
                         {hasNote && (
-                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-background flex items-center justify-center">
+                            {notesList.length}
+                          </span>
                         )}
                       </Button>
                       <div className="ml-auto flex items-center gap-1">
@@ -1222,12 +1294,9 @@ export default function JobPipeline() {
               );
 
               // Ações comuns reutilizáveis (WhatsApp, nota, mover, reprovar) + ações extras
-              const noteText = app.notes
-                ? typeof app.notes === 'string'
-                  ? app.notes
-                  : (app.notes as any)?.text || ''
-                : '';
-              const hasNote = noteText.trim().length > 0;
+              const notesList = getNotesList(app.notes);
+              const hasNote = notesList.length > 0;
+              const lastNote = hasNote ? notesList[notesList.length - 1].text : '';
 
               const renderStageActions = (extraButtons?: React.ReactNode) => (
                 <div
@@ -1274,11 +1343,17 @@ export default function JobPipeline() {
                         : 'text-amber-600 hover:bg-amber-500/10'
                     )}
                     onClick={() => openNoteDialog(app)}
-                    title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                    title={
+                      hasNote
+                        ? `${notesList.length} nota(s) — última: ${lastNote}`
+                        : 'Adicionar nota interna'
+                    }
                   >
                     <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
                     {hasNote && (
-                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-background flex items-center justify-center">
+                        {notesList.length}
+                      </span>
                     )}
                   </Button>
 
@@ -1644,7 +1719,7 @@ export default function JobPipeline() {
           if (!open) setNoteDialog({ app: null, open: false, value: '', saving: false });
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Notas internas</DialogTitle>
             <DialogDescription>
@@ -1653,24 +1728,107 @@ export default function JobPipeline() {
                 : 'Anotações privadas visíveis apenas para a equipe.'}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={noteDialog.value}
-            onChange={(e) => setNoteDialog((prev) => ({ ...prev, value: e.target.value }))}
-            placeholder="Escreva uma observação sobre o candidato..."
-            rows={6}
-            autoFocus
-          />
+
+          {/* Lista segmentada de notas */}
+          {(() => {
+            const items = getNotesList(noteDialog.app?.notes);
+            if (items.length === 0) {
+              return (
+                <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                  Nenhuma nota registrada ainda.
+                </div>
+              );
+            }
+            // mais recente primeiro
+            const ordered = [...items].sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+            return (
+              <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1">
+                {ordered.map((n) => {
+                  const isLegacy = n.id === 'legacy';
+                  const dt = isLegacy ? null : new Date(n.created_at);
+                  return (
+                    <div
+                      key={n.id}
+                      className="rounded-md border border-border bg-muted/20 p-3 text-sm space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <UserIcon className="h-3 w-3 shrink-0" />
+                          <span className="font-medium text-foreground/80 truncate">
+                            {n.author || 'Equipe'}
+                          </span>
+                          {dt && (
+                            <>
+                              <span>·</span>
+                              <span className="shrink-0">
+                                {dt.toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </>
+                          )}
+                          {isLegacy && (
+                            <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">
+                              antiga
+                            </Badge>
+                          )}
+                        </div>
+                        {!isLegacy && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteNote(n.id)}
+                            title="Excluir nota"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      <p className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
+                        {n.text}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* Adicionar nova nota */}
+          <div className="space-y-1.5 pt-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              Nova nota
+            </label>
+            <Textarea
+              value={noteDialog.value}
+              onChange={(e) => setNoteDialog((prev) => ({ ...prev, value: e.target.value }))}
+              placeholder="Escreva uma observação sobre o candidato..."
+              rows={3}
+              autoFocus
+            />
+          </div>
+
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setNoteDialog({ app: null, open: false, value: '', saving: false })}
               disabled={noteDialog.saving}
             >
-              Cancelar
+              Fechar
             </Button>
-            <Button onClick={saveNote} disabled={noteDialog.saving}>
+            <Button
+              onClick={saveNote}
+              disabled={noteDialog.saving || !noteDialog.value.trim()}
+            >
               {noteDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
+              Adicionar nota
             </Button>
           </DialogFooter>
         </DialogContent>
