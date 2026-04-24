@@ -97,7 +97,29 @@ export default function CandidateView() {
         </Badge>
       );
     }
-    return <Badge variant="secondary">{a}</Badge>;
+    if (item.question_type === 'url') {
+      return (
+        <a
+          href={a}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary underline break-all"
+        >
+          {a}
+        </a>
+      );
+    }
+    if (item.question_type === 'email') {
+      return (
+        <a href={`mailto:${a}`} className="text-sm text-primary underline break-all">
+          {a}
+        </a>
+      );
+    }
+    if (item.question_type === 'text_long') {
+      return <p className="text-sm text-foreground whitespace-pre-wrap">{a}</p>;
+    }
+    return <Badge variant="secondary" className="break-all">{a}</Badge>;
   };
 
   return (
