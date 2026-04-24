@@ -648,6 +648,10 @@ ${companyName}`;
 
   const activeStage = stages.find((s) => s.id === activeStageId) || stages[0];
   const activeCandidates = grouped[activeStageId] || [];
+  const isScreeningStage =
+    activeStageId === 'screening' ||
+    activeStage?.name?.trim().toLowerCase().includes('triagem') ||
+    activeStage?.name?.trim().toLowerCase().includes('screening');
 
   if (loading) {
     return (
