@@ -1122,6 +1122,245 @@ export default function JobPipeline() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Sheet de Entrevista */}
+      <Sheet
+        open={interviewSheet.open}
+        onOpenChange={(open) => {
+          if (!open) setInterviewSheet((prev) => ({ ...prev, open: false }));
+        }}
+      >
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>
+              {interviewSheet.tab === 'feedback' ? 'Feedback da entrevista' : 'Agendar entrevista'}
+            </SheetTitle>
+            <SheetDescription>
+              {interviewSheet.app?.candidate_name
+                ? `Candidato: ${interviewSheet.app.candidate_name}`
+                : ''}
+            </SheetDescription>
+          </SheetHeader>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mt-4 mb-4 p-1 bg-muted rounded-lg">
+            <button
+              type="button"
+              onClick={() => setInterviewSheet((prev) => ({ ...prev, tab: 'agendar' }))}
+              className={cn(
+                'flex-1 text-xs font-semibold py-2 rounded-md transition-colors',
+                interviewSheet.tab === 'agendar'
+                  ? 'bg-background shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Agendamento
+            </button>
+            <button
+              type="button"
+              onClick={() => setInterviewSheet((prev) => ({ ...prev, tab: 'feedback' }))}
+              disabled={!interviewSheet.existing}
+              className={cn(
+                'flex-1 text-xs font-semibold py-2 rounded-md transition-colors',
+                interviewSheet.tab === 'feedback'
+                  ? 'bg-background shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+                !interviewSheet.existing && 'opacity-40 cursor-not-allowed'
+              )}
+            >
+              Feedback
+            </button>
+          </div>
+
+          {interviewSheet.tab === 'agendar' ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="scheduledAt">Data e hora *</Label>
+                <Input
+                  id="scheduledAt"
+                  type="datetime-local"
+                  value={interviewSheet.scheduledAt}
+                  onChange={(e) =>
+                    setInterviewSheet((prev) => ({ ...prev, scheduledAt: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="format">Formato</Label>
+                <Select
+                  value={interviewSheet.format}
+                  onValueChange={(v) =>
+                    setInterviewSheet((prev) => ({ ...prev, format: v }))
+                  }
+                >
+                  <SelectTrigger id="format">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">
+                      <span className="flex items-center gap-2">
+                        <Video className="h-4 w-4" /> Videochamada
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="presencial">
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" /> Presencial
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="telefone">
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" /> Ligação
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {interviewSheet.format === 'video' && (
+                <div className="space-y-2">
+                  <Label htmlFor="meetingLink">Link da reunião</Label>
+                  <Input
+                    id="meetingLink"
+                    type="url"
+                    placeholder="https://meet.google.com/..."
+                    value={interviewSheet.meetingLink}
+                    onChange={(e) =>
+                      setInterviewSheet((prev) => ({ ...prev, meetingLink: e.target.value }))
+                    }
+                  />
+                </div>
+              )}
+
+              {interviewSheet.format === 'presencial' && (
+                <div className="space-y-2">
+                  <Label htmlFor="location">Endereço</Label>
+                  <Input
+                    id="location"
+                    placeholder="Rua, número, sala..."
+                    value={interviewSheet.location}
+                    onChange={(e) =>
+                      setInterviewSheet((prev) => ({ ...prev, location: e.target.value }))
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="interviewer">Entrevistador</Label>
+                <Input
+                  id="interviewer"
+                  placeholder="Nome do responsável"
+                  value={interviewSheet.interviewer}
+                  onChange={(e) =>
+                    setInterviewSheet((prev) => ({ ...prev, interviewer: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setInterviewSheet((prev) => ({ ...prev, open: false }))}
+                  disabled={interviewSheet.saving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={saveInterview}
+                  disabled={interviewSheet.saving || !interviewSheet.scheduledAt}
+                >
+                  {interviewSheet.saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  {interviewSheet.existing ? 'Atualizar e notificar' : 'Agendar e notificar'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Avaliação geral</Label>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const value = i + 1;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() =>
+                          setInterviewSheet((prev) => ({ ...prev, feedbackScore: value }))
+                        }
+                        className="p-1"
+                      >
+                        <Star
+                          className={cn(
+                            'h-7 w-7 transition-colors',
+                            value <= interviewSheet.feedbackScore
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-muted-foreground/30 hover:text-amber-300'
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                  {interviewSheet.feedbackScore > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setInterviewSheet((prev) => ({ ...prev, feedbackScore: 0 }))
+                      }
+                      className="ml-2 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="feedback">Anotações da entrevista *</Label>
+                <Textarea
+                  id="feedback"
+                  rows={8}
+                  placeholder="Pontos fortes, pontos a melhorar, fit cultural, recomendações..."
+                  value={interviewSheet.feedbackText}
+                  onChange={(e) =>
+                    setInterviewSheet((prev) => ({ ...prev, feedbackText: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setInterviewSheet((prev) => ({ ...prev, open: false }))}
+                  disabled={interviewSheet.saving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={saveFeedback}
+                  disabled={
+                    interviewSheet.saving ||
+                    !interviewSheet.existing ||
+                    !interviewSheet.feedbackText.trim()
+                  }
+                >
+                  {interviewSheet.saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                  )}
+                  Salvar feedback
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </CompanyLayout>
   );
 }
