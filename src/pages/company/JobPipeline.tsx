@@ -1224,8 +1224,6 @@ export default function JobPipeline() {
               open: false,
               app: null,
               targetStage: '',
-              reason: '',
-              notify: true,
               saving: false,
             });
         }}
@@ -1233,7 +1231,7 @@ export default function JobPipeline() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MoveHorizontal className="h-5 w-5 text-indigo-600" />
+              <MoveHorizontal className="h-5 w-5 text-primary" />
               Mover candidato
             </DialogTitle>
             <DialogDescription>
@@ -1245,92 +1243,27 @@ export default function JobPipeline() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Mover para qual etapa?</Label>
-              <Select
-                value={moveDialog.targetStage}
-                onValueChange={(v) =>
-                  setMoveDialog((prev) => ({ ...prev, targetStage: v as CandidateStageId }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a etapa de destino" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CANDIDATE_STAGES.filter(
-                    (s) => !moveDialog.app || s.id !== getCandidateStage(moveDialog.app)
-                  ).map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {moveDialog.targetStage &&
-              moveDialog.app &&
-              (() => {
-                const currentIdx = PROGRESSION.indexOf(getCandidateStage(moveDialog.app));
-                const targetIdx = PROGRESSION.indexOf(moveDialog.targetStage as CandidateStageId);
-                const isBackward =
-                  currentIdx !== -1 &&
-                  targetIdx !== -1 &&
-                  targetIdx < currentIdx;
-                const isReject = moveDialog.targetStage === 'reprovado';
-                const isApprove = moveDialog.targetStage === 'aprovado';
-                let warning = '';
-                if (isReject) warning = 'Esta ação reprova o candidato no processo seletivo.';
-                else if (isApprove) warning = 'Esta ação marca o candidato como aprovado.';
-                else if (isBackward) warning = 'Você está retornando o candidato para uma etapa anterior. Tem certeza?';
-                if (!warning) return null;
-                return (
-                  <div className="flex gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
-                    <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs leading-relaxed">{warning}</p>
-                  </div>
-                );
-              })()}
-
-            <div className="space-y-2">
-              <Label htmlFor="moveReason">
-                Motivo / observação{' '}
-                <span className="text-muted-foreground font-normal">(opcional)</span>
-              </Label>
-              <Textarea
-                id="moveReason"
-                rows={3}
-                placeholder="Descreva o motivo da mudança de etapa..."
-                value={moveDialog.reason}
-                onChange={(e) =>
-                  setMoveDialog((prev) => ({ ...prev, reason: e.target.value }))
-                }
-              />
-              <p className="text-xs text-muted-foreground">
-                Se preenchido e a notificação estiver ativa, o motivo será incluído no e-mail ao candidato.
-              </p>
-            </div>
-
-            <label className="flex items-start gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-0.5"
-                checked={moveDialog.notify}
-                onChange={(e) =>
-                  setMoveDialog((prev) => ({ ...prev, notify: e.target.checked }))
-                }
-              />
-              <span>
-                Notificar o candidato por e-mail
-                {moveDialog.targetStage &&
-                  !EMAIL_STATUS_FOR_STAGE[moveDialog.targetStage as CandidateStageId] && (
-                    <span className="block text-xs text-muted-foreground">
-                      (esta etapa não envia e-mail por padrão)
-                    </span>
-                  )}
-              </span>
-            </label>
+          <div className="space-y-2 py-2">
+            <Label>Mover para qual etapa?</Label>
+            <Select
+              value={moveDialog.targetStage}
+              onValueChange={(v) =>
+                setMoveDialog((prev) => ({ ...prev, targetStage: v as CandidateStageId }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a etapa de destino" />
+              </SelectTrigger>
+              <SelectContent>
+                {CANDIDATE_STAGES.filter(
+                  (s) => !moveDialog.app || s.id !== getCandidateStage(moveDialog.app)
+                ).map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
@@ -1341,8 +1274,6 @@ export default function JobPipeline() {
                   open: false,
                   app: null,
                   targetStage: '',
-                  reason: '',
-                  notify: true,
                   saving: false,
                 })
               }
@@ -1355,7 +1286,7 @@ export default function JobPipeline() {
               disabled={moveDialog.saving || !moveDialog.targetStage}
             >
               {moveDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirmar movimentação
+              Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>
