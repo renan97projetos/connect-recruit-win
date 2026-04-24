@@ -62,6 +62,8 @@ import {
   FileCheck,
   UserCheck,
   BriefcaseBusiness,
+  Trash2,
+  User as UserIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
