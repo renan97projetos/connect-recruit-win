@@ -208,6 +208,22 @@ export default function JobPipeline() {
     feedbackScore: 0,
   });
   const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
+  const [offersByApp, setOffersByApp] = useState<Record<string, any>>({});
+  const [offerDialog, setOfferDialog] = useState<{
+    open: boolean;
+    app: any | null;
+    salary: string;
+    benefits: string;
+    notes: string;
+    saving: boolean;
+  }>({
+    open: false,
+    app: null,
+    salary: '',
+    benefits: '',
+    notes: '',
+    saving: false,
+  });
   const [moveDialog, setMoveDialog] = useState<{
     open: boolean;
     app: any | null;
