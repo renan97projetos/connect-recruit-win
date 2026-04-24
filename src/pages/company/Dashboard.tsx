@@ -27,7 +27,24 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Download, Search, Eye } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Download, Search, Eye, MoreHorizontal, Pause, Play, Ban, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
