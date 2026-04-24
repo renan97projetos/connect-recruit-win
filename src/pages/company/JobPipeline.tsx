@@ -1194,7 +1194,7 @@ export default function JobPipeline() {
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
               <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-500" />
+                <Trophy className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold">Ranqueados por score</span>
               </div>
               <span className="text-xs text-muted-foreground">
