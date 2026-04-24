@@ -27,6 +27,8 @@ interface JobScreeningGroup {
 export default function CandidateView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const filterJobId = searchParams.get('jobId');
   const [profile, setProfile] = useState<any | null>(null);
   const [email, setEmail] = useState<string | undefined>();
   const [screeningGroups, setScreeningGroups] = useState<JobScreeningGroup[]>([]);
