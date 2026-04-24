@@ -25,20 +25,20 @@ interface StatusEmailRequest {
 
 const STATUS_MESSAGES: Record<StatusKey, { subject: string; body: string }> = {
   "in-review": {
-    subject: "Sua candidatura está sendo avaliada",
-    body: "Recebemos sua candidatura e nossa equipe está analisando seu perfil. Entraremos em contato em breve.",
+    subject: "Sua candidatura está sendo analisada",
+    body: "Olá {{candidato_nome}},\n\nRecebemos o seu perfil para a vaga de {{vaga_titulo}} em {{empresa_nome}} e nossa equipe já está fazendo a análise.\n\nVocê receberá um e-mail assim que houver uma atualização no seu processo seletivo.",
   },
   interview: {
-    subject: "Você avançou para a próxima etapa!",
-    body: "Parabéns! Seu perfil foi selecionado e você avançou no processo seletivo. Nossa equipe entrará em contato para combinar os próximos passos.",
+    subject: "Parabéns! Você avançou no processo seletivo",
+    body: "Olá {{candidato_nome}},\n\nÓtimas notícias! Você avançou no processo seletivo para a vaga de {{vaga_titulo}} em {{empresa_nome}}.\n\nNossa equipe entrará em contato para combinar os próximos passos. Fique atento ao seu e-mail e WhatsApp.",
   },
   approved: {
-    subject: "Boa notícia sobre sua candidatura!",
-    body: "Temos ótimas notícias! Você foi aprovado(a) no processo seletivo. Nossa equipe entrará em contato em breve com os próximos passos.",
+    subject: "Você foi aprovado(a)! 🎉",
+    body: "Olá {{candidato_nome}},\n\nTemos ótimas notícias para você! Após todo o processo seletivo, você foi aprovado(a) para a vaga de {{vaga_titulo}} em {{empresa_nome}}.\n\nNossa equipe entrará em contato em breve com os próximos passos para formalizar a sua contratação.\n\nParabéns e seja bem-vindo(a)!",
   },
   rejected: {
-    subject: "Obrigado pela sua candidatura",
-    body: "Agradecemos muito o seu interesse em fazer parte da {{empresa_nome}} e o tempo que dedicou ao nosso processo seletivo para a vaga de {{vaga_titulo}}.\n\nApós uma análise cuidadosa do seu perfil, optamos por seguir com outros candidatos cujas experiências estão mais alinhadas ao que buscamos neste momento.\n\nEssa decisão não diminui em nada o seu valor profissional. Guardamos o seu perfil e, caso surja uma oportunidade que combine com a sua trajetória, entraremos em contato.\n\nDesejamos muito sucesso na sua carreira.\n\nAtt,\nEquipe de Recrutamento SinapseRH",
+    subject: "Obrigado pela sua participação",
+    body: "Olá {{candidato_nome}},\n\nAgradecemos muito o seu interesse em fazer parte de {{empresa_nome}} e o tempo que dedicou ao processo seletivo para a vaga de {{vaga_titulo}}.\n\nApós uma análise cuidadosa de todos os perfis, optamos por seguir com candidatos cujas experiências estão mais alinhadas ao que buscamos neste momento.\n\nEssa decisão não reflete seu valor profissional. Guardamos o seu cadastro e, caso surja uma oportunidade compatível com o seu perfil, entraremos em contato.\n\nDesejamos muito sucesso na sua carreira.\n\nEquipe de Recrutamento\n{{empresa_nome}}",
   },
 };
 
