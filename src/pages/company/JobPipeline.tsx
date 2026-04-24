@@ -209,6 +209,21 @@ export default function JobPipeline() {
     feedbackScore: 0,
   });
   const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
+  const [moveDialog, setMoveDialog] = useState<{
+    open: boolean;
+    app: any | null;
+    targetStage: CandidateStageId | '';
+    reason: string;
+    notify: boolean;
+    saving: boolean;
+  }>({
+    open: false,
+    app: null,
+    targetStage: '',
+    reason: '',
+    notify: true,
+    saving: false,
+  });
 
   useEffect(() => {
     if (!id) return;
