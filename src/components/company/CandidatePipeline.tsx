@@ -726,7 +726,7 @@ ${companyName}`;
           </div>
         </div>
 
-        {activeStageId === 'screening' ? (
+        {isScreeningStage ? (
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
               <div className="flex items-center gap-2">
