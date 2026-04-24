@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { MapPin, DollarSign, Building2, Clock, CheckCircle2, ArrowLeft, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -407,7 +408,7 @@ export default function JobDetails() {
                                   </Label>
                                 </div>
                               </RadioGroup>
-                            ) : q.question_type === 'multiple_choice' ? (
+                            ) : q.question_type === 'multiple_choice' || q.question_type === 'single_choice' ? (
                               <RadioGroup
                                 value={answers[q.id] || ''}
                                 onValueChange={(val) =>
@@ -427,9 +428,9 @@ export default function JobDetails() {
                                   </div>
                                 ))}
                               </RadioGroup>
-                            ) : q.question_type === 'scale_1_5' ? (
-                              <div className="flex gap-2">
-                                {[1, 2, 3, 4, 5].map((n) => {
+                            ) : q.question_type === 'scale_1_5' || q.question_type === 'scale_1_10' ? (
+                              <div className="flex gap-2 flex-wrap">
+                                {Array.from({ length: q.question_type === 'scale_1_10' ? 10 : 5 }, (_, i) => i + 1).map((n) => {
                                   const selected = answers[q.id] === String(n);
                                   return (
                                     <button
@@ -449,6 +450,49 @@ export default function JobDetails() {
                                   );
                                 })}
                               </div>
+                            ) : q.question_type === 'numeric' ? (
+                              <Input
+                                type="number"
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                                placeholder="Digite um número"
+                              />
+                            ) : q.question_type === 'date' ? (
+                              <Input
+                                type="date"
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                              />
+                            ) : q.question_type === 'email' ? (
+                              <Input
+                                type="email"
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                                placeholder="exemplo@email.com"
+                              />
+                            ) : q.question_type === 'url' ? (
+                              <Input
+                                type="url"
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                                placeholder="https://..."
+                              />
+                            ) : q.question_type === 'text' ? (
+                              <Input
+                                value={answers[q.id] || ''}
+                                onChange={(e) =>
+                                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                                }
+                                placeholder="Sua resposta..."
+                              />
                             ) : (
                               <Textarea
                                 value={answers[q.id] || ''}

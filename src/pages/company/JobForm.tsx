@@ -77,13 +77,26 @@ export default function JobForm() {
   const [benefitInput, setBenefitInput] = useState('');
   const [selectedReqCategory, setSelectedReqCategory] = useState<string>('');
 
+  type ScreeningQuestionType =
+    | 'text'
+    | 'text_long'
+    | 'yes_no'
+    | 'single_choice'
+    | 'multiple_choice'
+    | 'scale_1_5'
+    | 'scale_1_10'
+    | 'numeric'
+    | 'date'
+    | 'email'
+    | 'url';
   type ScreeningQuestion = {
     question: string;
-    question_type: 'text' | 'yes_no' | 'multiple_choice' | 'scale_1_5';
+    question_type: ScreeningQuestionType;
     required: boolean;
     options?: string[];
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
+  const QUESTION_TYPES_WITH_OPTIONS: ScreeningQuestionType[] = ['multiple_choice', 'single_choice'];
 
   const [scoreConfig, setScoreConfig] = useState<ScoreConfig>({
     required_skills: [],
@@ -221,10 +234,14 @@ export default function JobForm() {
           .eq('job_id', id)
           .order('order_position');
         if (qs && qs.length > 0) {
+          const VALID_TYPES: ScreeningQuestionType[] = [
+            'text', 'text_long', 'yes_no', 'single_choice', 'multiple_choice',
+            'scale_1_5', 'scale_1_10', 'numeric', 'date', 'email', 'url',
+          ];
           setQuestions(
             qs.map((q: any) => ({
               question: q.question,
-              question_type: (['text', 'yes_no', 'multiple_choice', 'scale_1_5'].includes(q.question_type)
+              question_type: (VALID_TYPES.includes(q.question_type)
                 ? q.question_type
                 : 'text') as ScreeningQuestion['question_type'],
               required: !!q.required,
@@ -346,7 +363,7 @@ export default function JobForm() {
               question_type: q.question_type,
               required: q.required,
               order_position: i,
-              options: q.question_type === 'multiple_choice' && q.options ? q.options.filter(o => o.trim()) : null,
+              options: QUESTION_TYPES_WITH_OPTIONS.includes(q.question_type) && q.options ? q.options.filter(o => o.trim()) : null,
             })),
           );
         }
@@ -984,9 +1001,9 @@ export default function JobForm() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">Perguntas de triagem</CardTitle>
+                    <CardTitle className="text-base">Perguntas customizadas (triagem)</CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      O candidato responde ao se candidatar
+                      Crie perguntas próprias além das geradas pelo Score de Aderência. Tipos disponíveis: texto curto/longo, sim/não, escolha única, múltipla escolha, escala 1–5, escala 1–10, número, data, e-mail, link.
                     </p>
                   </div>
                   <Button
@@ -1036,21 +1053,30 @@ export default function JobForm() {
                                     ? {
                                         ...item,
                                         question_type: val as ScreeningQuestion['question_type'],
-                                        options: val === 'multiple_choice' ? (item.options || ['', '']) : undefined,
+                                        options: QUESTION_TYPES_WITH_OPTIONS.includes(val as ScreeningQuestionType)
+                                          ? (item.options || ['', ''])
+                                          : undefined,
                                       }
                                     : item,
                                 ),
                               )
                             }
                           >
-                            <SelectTrigger className="w-40 text-xs">
+                            <SelectTrigger className="w-44 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="text">Texto livre</SelectItem>
+                              <SelectItem value="text">Texto curto</SelectItem>
+                              <SelectItem value="text_long">Texto longo</SelectItem>
                               <SelectItem value="yes_no">Sim / Não</SelectItem>
+                              <SelectItem value="single_choice">Escolha única (lista)</SelectItem>
                               <SelectItem value="multiple_choice">Múltipla escolha</SelectItem>
                               <SelectItem value="scale_1_5">Escala 1 a 5</SelectItem>
+                              <SelectItem value="scale_1_10">Escala 1 a 10</SelectItem>
+                              <SelectItem value="numeric">Número</SelectItem>
+                              <SelectItem value="date">Data</SelectItem>
+                              <SelectItem value="email">E-mail</SelectItem>
+                              <SelectItem value="url">Link / URL</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button
@@ -1066,7 +1092,7 @@ export default function JobForm() {
                           </Button>
                         </div>
 
-                        {q.question_type === 'multiple_choice' && (
+                        {QUESTION_TYPES_WITH_OPTIONS.includes(q.question_type) && (
                           <div className="space-y-1.5 pl-1">
                             <Label className="text-xs text-muted-foreground">Opções</Label>
                             {(q.options || ['', '']).map((opt, optIdx) => (
