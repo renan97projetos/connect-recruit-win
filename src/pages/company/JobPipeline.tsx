@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Tooltip,
   TooltipContent,
@@ -391,6 +392,16 @@ export default function JobPipeline() {
     nextId: CandidateStageId | null;
   }>({ open: false, count: 0, nextLabel: '', nextId: null });
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelected = (appId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(appId)) next.delete(appId);
+      else next.add(appId);
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -506,12 +517,12 @@ export default function JobPipeline() {
     }
   };
 
-  const advanceAllInStage = () => {
+  const advanceSelectedInStage = () => {
     const stageCandidates = applications.filter(
-      (a) => getCandidateStage(a) === activeStage
+      (a) => getCandidateStage(a) === activeStage && selectedIds.has(a.id)
     );
     if (stageCandidates.length === 0) {
-      toast({ title: 'Nenhum candidato nesta etapa', variant: 'destructive' });
+      toast({ title: 'Nenhum candidato selecionado', variant: 'destructive' });
       return;
     }
     const next = getNextStage(activeStage);
@@ -535,7 +546,7 @@ export default function JobPipeline() {
     const nextId = confirmBulk.nextId;
     if (!nextId) return;
     const stageCandidates = applications.filter(
-      (a) => getCandidateStage(a) === activeStage
+      (a) => getCandidateStage(a) === activeStage && selectedIds.has(a.id)
     );
     setConfirmBulk({ open: false, count: 0, nextLabel: '', nextId: null });
     setActionLoading('bulk');
@@ -550,6 +561,7 @@ export default function JobPipeline() {
       else fail++;
     }
     setActionLoading(null);
+    setSelectedIds(new Set());
 
     toast({
       title: `${ok} candidato(s) movidos`,
@@ -1062,7 +1074,10 @@ export default function JobPipeline() {
           return (
             <button
               key={stage.id}
-              onClick={() => setActiveStage(stage.id)}
+              onClick={() => {
+                setActiveStage(stage.id);
+                setSelectedIds(new Set());
+              }}
               className={cn(
                 'flex-shrink-0 min-w-[110px] p-3 rounded-xl border text-left transition-all',
                 isActive
@@ -1094,37 +1109,83 @@ export default function JobPipeline() {
       {/* Conteúdo da etapa selecionada */}
       <div>
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            {activeStageLabel} — {candidatesInActiveStage.length}{' '}
-            {candidatesInActiveStage.length === 1 ? 'candidato' : 'candidatos'}
-          </h2>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              {activeStageLabel} — {candidatesInActiveStage.length}{' '}
+              {candidatesInActiveStage.length === 1 ? 'candidato' : 'candidatos'}
+            </h2>
+            {candidatesInActiveStage.length > 0 && (
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                <Checkbox
+                  checked={
+                    candidatesInActiveStage.every((a) => selectedIds.has(a.id))
+                      ? true
+                      : candidatesInActiveStage.some((a) => selectedIds.has(a.id))
+                      ? 'indeterminate'
+                      : false
+                  }
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedIds(
+                        new Set(candidatesInActiveStage.map((a) => a.id))
+                      );
+                    } else {
+                      setSelectedIds(new Set());
+                    }
+                  }}
+                />
+                Selecionar todos
+              </label>
+            )}
+          </div>
           {(() => {
             const next = getNextStage(activeStage);
-            const canBulk =
-              !!next && candidatesInActiveStage.length > 0;
+            const selectedCount = candidatesInActiveStage.filter((a) =>
+              selectedIds.has(a.id)
+            ).length;
+            const canBulk = !!next && selectedCount > 0;
             return (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!canBulk || actionLoading === 'bulk'}
-                onClick={advanceAllInStage}
-                className="gap-2"
-                title={
-                  next
-                    ? `Mover todos para ${next.label}`
-                    : 'Etapa final — não há próxima etapa'
-                }
-              >
-                {actionLoading === 'bulk' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {selectedCount > 0 && (
+                  <>
+                    <Badge variant="secondary" className="gap-1">
+                      {selectedCount} selecionado{selectedCount === 1 ? '' : 's'}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSelectedIds(new Set())}
+                      disabled={actionLoading === 'bulk'}
+                    >
+                      Limpar
+                    </Button>
+                  </>
                 )}
-                Avançar todos
-                {next && (
-                  <span className="text-muted-foreground">→ {next.label}</span>
-                )}
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!canBulk || actionLoading === 'bulk'}
+                  onClick={advanceSelectedInStage}
+                  className="gap-2"
+                  title={
+                    !next
+                      ? 'Etapa final — não há próxima etapa'
+                      : selectedCount === 0
+                      ? 'Selecione candidatos para avançar'
+                      : `Mover selecionados para ${next.label}`
+                  }
+                >
+                  {actionLoading === 'bulk' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" />
+                  )}
+                  Avançar selecionados
+                  {next && (
+                    <span className="text-muted-foreground">→ {next.label}</span>
+                  )}
+                </Button>
+              </div>
             );
           })()}
         </div>
@@ -1143,6 +1204,26 @@ export default function JobPipeline() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={
+                        rankedCandidates.length > 0 &&
+                        rankedCandidates.every((a) => selectedIds.has(a.id))
+                          ? true
+                          : rankedCandidates.some((a) => selectedIds.has(a.id))
+                          ? 'indeterminate'
+                          : false
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds(new Set(rankedCandidates.map((a) => a.id)));
+                        } else {
+                          setSelectedIds(new Set());
+                        }
+                      }}
+                      aria-label="Selecionar todos"
+                    />
+                  </TableHead>
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead className="w-24">Score</TableHead>
@@ -1154,14 +1235,23 @@ export default function JobPipeline() {
                 {rankedCandidates.map((app, idx) => {
                   const profile = profilesById[app.candidate_id];
                   const score = app.adherence_score ?? app.score ?? 0;
+                  const isSelected = selectedIds.has(app.id);
                   const goToProfile = () =>
                     navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
                   return (
                     <TableRow
                       key={app.id}
                       onClick={goToProfile}
-                      className="cursor-pointer hover:bg-muted/50"
+                      data-state={isSelected ? 'selected' : undefined}
+                      className="cursor-pointer hover:bg-muted/50 data-[state=selected]:bg-primary/5"
                     >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelected(app.id)}
+                          aria-label={`Selecionar ${app.candidate_name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-bold text-muted-foreground">
                         {idx + 1}
                       </TableCell>
@@ -1301,7 +1391,7 @@ export default function JobPipeline() {
                 })}
                 {rankedCandidates.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
                       Nenhum candidato em Triagem
                     </TableCell>
                   </TableRow>
@@ -1340,6 +1430,13 @@ export default function JobPipeline() {
                     className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
                   >
                     <div className="flex items-start gap-3 mb-3">
+                      <div onClick={(e) => e.stopPropagation()} className="pt-1">
+                        <Checkbox
+                          checked={selectedIds.has(app.id)}
+                          onCheckedChange={() => toggleSelected(app.id)}
+                          aria-label={`Selecionar ${app.candidate_name}`}
+                        />
+                      </div>
                       <Avatar className="h-10 w-10 flex-shrink-0">
                         <AvatarImage src={profile?.avatar_url || undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -1529,8 +1626,16 @@ export default function JobPipeline() {
               }
 
               // Header reutilizável (avatar + nome + email + score)
+              const isSelected = selectedIds.has(app.id);
               const renderCardHeader = () => (
                 <div className="flex items-start gap-3 mb-3">
+                  <div onClick={(e) => e.stopPropagation()} className="pt-1">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelected(app.id)}
+                      aria-label={`Selecionar ${app.candidate_name}`}
+                    />
+                  </div>
                   <Avatar className="h-10 w-10 flex-shrink-0">
                     <AvatarImage src={profile?.avatar_url || undefined} />
                     <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -1551,6 +1656,7 @@ export default function JobPipeline() {
                   )}
                 </div>
               );
+
 
               // Ações comuns reutilizáveis (WhatsApp, nota, mover, reprovar) + ações extras
               const notesList = getNotesList(app.notes);
@@ -1851,6 +1957,13 @@ export default function JobPipeline() {
                   className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
                 >
                   <div className="flex items-start gap-3 mb-3">
+                    <div onClick={(e) => e.stopPropagation()} className="pt-1">
+                      <Checkbox
+                        checked={selectedIds.has(app.id)}
+                        onCheckedChange={() => toggleSelected(app.id)}
+                        aria-label={`Selecionar ${app.candidate_name}`}
+                      />
+                    </div>
                     <Avatar className="h-10 w-10 flex-shrink-0">
                       <AvatarImage src={profile?.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
