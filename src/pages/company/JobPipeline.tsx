@@ -14,11 +14,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown, Video, MapPin, Phone, Loader2, CalendarPlus } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
