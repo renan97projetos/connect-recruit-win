@@ -218,6 +218,7 @@ export default function JobPipeline() {
   });
   const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
   const [offersByApp, setOffersByApp] = useState<Record<string, any>>({});
+  const [documentsByApp, setDocumentsByApp] = useState<Record<string, any[]>>({});
   const [offerDialog, setOfferDialog] = useState<{
     open: boolean;
     app: any | null;
