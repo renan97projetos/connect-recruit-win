@@ -538,6 +538,7 @@ export default function JobForm() {
                     id="description"
                     rows={6}
                     value={formData.description}
+                    disabled={fieldsLocked}
                     onChange={(e) => {
                       setFormData({ ...formData, description: e.target.value });
                       if (errors.description) setErrors({ ...errors, description: undefined });
