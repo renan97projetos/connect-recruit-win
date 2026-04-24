@@ -383,7 +383,7 @@ export default function JobPipeline() {
                       <TableCell className="text-xs text-muted-foreground">
                         Há {daysAgo(app.applied_at)}d
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-0.5">
                           <Button
                             size="sm"
@@ -412,6 +412,7 @@ export default function JobPipeline() {
                               )}`}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <Button
                                 size="sm"
