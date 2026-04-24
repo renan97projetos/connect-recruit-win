@@ -1160,6 +1160,5 @@ ${companyName}`;
     </Dialog>
 
     </>
-    </>
   );
 }
