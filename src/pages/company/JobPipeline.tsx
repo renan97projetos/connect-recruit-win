@@ -506,7 +506,7 @@ export default function JobPipeline() {
     }
   };
 
-  const advanceAllInStage = async () => {
+  const advanceAllInStage = () => {
     const stageCandidates = applications.filter(
       (a) => getCandidateStage(a) === activeStage
     );
@@ -523,20 +523,28 @@ export default function JobPipeline() {
       });
       return;
     }
-    if (
-      !confirm(
-        `Avançar ${stageCandidates.length} candidato(s) de ${activeStageLabel} para ${next.label}?`
-      )
-    )
-      return;
+    setConfirmBulk({
+      open: true,
+      count: stageCandidates.length,
+      nextLabel: next.label,
+      nextId: next.id,
+    });
+  };
 
+  const performBulkAdvance = async () => {
+    const nextId = confirmBulk.nextId;
+    if (!nextId) return;
+    const stageCandidates = applications.filter(
+      (a) => getCandidateStage(a) === activeStage
+    );
+    setConfirmBulk({ open: false, count: 0, nextLabel: '', nextId: null });
     setActionLoading('bulk');
     let ok = 0;
     let fail = 0;
     for (const app of stageCandidates) {
       const success = await updateApplication(app.id, {
-        current_stage: next.id,
-        status: STATUS_FOR_STAGE[next.id],
+        current_stage: nextId,
+        status: STATUS_FOR_STAGE[nextId],
       });
       if (success) ok++;
       else fail++;
@@ -544,14 +552,20 @@ export default function JobPipeline() {
     setActionLoading(null);
 
     toast({
-      title: `${ok} candidato(s) movidos para ${next.label}`,
+      title: `${ok} candidato(s) movidos`,
       description: fail > 0 ? `${fail} falharam.` : undefined,
       variant: fail > 0 ? 'destructive' : 'default',
     });
   };
 
-  const rejectCandidate = async (app: any) => {
-    if (!confirm(`Rejeitar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
+  const rejectCandidate = (app: any) => {
+    setConfirmReject({ open: true, app });
+  };
+
+  const performReject = async () => {
+    const app = confirmReject.app;
+    if (!app) return;
+    setConfirmReject({ open: false, app: null });
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
     if (!ok) return;
     toast({ title: `${app.candidate_name} rejeitado`, description: 'E-mail enviado.' });
