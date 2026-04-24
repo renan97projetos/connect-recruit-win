@@ -1053,21 +1053,30 @@ export default function JobForm() {
                                     ? {
                                         ...item,
                                         question_type: val as ScreeningQuestion['question_type'],
-                                        options: val === 'multiple_choice' ? (item.options || ['', '']) : undefined,
+                                        options: QUESTION_TYPES_WITH_OPTIONS.includes(val as ScreeningQuestionType)
+                                          ? (item.options || ['', ''])
+                                          : undefined,
                                       }
                                     : item,
                                 ),
                               )
                             }
                           >
-                            <SelectTrigger className="w-40 text-xs">
+                            <SelectTrigger className="w-44 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="text">Texto livre</SelectItem>
+                              <SelectItem value="text">Texto curto</SelectItem>
+                              <SelectItem value="text_long">Texto longo</SelectItem>
                               <SelectItem value="yes_no">Sim / Não</SelectItem>
+                              <SelectItem value="single_choice">Escolha única (lista)</SelectItem>
                               <SelectItem value="multiple_choice">Múltipla escolha</SelectItem>
                               <SelectItem value="scale_1_5">Escala 1 a 5</SelectItem>
+                              <SelectItem value="scale_1_10">Escala 1 a 10</SelectItem>
+                              <SelectItem value="numeric">Número</SelectItem>
+                              <SelectItem value="date">Data</SelectItem>
+                              <SelectItem value="email">E-mail</SelectItem>
+                              <SelectItem value="url">Link / URL</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button
@@ -1083,7 +1092,7 @@ export default function JobForm() {
                           </Button>
                         </div>
 
-                        {q.question_type === 'multiple_choice' && (
+                        {QUESTION_TYPES_WITH_OPTIONS.includes(q.question_type) && (
                           <div className="space-y-1.5 pl-1">
                             <Label className="text-xs text-muted-foreground">Opções</Label>
                             {(q.options || ['', '']).map((opt, optIdx) => (
