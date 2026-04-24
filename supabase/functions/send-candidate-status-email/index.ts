@@ -74,8 +74,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const subject = (customSubject && customSubject.trim()) ? customSubject : message.subject;
-    const body = (customBody && customBody.trim()) ? customBody : message.body;
+    const rawSubject = (customSubject && customSubject.trim()) ? customSubject : message.subject;
+    const rawBody = (customBody && customBody.trim()) ? customBody : message.body;
+
+    const replaceVars = (str: string) =>
+      str
+        .replace(/\{\{candidato_nome\}\}/g, candidateName)
+        .replace(/\{\{vaga_titulo\}\}/g, jobTitle)
+        .replace(/\{\{empresa_nome\}\}/g, companyName);
+
+    const subject = replaceVars(rawSubject);
+    const body = replaceVars(rawBody);
+    const bodyHtml = body
+      .split(/\n\n+/)
+      .map((p) => `<p style="font-size:15px;color:#444;margin:0 0 14px;">${p.replace(/\n/g, "<br/>")}</p>`)
+      .join("");
 
     const feedbackHtml = feedback
       ? `<div style="background:#fff7e6;border-left:4px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;">
