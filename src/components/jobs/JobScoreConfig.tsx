@@ -326,9 +326,9 @@ export function JobScoreConfig({
                   </div>
                   <Slider
                     value={[q.weight]}
-                    min={1}
+                    min={0}
                     max={100}
-                    step={1}
+                    step={5}
                     onValueChange={(v) => onCustomWeightChange?.(q.index, v[0])}
                   />
                 </div>

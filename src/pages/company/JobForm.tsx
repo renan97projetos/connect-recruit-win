@@ -1223,7 +1223,7 @@ export default function JobForm() {
                                           score_weight: e.target.checked
                                             ? item.score_weight && item.score_weight > 0
                                               ? item.score_weight
-                                              : 5
+                                              : 10
                                             : 0,
                                         }
                                       : item,
@@ -1240,9 +1240,9 @@ export default function JobForm() {
                               <Label className="text-xs text-muted-foreground">Pontos:</Label>
                               <Input
                                 type="number"
-                                min={1}
+                                min={0}
                                 max={100}
-                                step={1}
+                                step={5}
                                 value={q.score_weight ?? 0}
                                 onChange={(e) => {
                                   const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
