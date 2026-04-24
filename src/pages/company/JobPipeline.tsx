@@ -1619,8 +1619,16 @@ export default function JobPipeline() {
               }
 
               // Header reutilizável (avatar + nome + email + score)
+              const isSelected = selectedIds.has(app.id);
               const renderCardHeader = () => (
                 <div className="flex items-start gap-3 mb-3">
+                  <div onClick={(e) => e.stopPropagation()} className="pt-1">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelected(app.id)}
+                      aria-label={`Selecionar ${app.candidate_name}`}
+                    />
+                  </div>
                   <Avatar className="h-10 w-10 flex-shrink-0">
                     <AvatarImage src={profile?.avatar_url || undefined} />
                     <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -1641,6 +1649,7 @@ export default function JobPipeline() {
                   )}
                 </div>
               );
+
 
               // Ações comuns reutilizáveis (WhatsApp, nota, mover, reprovar) + ações extras
               const notesList = getNotesList(app.notes);
