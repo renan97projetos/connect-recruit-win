@@ -430,17 +430,32 @@ export default function CompanyDashboard() {
                       {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 text-xs text-primary hover:text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/company/jobs/${job.id}`);
-                        }}
-                      >
-                        Ver candidatos
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-primary hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/jobs/${job.id}`);
+                          }}
+                          title="Ver dados e descrição da vaga"
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          Ver vaga
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-primary hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/company/jobs/${job.id}`);
+                          }}
+                        >
+                          Ver candidatos
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
