@@ -453,20 +453,6 @@ export default function JobPipeline() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-9 w-9 border-destructive/40 text-destructive hover:bg-destructive/10 hover:border-destructive"
-                              onClick={() => handleUpdateStatus(app.id, 'rejected')}
-                              aria-label="Reprovar candidato"
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Reprovar</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
                               className="h-9 w-9 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary"
                               onClick={() => handleUpdateStatus(app.id, 'interview')}
                               aria-label="Mover para entrevista"
