@@ -634,7 +634,7 @@ ${companyName}`;
                 <Card
                   key={app.id}
                   className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                  onClick={() => navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`)}
                 >
                   <div className="flex items-center gap-4">
                     {/* Checkbox seleção */}
@@ -899,7 +899,7 @@ ${companyName}`;
                           <div
                             key={app.id}
                             className="flex items-center gap-3 p-3 rounded-md border bg-background hover:bg-muted/30 cursor-pointer"
-                            onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                            onClick={() => navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`)}
                           >
                             <Avatar className="h-9 w-9">
                               <AvatarFallback>{initials(app.candidate_name)}</AvatarFallback>
@@ -947,7 +947,7 @@ ${companyName}`;
                           <div
                             key={app.id}
                             className="flex items-center gap-3 p-3 rounded-md border bg-background hover:bg-muted/30 cursor-pointer"
-                            onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                            onClick={() => navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`)}
                           >
                             <Avatar className="h-9 w-9">
                               <AvatarFallback>{initials(app.candidate_name)}</AvatarFallback>
@@ -986,7 +986,7 @@ ${companyName}`;
                           <div
                             key={app.id}
                             className="flex items-center gap-3 p-3 rounded-md border bg-background hover:bg-muted/30 cursor-pointer opacity-75"
-                            onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                            onClick={() => navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`)}
                           >
                             <Avatar className="h-9 w-9">
                               <AvatarFallback>{initials(app.candidate_name)}</AvatarFallback>
