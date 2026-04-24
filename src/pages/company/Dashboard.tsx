@@ -453,7 +453,7 @@ export default function CompanyDashboard() {
                             navigate(`/company/jobs/${job.id}`);
                           }}
                         >
-                          Ver candidatos
+                          Ver Processo
                         </Button>
                       </div>
                     </TableCell>
