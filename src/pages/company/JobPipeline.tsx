@@ -1430,6 +1430,13 @@ export default function JobPipeline() {
                     className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
                   >
                     <div className="flex items-start gap-3 mb-3">
+                      <div onClick={(e) => e.stopPropagation()} className="pt-1">
+                        <Checkbox
+                          checked={selectedIds.has(app.id)}
+                          onCheckedChange={() => toggleSelected(app.id)}
+                          aria-label={`Selecionar ${app.candidate_name}`}
+                        />
+                      </div>
                       <Avatar className="h-10 w-10 flex-shrink-0">
                         <AvatarImage src={profile?.avatar_url || undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
