@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   Filter,
@@ -38,6 +39,9 @@ import {
   MapPin,
   Phone,
   Star,
+  StickyNote,
+  ArrowRight,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -115,6 +119,20 @@ const stageStatusMap: Record<string, string> = {
   rejected: 'rejected',
 };
 
+const NEXT_STAGE: Record<string, string> = {
+  screening: 'interview',
+  interview: 'assessment',
+  assessment: 'approved',
+  approved: 'approved',
+};
+
+const NEXT_STAGE_LABEL: Record<string, string> = {
+  screening: 'Mover para Entrevista',
+  interview: 'Mover para Avaliação',
+  assessment: 'Aprovar candidato',
+  approved: 'Aprovado',
+};
+
 function getStageBucket(app: ApplicationRow): string {
   const key = (app.current_stage || app.status || '').toLowerCase();
   return STAGE_ALIASES[key] || 'screening';
@@ -172,6 +190,12 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [feedbackScore, setFeedbackScore] = useState(0);
   const [savingInterview, setSavingInterview] = useState(false);
   const [interviewTab, setInterviewTab] = useState<'agendar' | 'feedback'>('agendar');
+
+  // Notas internas
+  const [noteSheetOpen, setNoteSheetOpen] = useState(false);
+  const [noteApp, setNoteApp] = useState<ApplicationRow | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -240,6 +264,33 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     }
 
     setLoading(false);
+  };
+
+  const openNoteSheet = async (app: ApplicationRow) => {
+    setNoteApp(app);
+    setNoteText('');
+    setNoteSheetOpen(true);
+    const { data } = await supabase
+      .from('applications')
+      .select('notes')
+      .eq('id', app.id)
+      .maybeSingle();
+    if (data?.notes) {
+      const n = data.notes as any;
+      setNoteText(typeof n === 'string' ? n : n?.text || '');
+    }
+  };
+
+  const saveNote = async () => {
+    if (!noteApp) return;
+    setSavingNote(true);
+    await supabase
+      .from('applications')
+      .update({ notes: { text: noteText } as any })
+      .eq('id', noteApp.id);
+    setSavingNote(false);
+    toast({ title: 'Nota salva!' });
+    setNoteSheetOpen(false);
   };
 
   const openInterviewSheet = async (app: ApplicationRow) => {
@@ -670,6 +721,145 @@ ${companyName}`;
           </div>
         </div>
 
+        {activeStageId === 'screening' ? (
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-semibold">Ranqueados por score</span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {activeCandidates.length} {activeCandidates.length === 1 ? 'candidato' : 'candidatos'}
+              </span>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead>Candidato</TableHead>
+                  <TableHead className="w-20">Score</TableHead>
+                  <TableHead className="w-28">Origem</TableHead>
+                  <TableHead className="w-28">Entrada</TableHead>
+                  <TableHead className="w-40 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...activeCandidates]
+                  .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                  .map((app, idx) => {
+                    const profile = profilesById[app.candidate_id];
+                    const score = app.score ?? 0;
+                    return (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-bold text-muted-foreground">
+                          {idx + 1}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={profile?.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                                {initials(app.candidate_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold truncate leading-tight">
+                                {app.candidate_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {app.candidate_email}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 rounded-md text-sm font-bold',
+                              score >= 70
+                                ? 'bg-green-100 text-green-700'
+                                : score >= 40
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-red-100 text-red-600'
+                            )}
+                          >
+                            {score}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'text-[10px] px-1.5 py-0.5 rounded font-medium',
+                              SOURCE_LABELS[app.source || '']?.color || 'bg-gray-100 text-gray-500'
+                            )}
+                          >
+                            {SOURCE_LABELS[app.source || '']?.label || 'Board'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {format(new Date(app.applied_at), 'dd/MM/yyyy', { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            {profile?.phone && (
+                              <a
+                                href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                  `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-600 hover:bg-green-50" title="WhatsApp">
+                                  <Phone className="h-3.5 w-3.5" />
+                                </Button>
+                              </a>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2"
+                              onClick={(e) => { e.stopPropagation(); openNoteSheet(app); }}
+                              title="Nota"
+                            >
+                              <StickyNote className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                              onClick={() => moveCandidate(app.id, 'interview')}
+                              disabled={updating === app.id}
+                              title="Mover para Entrevista"
+                            >
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-destructive hover:bg-destructive/10"
+                              onClick={() => moveCandidate(app.id, 'rejected')}
+                              disabled={updating === app.id}
+                              title="Reprovar"
+                            >
+                              <ThumbsDown className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                {activeCandidates.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
+                      Nenhum candidato nesta etapa
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
         <Droppable droppableId={`active-${activeStageId}`}>
           {(provided) => (
             <div
@@ -687,14 +877,6 @@ ${companyName}`;
                     <p className="text-xs text-muted-foreground mt-1 mb-4">
                       Arraste candidatos para esta etapa ou divulgue mais a vaga.
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/company/jobs/${jobId}`)}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Ver todos os candidatos
-                    </Button>
                   </CardContent>
                 </Card>
               ) : (
@@ -801,10 +983,12 @@ ${companyName}`;
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="flex-1 h-7 text-xs"
-                                onClick={() => navigate(`/company/jobs/${jobId}`)}
+                                className="h-7 px-2"
+                                onClick={(e) => { e.stopPropagation(); openNoteSheet(app); }}
+                                title="Adicionar nota"
+                                aria-label="Adicionar nota"
                               >
-                                <Eye className="h-3.5 w-3.5 mr-1" /> Ver
+                                <StickyNote className="h-3.5 w-3.5" />
                               </Button>
                               {getStageBucket(app) === 'interview' && (
                                 <Button
@@ -835,10 +1019,15 @@ ${companyName}`;
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                                onClick={() => moveCandidate(app.id, 'approved')}
+                                className="flex-1 h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                                onClick={() => {
+                                  const bucket = getStageBucket(app);
+                                  const next = NEXT_STAGE[bucket] || 'approved';
+                                  moveCandidate(app.id, next);
+                                }}
                                 disabled={updating === app.id}
-                                aria-label="Aprovar"
+                                title={NEXT_STAGE_LABEL[getStageBucket(app)] || 'Avançar'}
+                                aria-label={NEXT_STAGE_LABEL[getStageBucket(app)] || 'Avançar'}
                               >
                                 <ThumbsUp className="h-3.5 w-3.5" />
                               </Button>
@@ -864,6 +1053,7 @@ ${companyName}`;
             </div>
           )}
         </Droppable>
+        )}
       </div>
     </DragDropContext>
 
@@ -1176,6 +1366,34 @@ ${companyName}`;
               </Button>
             </div>
           )}
+        </div>
+      </SheetContent>
+    </Sheet>
+
+    <Sheet open={noteSheetOpen} onOpenChange={setNoteSheetOpen}>
+      <SheetContent className="w-full sm:max-w-md flex flex-col">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-amber-500" />
+            Nota interna
+          </SheetTitle>
+          <p className="text-xs text-muted-foreground">{noteApp?.candidate_name}</p>
+        </SheetHeader>
+        <div className="flex flex-col flex-1 mt-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Visível apenas para sua equipe.
+          </p>
+          <Textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Ex: Ligou às 14h, perfil forte mas sem disponibilidade imediata..."
+            className="flex-1 resize-none text-sm min-h-[180px]"
+          />
+          <Button onClick={saveNote} disabled={savingNote} className="w-full">
+            {savingNote
+              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
+              : 'Salvar nota'}
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
