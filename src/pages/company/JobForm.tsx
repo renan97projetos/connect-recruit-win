@@ -1262,6 +1262,39 @@ export default function JobForm() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              Destravar edição da vaga?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 pt-2">
+              <span className="block">
+                {activeApplicationsCount > 0 ? (
+                  <>
+                    Esta vaga tem <strong>{activeApplicationsCount} candidatura{activeApplicationsCount > 1 ? 's' : ''} ativa{activeApplicationsCount > 1 ? 's' : ''}</strong> — as alterações <strong>não retroagem</strong> para quem já aplicou. Deseja prosseguir para a alteração?
+                  </>
+                ) : (
+                  <>Deseja prosseguir para alterar todos os campos desta vaga publicada?</>
+                )}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setEditUnlocked(true);
+                setUnlockDialogOpen(false);
+              }}
+            >
+              Sim, prosseguir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CompanyLayout>
   );
 }
