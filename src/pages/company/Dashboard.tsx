@@ -27,7 +27,7 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Download, Search } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Download, Search, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -430,17 +430,32 @@ export default function CompanyDashboard() {
                       {format(new Date(job.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 text-xs text-primary hover:text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/company/jobs/${job.id}`);
-                        }}
-                      >
-                        Ver candidatos
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-primary hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/jobs/${job.id}`);
+                          }}
+                          title="Ver dados e descrição da vaga"
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          Ver vaga
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-primary hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/company/jobs/${job.id}`);
+                          }}
+                        >
+                          Ver candidatos
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
