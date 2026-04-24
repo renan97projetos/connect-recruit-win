@@ -996,7 +996,6 @@ export default function JobForm() {
 
             <JobScoreConfig value={scoreConfig} onChange={setScoreConfig} />
 
-            <ProFeatureGate featureName="Perguntas de Triagem">
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -1176,7 +1175,6 @@ export default function JobForm() {
                 )}
               </CardContent>
             </Card>
-            </ProFeatureGate>
 
             {/* Aprovação - apenas Pro */}
             {isPro && (
