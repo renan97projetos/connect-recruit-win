@@ -11,6 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -100,6 +109,12 @@ export default function JobPipeline() {
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState<CandidateStageId>('triagem');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [noteDialog, setNoteDialog] = useState<{ app: any | null; open: boolean; value: string; saving: boolean }>({
+    app: null,
+    open: false,
+    value: '',
+    saving: false,
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -198,25 +213,32 @@ export default function JobPipeline() {
     }).catch(console.error);
   };
 
-  const editNote = async (app: any) => {
+  const openNoteDialog = (app: any) => {
     const current = app.notes
       ? typeof app.notes === 'string'
         ? app.notes
         : (app.notes as any)?.text || ''
       : '';
-    const next = window.prompt(`Notas internas — ${app.candidate_name}`, current);
-    if (next === null) return;
+    setNoteDialog({ app, open: true, value: current, saving: false });
+  };
+
+  const saveNote = async () => {
+    if (!noteDialog.app) return;
+    setNoteDialog((prev) => ({ ...prev, saving: true }));
+    const next = noteDialog.value;
     const { error } = await supabase
       .from('applications')
       .update({ notes: { text: next } as any })
-      .eq('id', app.id);
+      .eq('id', noteDialog.app.id);
     if (error) {
+      setNoteDialog((prev) => ({ ...prev, saving: false }));
       toast({ title: 'Erro ao salvar nota', variant: 'destructive' });
       return;
     }
     setApplications((prev) =>
-      prev.map((a) => (a.id === app.id ? { ...a, notes: { text: next } } : a))
+      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: { text: next } } : a))
     );
+    setNoteDialog({ app: null, open: false, value: '', saving: false });
     toast({ title: 'Nota salva' });
   };
 
@@ -451,7 +473,7 @@ export default function JobPipeline() {
                                     ? 'text-amber-600 bg-amber-500/10 hover:bg-amber-500/20'
                                     : 'text-amber-600 hover:bg-amber-500/10'
                                 )}
-                                onClick={() => editNote(app)}
+                                onClick={() => openNoteDialog(app)}
                                 title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
                               >
                                 <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
@@ -538,6 +560,44 @@ export default function JobPipeline() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={noteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) setNoteDialog({ app: null, open: false, value: '', saving: false });
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notas internas</DialogTitle>
+            <DialogDescription>
+              {noteDialog.app?.candidate_name
+                ? `Anotações privadas sobre ${noteDialog.app.candidate_name}. Visível apenas para a equipe.`
+                : 'Anotações privadas visíveis apenas para a equipe.'}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={noteDialog.value}
+            onChange={(e) => setNoteDialog((prev) => ({ ...prev, value: e.target.value }))}
+            placeholder="Escreva uma observação sobre o candidato..."
+            rows={6}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setNoteDialog({ app: null, open: false, value: '', saving: false })}
+              disabled={noteDialog.saving}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={saveNote} disabled={noteDialog.saving}>
+              {noteDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CompanyLayout>
   );
 }
