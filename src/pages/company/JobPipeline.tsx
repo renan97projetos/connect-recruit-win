@@ -56,6 +56,8 @@ import {
   CheckCircle2,
   ClipboardList,
   Send,
+  MoveHorizontal,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -207,6 +209,21 @@ export default function JobPipeline() {
     feedbackScore: 0,
   });
   const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
+  const [moveDialog, setMoveDialog] = useState<{
+    open: boolean;
+    app: any | null;
+    targetStage: CandidateStageId | '';
+    reason: string;
+    notify: boolean;
+    saving: boolean;
+  }>({
+    open: false,
+    app: null,
+    targetStage: '',
+    reason: '',
+    notify: true,
+    saving: false,
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -319,6 +336,78 @@ export default function JobPipeline() {
         newStatus: 'rejected',
       },
     }).catch(console.error);
+  };
+
+  const openMoveDialog = (app: any) => {
+    setMoveDialog({
+      open: true,
+      app,
+      targetStage: '',
+      reason: '',
+      notify: true,
+      saving: false,
+    });
+  };
+
+  const confirmMove = async () => {
+    const { app, targetStage, reason, notify } = moveDialog;
+    if (!app || !targetStage) return;
+    const current = getCandidateStage(app);
+    if (targetStage === current) {
+      toast({ title: 'O candidato já está nesta etapa', variant: 'destructive' });
+      return;
+    }
+
+    setMoveDialog((prev) => ({ ...prev, saving: true }));
+
+    const ok = await updateApplication(app.id, {
+      current_stage: targetStage,
+      status: STATUS_FOR_STAGE[targetStage as CandidateStageId],
+    });
+
+    if (!ok) {
+      setMoveDialog((prev) => ({ ...prev, saving: false }));
+      return;
+    }
+
+    const targetLabel =
+      CANDIDATE_STAGES.find((s) => s.id === targetStage)?.label || targetStage;
+
+    if (notify) {
+      const emailStatus = EMAIL_STATUS_FOR_STAGE[targetStage as CandidateStageId];
+      if (emailStatus) {
+        const reasonBlock = reason.trim()
+          ? `\n\nObservação da equipe:\n${reason.trim()}`
+          : '';
+        supabase.functions
+          .invoke('send-candidate-status-email', {
+            body: {
+              candidateName: app.candidate_name,
+              candidateEmail: app.candidate_email,
+              jobTitle,
+              companyName: companyName || 'Sinapse RH',
+              newStatus: emailStatus,
+              customSubject: `Atualização do processo seletivo — ${jobTitle}`,
+              customBody: `Olá ${app.candidate_name},\n\nSua candidatura foi movida para a etapa "${targetLabel}".${reasonBlock}\n\nQualquer dúvida, entre em contato.\n\nEquipe ${companyName || 'Sinapse RH'}`,
+            },
+          })
+          .catch(console.error);
+      }
+    }
+
+    setMoveDialog({
+      open: false,
+      app: null,
+      targetStage: '',
+      reason: '',
+      notify: true,
+      saving: false,
+    });
+
+    toast({
+      title: `${app.candidate_name} movido para ${targetLabel}`,
+      description: notify ? 'E-mail de notificação enviado.' : 'Sem notificação ao candidato.',
+    });
   };
 
   const openInterviewSheet = async (app: any, tab: 'agendar' | 'feedback' = 'agendar') => {
@@ -699,6 +788,16 @@ export default function JobPipeline() {
                           <Button
                             size="sm"
                             variant="ghost"
+                            className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-500/10"
+                            onClick={() => openMoveDialog(app)}
+                            disabled={actionLoading === app.id}
+                            title="Mover para outra etapa"
+                          >
+                            <MoveHorizontal className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                             onClick={() => rejectCandidate(app)}
                             disabled={actionLoading === app.id}
@@ -982,6 +1081,16 @@ export default function JobPipeline() {
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-8 px-2 text-indigo-600 hover:bg-indigo-500/10"
+                          onClick={() => openMoveDialog(app)}
+                          disabled={actionLoading === app.id}
+                          title="Mover para outra etapa"
+                        >
+                          <MoveHorizontal className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => rejectCandidate(app)}
                           disabled={actionLoading === app.id}
@@ -1044,34 +1153,50 @@ export default function JobPipeline() {
                       </span>
                     )}
                   </div>
-                  {!isTerminal && (
-                    <div
-                      className="flex items-center gap-2 pt-3 border-t border-border"
-                      onClick={(e) => e.stopPropagation()}
+                  <div
+                    className="flex items-center gap-2 pt-3 border-t border-border"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {!isTerminal && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 h-8 text-xs gap-1"
+                          onClick={() => moveToNextStage(app)}
+                          disabled={actionLoading === app.id || !next}
+                          title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                          {next ? next.label : 'Final'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => rejectCandidate(app)}
+                          disabled={actionLoading === app.id}
+                          title="Reprovar (envia e-mail)"
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        'h-8 px-2 text-indigo-600 hover:bg-indigo-500/10',
+                        isTerminal && 'flex-1 text-xs gap-1'
+                      )}
+                      onClick={() => openMoveDialog(app)}
+                      disabled={actionLoading === app.id}
+                      title="Mover para outra etapa"
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 h-8 text-xs gap-1"
-                        onClick={() => moveToNextStage(app)}
-                        disabled={actionLoading === app.id || !next}
-                        title={next ? `Mover para ${next.label}` : 'Etapa final'}
-                      >
-                        <ArrowRight className="h-3 w-3" />
-                        {next ? next.label : 'Final'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => rejectCandidate(app)}
-                        disabled={actionLoading === app.id}
-                        title="Reprovar (envia e-mail)"
-                      >
-                        <ThumbsDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
+                      <MoveHorizontal className="h-3 w-3" />
+                      {isTerminal && 'Mover para outra etapa'}
+                    </Button>
+                  </div>
                 </div>
               );
             })}
@@ -1118,6 +1243,152 @@ export default function JobPipeline() {
             <Button onClick={saveNote} disabled={noteDialog.saving}>
               {noteDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Mover entre etapas */}
+      <Dialog
+        open={moveDialog.open}
+        onOpenChange={(open) => {
+          if (!open && !moveDialog.saving)
+            setMoveDialog({
+              open: false,
+              app: null,
+              targetStage: '',
+              reason: '',
+              notify: true,
+              saving: false,
+            });
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MoveHorizontal className="h-5 w-5 text-indigo-600" />
+              Mover candidato
+            </DialogTitle>
+            <DialogDescription>
+              {moveDialog.app
+                ? `${moveDialog.app.candidate_name} está atualmente em ${
+                    CANDIDATE_STAGES.find((s) => s.id === getCandidateStage(moveDialog.app))?.label
+                  }.`
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Mover para qual etapa?</Label>
+              <Select
+                value={moveDialog.targetStage}
+                onValueChange={(v) =>
+                  setMoveDialog((prev) => ({ ...prev, targetStage: v as CandidateStageId }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a etapa de destino" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CANDIDATE_STAGES.filter(
+                    (s) => !moveDialog.app || s.id !== getCandidateStage(moveDialog.app)
+                  ).map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {moveDialog.targetStage &&
+              moveDialog.app &&
+              (() => {
+                const currentIdx = PROGRESSION.indexOf(getCandidateStage(moveDialog.app));
+                const targetIdx = PROGRESSION.indexOf(moveDialog.targetStage as CandidateStageId);
+                const isBackward =
+                  currentIdx !== -1 &&
+                  targetIdx !== -1 &&
+                  targetIdx < currentIdx;
+                const isReject = moveDialog.targetStage === 'reprovado';
+                const isApprove = moveDialog.targetStage === 'aprovado';
+                let warning = '';
+                if (isReject) warning = 'Esta ação reprova o candidato no processo seletivo.';
+                else if (isApprove) warning = 'Esta ação marca o candidato como aprovado.';
+                else if (isBackward) warning = 'Você está retornando o candidato para uma etapa anterior. Tem certeza?';
+                if (!warning) return null;
+                return (
+                  <div className="flex gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs leading-relaxed">{warning}</p>
+                  </div>
+                );
+              })()}
+
+            <div className="space-y-2">
+              <Label htmlFor="moveReason">
+                Motivo / observação{' '}
+                <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Textarea
+                id="moveReason"
+                rows={3}
+                placeholder="Descreva o motivo da mudança de etapa..."
+                value={moveDialog.reason}
+                onChange={(e) =>
+                  setMoveDialog((prev) => ({ ...prev, reason: e.target.value }))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Se preenchido e a notificação estiver ativa, o motivo será incluído no e-mail ao candidato.
+              </p>
+            </div>
+
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={moveDialog.notify}
+                onChange={(e) =>
+                  setMoveDialog((prev) => ({ ...prev, notify: e.target.checked }))
+                }
+              />
+              <span>
+                Notificar o candidato por e-mail
+                {moveDialog.targetStage &&
+                  !EMAIL_STATUS_FOR_STAGE[moveDialog.targetStage as CandidateStageId] && (
+                    <span className="block text-xs text-muted-foreground">
+                      (esta etapa não envia e-mail por padrão)
+                    </span>
+                  )}
+              </span>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setMoveDialog({
+                  open: false,
+                  app: null,
+                  targetStage: '',
+                  reason: '',
+                  notify: true,
+                  saving: false,
+                })
+              }
+              disabled={moveDialog.saving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmMove}
+              disabled={moveDialog.saving || !moveDialog.targetStage}
+            >
+              {moveDialog.saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar movimentação
             </Button>
           </DialogFooter>
         </DialogContent>
