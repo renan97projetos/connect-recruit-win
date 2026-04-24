@@ -321,6 +321,172 @@ export default function JobPipeline() {
     }).catch(console.error);
   };
 
+  const openInterviewSheet = async (app: any, tab: 'agendar' | 'feedback' = 'agendar') => {
+    setInterviewSheet((prev) => ({
+      ...prev,
+      open: true,
+      app,
+      tab,
+      existing: null,
+      saving: false,
+      scheduledAt: '',
+      format: 'video',
+      meetingLink: '',
+      location: '',
+      interviewer: '',
+      feedbackText: '',
+      feedbackScore: 0,
+    }));
+
+    const { data } = await supabase
+      .from('interviews')
+      .select('*')
+      .eq('application_id', app.id)
+      .maybeSingle();
+
+    if (data) {
+      setInterviewSheet((prev) => ({
+        ...prev,
+        existing: data,
+        scheduledAt: data.scheduled_at
+          ? new Date(data.scheduled_at).toISOString().slice(0, 16)
+          : '',
+        format: data.format || 'video',
+        meetingLink: data.meeting_link || '',
+        location: data.location || '',
+        interviewer: data.interviewer_name || '',
+        feedbackText: data.feedback || '',
+        feedbackScore: data.feedback_score || 0,
+        tab: data.status === 'done' ? 'feedback' : tab,
+      }));
+    }
+  };
+
+  const saveInterview = async () => {
+    const {
+      app,
+      existing,
+      scheduledAt,
+      format,
+      meetingLink,
+      location,
+      interviewer,
+    } = interviewSheet;
+    if (!app || !scheduledAt) return;
+
+    setInterviewSheet((prev) => ({ ...prev, saving: true }));
+
+    const userRes = await supabase.auth.getUser();
+    const payload: any = {
+      application_id: app.id,
+      job_id: id,
+      company_id: userRes.data.user?.id,
+      scheduled_at: new Date(scheduledAt).toISOString(),
+      format,
+      meeting_link: meetingLink || null,
+      location: location || null,
+      interviewer_name: interviewer || null,
+      status: 'scheduled',
+      updated_at: new Date().toISOString(),
+    };
+
+    let saved: any = null;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('interviews')
+        .update(payload)
+        .eq('id', existing.id)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setInterviewSheet((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar entrevista', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    } else {
+      const { data, error } = await supabase
+        .from('interviews')
+        .insert(payload)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setInterviewSheet((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar entrevista', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    }
+    if (saved) {
+      setInterviewsByApp((prev) => ({ ...prev, [app.id]: saved }));
+    }
+
+    const dateFormatted = new Date(scheduledAt).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const formatLabels: Record<string, string> = {
+      video: 'Videochamada',
+      presencial: 'Presencial',
+      telefone: 'Ligação',
+    };
+
+    supabase.functions
+      .invoke('send-candidate-status-email', {
+        body: {
+          candidateName: app.candidate_name,
+          candidateEmail: app.candidate_email,
+          jobTitle,
+          companyName: companyName || 'Sinapse RH',
+          newStatus: 'interview',
+          customSubject: `Entrevista agendada — ${jobTitle}`,
+          customBody: `Olá ${app.candidate_name},\n\nSua entrevista foi agendada:\n\n📅 ${dateFormatted}\n📋 ${formatLabels[format] || format}${meetingLink ? `\n🔗 ${meetingLink}` : ''}${location ? `\n📍 ${location}` : ''}${interviewer ? `\n👤 ${interviewer}` : ''}\n\nQualquer dúvida, entre em contato.\n\nEquipe ${companyName || 'Sinapse RH'}`,
+        },
+      })
+      .catch(console.error);
+
+    setInterviewSheet((prev) => ({ ...prev, saving: false, open: false }));
+    toast({
+      title: 'Entrevista agendada!',
+      description: `E-mail enviado para ${app.candidate_name}.`,
+    });
+  };
+
+  const saveFeedback = async () => {
+    const { existing, app, feedbackText, feedbackScore } = interviewSheet;
+    if (!existing || !feedbackText.trim()) return;
+
+    setInterviewSheet((prev) => ({ ...prev, saving: true }));
+
+    const { data, error } = await supabase
+      .from('interviews')
+      .update({
+        feedback: feedbackText,
+        feedback_score: feedbackScore || null,
+        status: 'done',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      setInterviewSheet((prev) => ({ ...prev, saving: false }));
+      toast({ title: 'Erro ao registrar feedback', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    if (data && app) {
+      setInterviewsByApp((prev) => ({ ...prev, [app.id]: data }));
+    }
+
+    setInterviewSheet((prev) => ({ ...prev, saving: false, open: false }));
+    toast({ title: 'Feedback registrado!' });
+  };
+
   const openNoteDialog = (app: any) => {
     const current = app.notes
       ? typeof app.notes === 'string'
