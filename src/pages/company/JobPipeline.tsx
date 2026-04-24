@@ -200,6 +200,39 @@ export default function JobPipeline() {
     }
   };
 
+  const handleUpdateStatus = async (
+    appId: string,
+    newStatus: 'approved' | 'rejected' | 'interview',
+  ) => {
+    const { error } = await supabase
+      .from('applications')
+      .update({ status: newStatus })
+      .eq('id', appId);
+
+    if (error) {
+      toast.error('Erro ao atualizar status');
+      return;
+    }
+
+    setApplications((prev) =>
+      prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)),
+    );
+
+    const messages: Record<string, string> = {
+      approved: 'Candidato aprovado',
+      rejected: 'Candidato reprovado',
+      interview: 'Candidato movido para entrevista',
+    };
+    toast.success(messages[newStatus]);
+  };
+
+  const statusLabels: Record<string, { label: string; className: string }> = {
+    pending: { label: 'pendente', className: '' },
+    approved: { label: 'aprovado', className: 'bg-success/10 text-success border-success/20' },
+    rejected: { label: 'reprovado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
+    interview: { label: 'entrevista', className: 'bg-primary/10 text-primary border-primary/20' },
+  };
+
   return (
     <CompanyLayout>
       <div className="mb-6">
