@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -200,6 +200,39 @@ export default function JobPipeline() {
     }
   };
 
+  const handleUpdateStatus = async (
+    appId: string,
+    newStatus: 'approved' | 'rejected' | 'interview',
+  ) => {
+    const { error } = await supabase
+      .from('applications')
+      .update({ status: newStatus })
+      .eq('id', appId);
+
+    if (error) {
+      toast.error('Erro ao atualizar status');
+      return;
+    }
+
+    setApplications((prev) =>
+      prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)),
+    );
+
+    const messages: Record<string, string> = {
+      approved: 'Candidato aprovado',
+      rejected: 'Candidato reprovado',
+      interview: 'Candidato movido para entrevista',
+    };
+    toast.success(messages[newStatus]);
+  };
+
+  const statusLabels: Record<string, { label: string; className: string }> = {
+    pending: { label: 'pendente', className: '' },
+    approved: { label: 'aprovado', className: 'bg-success/10 text-success border-success/20' },
+    rejected: { label: 'reprovado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
+    interview: { label: 'entrevista', className: 'bg-primary/10 text-primary border-primary/20' },
+  };
+
   return (
     <CompanyLayout>
       <div className="mb-6">
@@ -282,6 +315,57 @@ export default function JobPipeline() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Ações de triagem: Aprovar / Reprovar / Mover para entrevista */}
+                    {app.status === 'pending' && (
+                      <div
+                        className="flex items-center gap-1 flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-success/40 text-success hover:bg-success/10 hover:border-success"
+                              onClick={() => handleUpdateStatus(app.id, 'approved')}
+                              aria-label="Aprovar candidato"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Aprovar</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-destructive/40 text-destructive hover:bg-destructive/10 hover:border-destructive"
+                              onClick={() => handleUpdateStatus(app.id, 'rejected')}
+                              aria-label="Reprovar candidato"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Reprovar</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary"
+                              onClick={() => handleUpdateStatus(app.id, 'interview')}
+                              aria-label="Mover para entrevista"
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Mover para entrevista</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    )}
 
                     {/* Ações: WhatsApp e Notas */}
                     <div
@@ -422,8 +506,8 @@ export default function JobPipeline() {
                       </TooltipContent>
                     </Tooltip>
 
-                    <Badge variant="outline" className="capitalize">
-                      {app.status === 'pending' ? 'pendente' : app.status}
+                    <Badge variant="outline" className={`capitalize ${statusLabels[app.status]?.className || ''}`}>
+                      {statusLabels[app.status]?.label || app.status}
                     </Badge>
                   </div>
                 </Card>
