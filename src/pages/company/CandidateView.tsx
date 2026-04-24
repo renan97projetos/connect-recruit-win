@@ -210,7 +210,7 @@ export default function CandidateView() {
                       <p className="text-sm text-muted-foreground">
                         {group.totalQuestions === 0
                           ? 'Esta vaga não possui perguntas de triagem configuradas.'
-                          : 'O candidato se candidatou sem responder às perguntas de triagem desta vaga.'}
+                          : 'Esta candidatura foi adicionada manualmente (sem passar pelo formulário público), por isso não há respostas de triagem registradas. A pontuação do candidato foi calculada com base no perfil (skills, experiência, formação e localização).'}
                       </p>
                     ) : (
                       group.items.map((item) => (
