@@ -1531,17 +1531,25 @@ export default function JobPipeline() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-500/10"
+                        className={cn(
+                          'h-8 w-8 p-0 relative',
+                          hasInterview
+                            ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
+                            : 'text-blue-600 hover:bg-blue-500/10'
+                        )}
                         onClick={() => openInterviewSheet(app, 'agendar')}
-                        title={hasInterview ? 'Reagendar entrevista' : 'Agendar entrevista'}
+                        title={hasInterview ? 'Entrevista agendada — clique para reagendar' : 'Agendar entrevista'}
                       >
                         <Calendar className="h-4 w-4" />
+                        {hasInterview && (
+                          <CheckCircle2 className="absolute -top-1 -right-1 h-3.5 w-3.5 text-green-600 bg-background rounded-full" />
+                        )}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         className={cn(
-                          'h-8 w-8 p-0',
+                          'h-8 w-8 p-0 relative',
                           interview?.feedback
                             ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
                             : 'text-purple-600 hover:bg-purple-500/10',
@@ -1549,9 +1557,12 @@ export default function JobPipeline() {
                         )}
                         onClick={() => openInterviewSheet(app, 'feedback')}
                         disabled={!hasInterview}
-                        title={interview?.feedback ? 'Editar feedback' : 'Registrar feedback'}
+                        title={interview?.feedback ? 'Feedback registrado — clique para editar' : 'Registrar feedback'}
                       >
                         <ClipboardList className="h-4 w-4" />
+                        {interview?.feedback && (
+                          <CheckCircle2 className="absolute -top-1 -right-1 h-3.5 w-3.5 text-green-600 bg-background rounded-full" />
+                        )}
                       </Button>
                       {profile?.phone ? (() => {
                         const formatLabelsWa: Record<string, string> = {
@@ -1575,20 +1586,32 @@ export default function JobPipeline() {
                           if (interview.interviewer_name) waMessage += `\n- Entrevistador: ${interview.interviewer_name}`;
                         }
                         waMessage += `\n\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
+                        const waSent = !!waSentByApp[app.id];
                         return (
                           <a
                             href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waMessage)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markWaSent(app.id);
+                            }}
                           >
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-[#25D366] hover:bg-[#25D366]/10"
-                              title="WhatsApp"
+                              className={cn(
+                                'h-8 w-8 p-0 relative',
+                                waSent
+                                  ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
+                                  : 'text-[#25D366] hover:bg-[#25D366]/10'
+                              )}
+                              title={waSent ? 'WhatsApp já enviado — clique para reenviar' : 'WhatsApp'}
                             >
                               <MessageCircle className="h-4 w-4" />
+                              {waSent && (
+                                <CheckCircle2 className="absolute -top-1 -right-1 h-3.5 w-3.5 text-green-600 bg-background rounded-full" />
+                              )}
                             </Button>
                           </a>
                         );
