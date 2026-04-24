@@ -27,7 +27,7 @@ import { ptBR } from 'date-fns/locale';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompanyRole } from '@/hooks/useCompanyRole';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, Plus, Loader2, Download, Search } from 'lucide-react';
+import { BarChart3, Plus, Loader2, Download, Search, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
