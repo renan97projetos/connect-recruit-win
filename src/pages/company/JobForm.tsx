@@ -234,10 +234,14 @@ export default function JobForm() {
           .eq('job_id', id)
           .order('order_position');
         if (qs && qs.length > 0) {
+          const VALID_TYPES: ScreeningQuestionType[] = [
+            'text', 'text_long', 'yes_no', 'single_choice', 'multiple_choice',
+            'scale_1_5', 'scale_1_10', 'numeric', 'date', 'email', 'url',
+          ];
           setQuestions(
             qs.map((q: any) => ({
               question: q.question,
-              question_type: (['text', 'yes_no', 'multiple_choice', 'scale_1_5'].includes(q.question_type)
+              question_type: (VALID_TYPES.includes(q.question_type)
                 ? q.question_type
                 : 'text') as ScreeningQuestion['question_type'],
               required: !!q.required,
@@ -359,7 +363,7 @@ export default function JobForm() {
               question_type: q.question_type,
               required: q.required,
               order_position: i,
-              options: q.question_type === 'multiple_choice' && q.options ? q.options.filter(o => o.trim()) : null,
+              options: QUESTION_TYPES_WITH_OPTIONS.includes(q.question_type) && q.options ? q.options.filter(o => o.trim()) : null,
             })),
           );
         }
