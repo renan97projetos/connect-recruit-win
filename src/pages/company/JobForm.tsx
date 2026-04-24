@@ -386,6 +386,8 @@ export default function JobForm() {
             : 'Você pode publicá-la depois quando quiser.',
       });
       refreshPlanUsage();
+      // Após atualizar uma vaga já publicada, relock automático
+      setEditUnlocked(false);
       if (mode === 'draft') {
         // Permanece na vaga após salvar rascunho
         if (!isEditing && jobId) {
@@ -481,17 +483,8 @@ export default function JobForm() {
             <CardContent className="flex items-center gap-3 p-3">
               <Unlock className="h-4 w-4 shrink-0 text-blue-700" />
               <p className="text-xs text-blue-900 flex-1">
-                Edição completa habilitada. As alterações <strong>não retroagem</strong> para quem já aplicou.
+                Edição completa habilitada. As alterações <strong>não retroagem</strong> para quem já aplicou. A vaga será bloqueada novamente após atualizar.
               </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-blue-800 hover:bg-blue-100"
-                onClick={() => setEditUnlocked(false)}
-              >
-                Bloquear novamente
-              </Button>
             </CardContent>
           </Card>
         )}
@@ -1207,7 +1200,11 @@ export default function JobForm() {
                 disabled={loading !== null}
               >
                 <Send className="mr-2 h-4 w-4" />
-                {loading === 'publish' ? 'Publicando...' : isEditing ? 'Atualizar e publicar' : 'Publicar vaga'}
+                {loading === 'publish'
+                  ? (isPublishedJob ? 'Atualizando...' : 'Publicando...')
+                  : isPublishedJob
+                    ? 'Atualizar'
+                    : isEditing ? 'Atualizar e publicar' : 'Publicar vaga'}
               </Button>
             </div>
           </div>
