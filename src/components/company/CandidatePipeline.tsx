@@ -721,6 +721,145 @@ ${companyName}`;
           </div>
         </div>
 
+        {activeStageId === 'screening' ? (
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-semibold">Ranqueados por score</span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {activeCandidates.length} {activeCandidates.length === 1 ? 'candidato' : 'candidatos'}
+              </span>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead>Candidato</TableHead>
+                  <TableHead className="w-20">Score</TableHead>
+                  <TableHead className="w-28">Origem</TableHead>
+                  <TableHead className="w-28">Entrada</TableHead>
+                  <TableHead className="w-40 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...activeCandidates]
+                  .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                  .map((app, idx) => {
+                    const profile = profilesById[app.candidate_id];
+                    const score = app.score ?? 0;
+                    return (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-bold text-muted-foreground">
+                          {idx + 1}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={profile?.avatar_url || undefined} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                                {initials(app.candidate_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold truncate leading-tight">
+                                {app.candidate_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {app.candidate_email}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 rounded-md text-sm font-bold',
+                              score >= 70
+                                ? 'bg-green-100 text-green-700'
+                                : score >= 40
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-red-100 text-red-600'
+                            )}
+                          >
+                            {score}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'text-[10px] px-1.5 py-0.5 rounded font-medium',
+                              SOURCE_LABELS[app.source || '']?.color || 'bg-gray-100 text-gray-500'
+                            )}
+                          >
+                            {SOURCE_LABELS[app.source || '']?.label || 'Board'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {format(new Date(app.applied_at), 'dd/MM/yyyy', { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            {profile?.phone && (
+                              <a
+                                href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                  `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-600 hover:bg-green-50" title="WhatsApp">
+                                  <Phone className="h-3.5 w-3.5" />
+                                </Button>
+                              </a>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2"
+                              onClick={(e) => { e.stopPropagation(); openNoteSheet(app); }}
+                              title="Nota"
+                            >
+                              <StickyNote className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                              onClick={() => moveCandidate(app.id, 'interview')}
+                              disabled={updating === app.id}
+                              title="Mover para Entrevista"
+                            >
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-destructive hover:bg-destructive/10"
+                              onClick={() => moveCandidate(app.id, 'rejected')}
+                              disabled={updating === app.id}
+                              title="Reprovar"
+                            >
+                              <ThumbsDown className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                {activeCandidates.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
+                      Nenhum candidato nesta etapa
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
         <Droppable droppableId={`active-${activeStageId}`}>
           {(provided) => (
             <div
@@ -738,14 +877,6 @@ ${companyName}`;
                     <p className="text-xs text-muted-foreground mt-1 mb-4">
                       Arraste candidatos para esta etapa ou divulgue mais a vaga.
                     </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/company/jobs/${jobId}`)}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Ver todos os candidatos
-                    </Button>
                   </CardContent>
                 </Card>
               ) : (
@@ -922,6 +1053,7 @@ ${companyName}`;
             </div>
           )}
         </Droppable>
+        )}
       </div>
     </DragDropContext>
 
