@@ -37,8 +37,8 @@ const STATUS_MESSAGES: Record<StatusKey, { subject: string; body: string }> = {
     body: "Temos ótimas notícias! Você foi aprovado(a) no processo seletivo. Nossa equipe entrará em contato em breve com os próximos passos.",
   },
   rejected: {
-    subject: "Atualização sobre sua candidatura",
-    body: "Agradecemos seu interesse e o tempo dedicado ao processo seletivo. Após análise cuidadosa, não seguiremos com seu perfil neste momento. Guardamos seu currículo para oportunidades futuras.",
+    subject: "Obrigado pela sua candidatura",
+    body: "Agradecemos muito o seu interesse em fazer parte da {{empresa_nome}} e o tempo que dedicou ao nosso processo seletivo para a vaga de {{vaga_titulo}}.\n\nApós uma análise cuidadosa do seu perfil, optamos por seguir com outros candidatos cujas experiências estão mais alinhadas ao que buscamos neste momento.\n\nEssa decisão não diminui em nada o seu valor profissional. Guardamos o seu perfil e, caso surja uma oportunidade que combine com a sua trajetória, entraremos em contato.\n\nDesejamos muito sucesso na sua carreira.\n\nAtt,\nEquipe de Recrutamento SinapseRH",
   },
 };
 
@@ -74,8 +74,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const subject = (customSubject && customSubject.trim()) ? customSubject : message.subject;
-    const body = (customBody && customBody.trim()) ? customBody : message.body;
+    const rawSubject = (customSubject && customSubject.trim()) ? customSubject : message.subject;
+    const rawBody = (customBody && customBody.trim()) ? customBody : message.body;
+
+    const replaceVars = (str: string) =>
+      str
+        .replace(/\{\{candidato_nome\}\}/g, candidateName)
+        .replace(/\{\{vaga_titulo\}\}/g, jobTitle)
+        .replace(/\{\{empresa_nome\}\}/g, companyName);
+
+    const subject = replaceVars(rawSubject);
+    const body = replaceVars(rawBody);
+    const bodyHtml = body
+      .split(/\n\n+/)
+      .map((p) => `<p style="font-size:15px;color:#444;margin:0 0 14px;">${p.replace(/\n/g, "<br/>")}</p>`)
+      .join("");
 
     const feedbackHtml = feedback
       ? `<div style="background:#fff7e6;border-left:4px solid #f59e0b;padding:12px 16px;margin:16px 0;border-radius:4px;">
@@ -97,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div style="padding:30px;">
               <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Olá, ${candidateName}</h2>
-              <p style="font-size:15px;color:#444;">${body}</p>
+              ${bodyHtml}
               ${feedbackHtml}
               <div style="background:#f9f9f9;padding:16px;border-radius:6px;margin:20px 0;">
                 <p style="margin:4px 0;font-size:14px;"><strong>Vaga:</strong> ${jobTitle}</p>
