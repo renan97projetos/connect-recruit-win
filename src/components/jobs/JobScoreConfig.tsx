@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Plus, X, Target, Info } from 'lucide-react';
+import { Plus, X, Target, Info, Wand2, MessageSquare } from 'lucide-react';
 
 export type ScoreWeights = {
   skills: number;
@@ -26,14 +26,33 @@ export type ScoreConfig = {
   score_weights: ScoreWeights;
 };
 
+export type CustomScoredQuestion = {
+  /** índice da pergunta na lista do JobForm (para callback) */
+  index: number;
+  question: string;
+  weight: number;
+};
+
 interface Props {
   value: ScoreConfig;
   onChange: (config: ScoreConfig) => void;
+  /** Perguntas customizadas marcadas como "Contar no score" */
+  customScoredQuestions?: CustomScoredQuestion[];
+  /** Atualiza o peso de uma pergunta customizada (índice na lista original) */
+  onCustomWeightChange?: (index: number, weight: number) => void;
+  /** Limite máximo de perguntas customizadas pontuáveis */
+  maxCustomScored?: number;
 }
 
 const DEFAULT_WEIGHTS: ScoreWeights = { skills: 40, experience: 30, education: 20, location: 10 };
 
-export function JobScoreConfig({ value, onChange }: Props) {
+export function JobScoreConfig({
+  value,
+  onChange,
+  customScoredQuestions = [],
+  onCustomWeightChange,
+  maxCustomScored = 5,
+}: Props) {
   const [skillInput, setSkillInput] = useState('');
   const [weights, setWeights] = useState<ScoreWeights>(value.score_weights || DEFAULT_WEIGHTS);
 
@@ -55,7 +74,9 @@ export function JobScoreConfig({ value, onChange }: Props) {
     update({ required_skills: value.required_skills.filter((x) => x !== s) });
   };
 
-  const totalWeight = weights.skills + weights.experience + weights.education + weights.location;
+  const customTotal = customScoredQuestions.reduce((acc, q) => acc + (q.weight || 0), 0);
+  const standardTotal = weights.skills + weights.experience + weights.education + weights.location;
+  const totalWeight = standardTotal + customTotal;
 
   const updateWeight = (key: keyof ScoreWeights, val: number) => {
     const next = { ...weights, [key]: val };
@@ -67,6 +88,47 @@ export function JobScoreConfig({ value, onChange }: Props) {
     setWeights(DEFAULT_WEIGHTS);
     update({ score_weights: DEFAULT_WEIGHTS });
   };
+
+  /** Redistribui proporcionalmente para o total dar exatamente 100 */
+  const redistributeTo100 = () => {
+    if (totalWeight <= 0) return;
+    const factor = 100 / totalWeight;
+
+    // Escala padrão (arredondando)
+    const newStandard: ScoreWeights = {
+      skills: Math.round(weights.skills * factor),
+      experience: Math.round(weights.experience * factor),
+      education: Math.round(weights.education * factor),
+      location: Math.round(weights.location * factor),
+    };
+
+    // Escala perguntas customizadas
+    const newCustomWeights = customScoredQuestions.map((q) => Math.round(q.weight * factor));
+
+    // Ajusta o resíduo de arredondamento na primeira categoria padrão com peso > 0
+    const sumAfter =
+      newStandard.skills + newStandard.experience + newStandard.education + newStandard.location +
+      newCustomWeights.reduce((a, b) => a + b, 0);
+    const diff = 100 - sumAfter;
+    if (diff !== 0) {
+      const keys: (keyof ScoreWeights)[] = ['skills', 'experience', 'education', 'location'];
+      const target = keys.find((k) => newStandard[k] + diff >= 0) || 'skills';
+      newStandard[target] = newStandard[target] + diff;
+    }
+
+    setWeights(newStandard);
+    update({ score_weights: newStandard });
+
+    // Aplica nas perguntas customizadas
+    if (onCustomWeightChange) {
+      customScoredQuestions.forEach((q, i) => {
+        const w = Math.max(0, newCustomWeights[i]);
+        if (w !== q.weight) onCustomWeightChange(q.index, w);
+      });
+    }
+  };
+
+  const reachedLimit = customScoredQuestions.length >= maxCustomScored;
 
   return (
     <Card>
@@ -198,16 +260,27 @@ export function JobScoreConfig({ value, onChange }: Props) {
 
         {/* Pesos */}
         <div className="space-y-3 rounded-md border bg-muted/30 p-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
               <Label className="text-sm font-semibold">Pesos das categorias</Label>
               <p className="text-xs text-muted-foreground">
-                Total: <span className={totalWeight === 100 ? 'text-foreground font-semibold' : 'text-destructive font-semibold'}>{totalWeight}/100</span>
+                Total:{' '}
+                <span className={totalWeight === 100 ? 'text-foreground font-semibold' : 'text-destructive font-semibold'}>
+                  {totalWeight}/100
+                </span>
               </p>
             </div>
-            <Button type="button" variant="ghost" size="sm" onClick={resetWeights}>
-              Padrão
-            </Button>
+            <div className="flex gap-1.5">
+              {totalWeight !== 100 && (
+                <Button type="button" variant="outline" size="sm" onClick={redistributeTo100} className="gap-1.5">
+                  <Wand2 className="h-3.5 w-3.5" />
+                  Redistribuir para 100
+                </Button>
+              )}
+              <Button type="button" variant="ghost" size="sm" onClick={resetWeights}>
+                Padrão
+              </Button>
+            </div>
           </div>
 
           {(['skills', 'experience', 'education', 'location'] as const).map((key) => {
@@ -234,10 +307,52 @@ export function JobScoreConfig({ value, onChange }: Props) {
             );
           })}
 
+          {/* Perguntas customizadas pontuáveis */}
+          {customScoredQuestions.length > 0 && (
+            <div className="space-y-2 pt-2 mt-2 border-t border-border/60">
+              <div className="flex items-center gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                <Label className="text-xs font-semibold text-foreground">
+                  Perguntas customizadas ({customScoredQuestions.length}/{maxCustomScored})
+                </Label>
+              </div>
+              {customScoredQuestions.map((q) => (
+                <div key={q.index} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs gap-2">
+                    <span className="text-muted-foreground truncate" title={q.question}>
+                      {q.question || `Pergunta ${q.index + 1}`}
+                    </span>
+                    <span className="font-medium tabular-nums whitespace-nowrap">{q.weight} pts</span>
+                  </div>
+                  <Slider
+                    value={[q.weight]}
+                    min={1}
+                    max={100}
+                    step={1}
+                    onValueChange={(v) => onCustomWeightChange?.(q.index, v[0])}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           {totalWeight !== 100 && (
             <div className="flex items-start gap-2 rounded border border-warning/30 bg-warning/10 p-2 text-xs text-warning-foreground">
               <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-              <span>Os pesos somam {totalWeight}. Recomendamos manter em 100 para o score ficar sempre entre 0–100.</span>
+              <span>
+                Os pesos somam <strong>{totalWeight}</strong>. O total precisa ser <strong>100</strong> para o score
+                ficar entre 0–100. Use <strong>Redistribuir para 100</strong> para ajustar automaticamente.
+              </span>
+            </div>
+          )}
+
+          {reachedLimit && (
+            <div className="flex items-start gap-2 rounded border border-primary/20 bg-primary/5 p-2 text-xs text-muted-foreground">
+              <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
+              <span>
+                Limite de <strong>{maxCustomScored} perguntas customizadas pontuáveis</strong> atingido. Desmarque
+                alguma para liberar espaço.
+              </span>
             </div>
           )}
         </div>
@@ -248,8 +363,9 @@ export function JobScoreConfig({ value, onChange }: Props) {
           <div className="space-y-1">
             <p className="font-medium text-foreground">Quer perguntas além das padrões?</p>
             <p className="text-muted-foreground">
-              Use a seção <strong>Perguntas customizadas (triagem)</strong> abaixo para criar perguntas próprias.
-              Tipos disponíveis: <strong>texto curto, texto longo, sim/não, escolha única, múltipla escolha, escala 1–5, escala 1–10, número, data, e-mail e link/URL</strong>.
+              Use a seção <strong>Perguntas customizadas (triagem)</strong> abaixo. Marque{' '}
+              <strong>Contar no Score de Aderência</strong> em cada uma para que ela apareça aqui na tabela de pesos
+              (até <strong>{maxCustomScored}</strong> perguntas).
             </p>
           </div>
         </div>
