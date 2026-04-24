@@ -1223,7 +1223,7 @@ export default function JobForm() {
                                           score_weight: e.target.checked
                                             ? item.score_weight && item.score_weight > 0
                                               ? item.score_weight
-                                              : 5
+                                              : 10
                                             : 0,
                                         }
                                       : item,
