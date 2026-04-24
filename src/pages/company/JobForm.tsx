@@ -192,9 +192,18 @@ export default function JobForm() {
             isActive: job.is_active,
             requiresApproval: !!(job as any).requires_approval,
           });
+          setJobApprovalStatus((job as any).approval_status || '');
           setRequirements(job.requirements?.length > 0 ? job.requirements : ['']);
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
           setBenefits(job.benefits?.length > 0 ? job.benefits : ['']);
+
+          // Conta candidaturas ativas (não rejeitadas/retiradas)
+          const { count } = await supabase
+            .from('applications')
+            .select('id', { count: 'exact', head: true })
+            .eq('job_id', id)
+            .not('status', 'in', '(rejected,withdrawn)');
+          setActiveApplicationsCount(count || 0);
           const j = job as any;
           setScoreConfig({
             required_skills: j.required_skills || [],
