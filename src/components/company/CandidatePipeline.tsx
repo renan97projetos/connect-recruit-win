@@ -628,7 +628,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                                 size="sm"
                                 variant="ghost"
                                 className="flex-1 h-7 text-xs"
-                                onClick={() => navigate(`/company/jobs/${jobId}/candidates`)}
+                                onClick={() => navigate(`/company/jobs/${jobId}`)}
                               >
                                 <Eye className="h-3.5 w-3.5 mr-1" /> Ver
                               </Button>
