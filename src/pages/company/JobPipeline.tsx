@@ -80,6 +80,7 @@ export default function JobPipeline() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [jobTitle, setJobTitle] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [notesModalApp, setNotesModalApp] = useState<Application | null>(null);
@@ -104,7 +105,7 @@ export default function JobPipeline() {
       }
 
       const [jobRes, appsRes] = await Promise.all([
-        supabase.from('jobs').select('title').eq('id', id).maybeSingle(),
+        supabase.from('jobs').select('title, company_name').eq('id', id).maybeSingle(),
         supabase
           .from('applications')
           .select('id, candidate_id, candidate_name, candidate_email, status, score, adherence_score, profile_completeness, score_breakdown, applied_at, notes')
@@ -113,7 +114,10 @@ export default function JobPipeline() {
           .order('applied_at', { ascending: false }),
       ]);
 
-      if (jobRes.data) setJobTitle(jobRes.data.title);
+      if (jobRes.data) {
+        setJobTitle(jobRes.data.title);
+        setCompanyName((jobRes.data as any).company_name || 'SinapseRH');
+      }
 
       const apps = (appsRes.data ?? []) as any[];
       // Buscar telefones dos candidatos
@@ -214,6 +218,8 @@ export default function JobPipeline() {
       return;
     }
 
+    const app = applications.find((a) => a.id === appId);
+
     setApplications((prev) =>
       prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)),
     );
@@ -224,6 +230,23 @@ export default function JobPipeline() {
       interview: 'Candidato movido para entrevista',
     };
     toast.success(messages[newStatus]);
+
+    // Envia email automático ao reprovar
+    if (newStatus === 'rejected' && app?.candidate_email) {
+      supabase.functions
+        .invoke('send-candidate-status-email', {
+          body: {
+            candidateName: app.candidate_name,
+            candidateEmail: app.candidate_email,
+            jobTitle,
+            companyName,
+            newStatus: 'rejected',
+          },
+        })
+        .catch((err) => {
+          console.error('Erro ao enviar email de reprovação:', err);
+        });
+    }
   };
 
   const statusLabels: Record<string, { label: string; className: string }> = {
