@@ -613,6 +613,7 @@ export default function JobForm() {
                         if (errors.state) setErrors({ ...errors, state: undefined });
                         if (errors.city) setErrors({ ...errors, city: undefined });
                       }}
+                      disabled={fieldsLocked}
                     >
                       <SelectTrigger
                         id="state"
