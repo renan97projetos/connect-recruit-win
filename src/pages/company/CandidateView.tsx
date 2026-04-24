@@ -95,7 +95,14 @@ export default function CandidateView() {
             totalQuestions: totalCount ?? 0,
           });
         }
-        setScreeningGroups(groups);
+        // Mostrar apenas grupos com respostas reais. Se nenhum tiver, manter o primeiro com perguntas configuradas para dar contexto.
+        const withAnswers = groups.filter((g) => g.items.length > 0);
+        if (withAnswers.length > 0) {
+          setScreeningGroups(withAnswers);
+        } else {
+          const withQuestions = groups.filter((g) => g.totalQuestions > 0);
+          setScreeningGroups(withQuestions.slice(0, 1));
+        }
       }
 
       setLoading(false);
