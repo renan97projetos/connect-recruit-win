@@ -999,7 +999,19 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
-            <JobScoreConfig value={scoreConfig} onChange={setScoreConfig} />
+            <JobScoreConfig
+              value={scoreConfig}
+              onChange={setScoreConfig}
+              maxCustomScored={MAX_CUSTOM_SCORED_QUESTIONS}
+              customScoredQuestions={questions
+                .map((q, idx) => ({ index: idx, question: q.question, weight: q.score_weight ?? 0 }))
+                .filter((q) => q.weight > 0)}
+              onCustomWeightChange={(idx, weight) =>
+                setQuestions((prev) =>
+                  prev.map((item, i) => (i === idx ? { ...item, score_weight: Math.max(0, Math.min(100, weight)) } : item)),
+                )
+              }
+            />
 
             <Card>
               <CardHeader className="pb-2">
