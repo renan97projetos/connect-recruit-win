@@ -241,6 +241,18 @@ export function JobScoreConfig({ value, onChange }: Props) {
             </div>
           )}
         </div>
+
+        {/* Hint sobre perguntas customizadas */}
+        <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs">
+          <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
+          <div className="space-y-1">
+            <p className="font-medium text-foreground">Quer perguntas além das padrões?</p>
+            <p className="text-muted-foreground">
+              Use a seção <strong>Perguntas customizadas (triagem)</strong> abaixo para criar perguntas próprias.
+              Tipos disponíveis: <strong>texto curto, texto longo, sim/não, escolha única, múltipla escolha, escala 1–5, escala 1–10, número, data, e-mail e link/URL</strong>.
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
