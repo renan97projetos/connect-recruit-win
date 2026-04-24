@@ -567,22 +567,57 @@ export default function JobPipeline() {
     toast({ title: 'Feedback registrado!' });
   };
 
+  // Normaliza notes em uma lista [{id, text, author, created_at}]
+  // Aceita formato antigo: string ou { text }
+  const getNotesList = (
+    notes: any
+  ): Array<{ id: string; text: string; author?: string | null; created_at: string }> => {
+    if (!notes) return [];
+    if (Array.isArray(notes)) return notes.filter((n) => n && (n.text || '').trim());
+    if (typeof notes === 'string') {
+      const t = notes.trim();
+      return t
+        ? [{ id: 'legacy', text: t, author: null, created_at: new Date(0).toISOString() }]
+        : [];
+    }
+    if (typeof notes === 'object') {
+      if (Array.isArray((notes as any).items)) {
+        return (notes as any).items.filter((n: any) => n && (n.text || '').trim());
+      }
+      const t = ((notes as any).text || '').trim();
+      return t ? [{ id: 'legacy', text: t, author: null, created_at: new Date(0).toISOString() }] : [];
+    }
+    return [];
+  };
+
   const openNoteDialog = (app: any) => {
-    const current = app.notes
-      ? typeof app.notes === 'string'
-        ? app.notes
-        : (app.notes as any)?.text || ''
-      : '';
-    setNoteDialog({ app, open: true, value: current, saving: false });
+    setNoteDialog({ app, open: true, value: '', saving: false });
   };
 
   const saveNote = async () => {
     if (!noteDialog.app) return;
+    const text = noteDialog.value.trim();
+    if (!text) return;
     setNoteDialog((prev) => ({ ...prev, saving: true }));
-    const next = noteDialog.value;
+
+    const existing = getNotesList(noteDialog.app.notes);
+    const { data: userData } = await supabase.auth.getUser();
+    const authorName =
+      (userData.user?.user_metadata as any)?.name ||
+      userData.user?.email ||
+      'Usuário';
+    const newEntry = {
+      id: crypto.randomUUID(),
+      text,
+      author: authorName,
+      created_at: new Date().toISOString(),
+    };
+    const nextItems = [...existing, newEntry];
+    const nextNotes = { items: nextItems } as any;
+
     const { error } = await supabase
       .from('applications')
-      .update({ notes: { text: next } as any })
+      .update({ notes: nextNotes })
       .eq('id', noteDialog.app.id);
     if (error) {
       setNoteDialog((prev) => ({ ...prev, saving: false }));
@@ -590,10 +625,34 @@ export default function JobPipeline() {
       return;
     }
     setApplications((prev) =>
-      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: { text: next } } : a))
+      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: nextNotes } : a))
     );
-    setNoteDialog({ app: null, open: false, value: '', saving: false });
-    toast({ title: 'Nota salva' });
+    setNoteDialog((prev) => ({
+      ...prev,
+      app: { ...prev.app, notes: nextNotes },
+      value: '',
+      saving: false,
+    }));
+    toast({ title: 'Nota adicionada' });
+  };
+
+  const deleteNote = async (noteId: string) => {
+    if (!noteDialog.app) return;
+    const existing = getNotesList(noteDialog.app.notes);
+    const nextItems = existing.filter((n) => n.id !== noteId);
+    const nextNotes = { items: nextItems } as any;
+    const { error } = await supabase
+      .from('applications')
+      .update({ notes: nextNotes })
+      .eq('id', noteDialog.app.id);
+    if (error) {
+      toast({ title: 'Erro ao excluir nota', variant: 'destructive' });
+      return;
+    }
+    setApplications((prev) =>
+      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: nextNotes } : a))
+    );
+    setNoteDialog((prev) => ({ ...prev, app: { ...prev.app, notes: nextNotes } }));
   };
 
   const openOfferDialog = (app: any) => {
