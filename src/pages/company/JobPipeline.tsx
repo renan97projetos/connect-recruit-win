@@ -207,6 +207,40 @@ export default function JobPipeline() {
     }
   };
 
+  // Avança o pipeline_stage da vaga conforme o status mais avançado dos candidatos.
+  // Ordem: triagem < entrevista < avaliacao < aprovado
+  const STAGE_ORDER: Record<string, number> = {
+    triagem: 1,
+    entrevista: 2,
+    avaliacao: 3,
+    aprovado: 4,
+  };
+  const STATUS_TO_STAGE: Record<string, string> = {
+    interview: 'entrevista',
+    technical: 'avaliacao',
+    approved: 'aprovado',
+  };
+
+  const syncJobPipelineStage = async (apps: Application[]) => {
+    if (!id) return;
+    let highest = 'triagem';
+    for (const a of apps) {
+      const mapped = STATUS_TO_STAGE[a.status];
+      if (mapped && (STAGE_ORDER[mapped] ?? 0) > (STAGE_ORDER[highest] ?? 0)) {
+        highest = mapped;
+      }
+    }
+    const { data: jobRow } = await supabase
+      .from('jobs')
+      .select('pipeline_stage')
+      .eq('id', id)
+      .maybeSingle();
+    const current = jobRow?.pipeline_stage || 'triagem';
+    if ((STAGE_ORDER[highest] ?? 0) > (STAGE_ORDER[current] ?? 0)) {
+      await supabase.from('jobs').update({ pipeline_stage: highest }).eq('id', id);
+    }
+  };
+
   const handleUpdateStatus = async (
     appId: string,
     newStatus: 'approved' | 'rejected' | 'interview',
@@ -223,9 +257,10 @@ export default function JobPipeline() {
 
     const app = applications.find((a) => a.id === appId);
 
-    setApplications((prev) =>
-      prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)),
+    const updated = applications.map((a) =>
+      a.id === appId ? { ...a, status: newStatus } : a,
     );
+    setApplications(updated);
 
     const messages: Record<string, string> = {
       approved: 'Candidato aprovado',
@@ -233,6 +268,9 @@ export default function JobPipeline() {
       interview: 'Candidato movido para entrevista',
     };
     toast.success(messages[newStatus]);
+
+    // Avança a etapa da vaga no pipeline geral, se aplicável
+    void syncJobPipelineStage(updated);
 
     // Envia email automático ao reprovar
     if (newStatus === 'rejected' && app?.candidate_email) {
@@ -274,8 +312,8 @@ export default function JobPipeline() {
   };
 
   const handleBulkMoveToInterview = async () => {
-    const ids = Array.from(selectedIds).filter((id) =>
-      applications.find((a) => a.id === id && a.status === 'pending'),
+    const ids = Array.from(selectedIds).filter((idSel) =>
+      applications.find((a) => a.id === idSel && a.status === 'pending'),
     );
     if (ids.length === 0) return;
     setBulkMoving(true);
@@ -290,13 +328,18 @@ export default function JobPipeline() {
       return;
     }
 
-    setApplications((prev) =>
-      prev.map((a) => (ids.includes(a.id) ? { ...a, status: 'interview' } : a)),
+    const updated = applications.map((a) =>
+      ids.includes(a.id) ? { ...a, status: 'interview' } : a,
     );
+    setApplications(updated);
     setSelectedIds(new Set());
     toast.success(
       `${ids.length} ${ids.length === 1 ? 'candidato movido' : 'candidatos movidos'} para entrevista`,
     );
+
+    // Avança a etapa da vaga no pipeline geral
+    void syncJobPipelineStage(updated);
+
     setBulkMoving(false);
   };
 
