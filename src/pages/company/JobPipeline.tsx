@@ -213,25 +213,32 @@ export default function JobPipeline() {
     }).catch(console.error);
   };
 
-  const editNote = async (app: any) => {
+  const openNoteDialog = (app: any) => {
     const current = app.notes
       ? typeof app.notes === 'string'
         ? app.notes
         : (app.notes as any)?.text || ''
       : '';
-    const next = window.prompt(`Notas internas — ${app.candidate_name}`, current);
-    if (next === null) return;
+    setNoteDialog({ app, open: true, value: current, saving: false });
+  };
+
+  const saveNote = async () => {
+    if (!noteDialog.app) return;
+    setNoteDialog((prev) => ({ ...prev, saving: true }));
+    const next = noteDialog.value;
     const { error } = await supabase
       .from('applications')
       .update({ notes: { text: next } as any })
-      .eq('id', app.id);
+      .eq('id', noteDialog.app.id);
     if (error) {
+      setNoteDialog((prev) => ({ ...prev, saving: false }));
       toast({ title: 'Erro ao salvar nota', variant: 'destructive' });
       return;
     }
     setApplications((prev) =>
-      prev.map((a) => (a.id === app.id ? { ...a, notes: { text: next } } : a))
+      prev.map((a) => (a.id === noteDialog.app.id ? { ...a, notes: { text: next } } : a))
     );
+    setNoteDialog({ app: null, open: false, value: '', saving: false });
     toast({ title: 'Nota salva' });
   };
 
