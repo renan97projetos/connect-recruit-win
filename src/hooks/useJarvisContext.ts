@@ -113,7 +113,7 @@ export function useJarvisContext() {
           ['triagem', 'aberta'].includes((a.current_stage || '').toLowerCase())
         ).length;
         const approvedThisWeek = apps.filter(
-          (a) => a.updated_at >= weekAgo && ['contratado', 'approved', 'hired'].includes((a.status || '').toLowerCase())
+          (a) => a.updated_at >= weekAgo && ['approved', 'hired'].includes((a.status || '').toLowerCase())
         ).length;
         const rejectedThisWeek = apps.filter(
           (a) => a.updated_at >= weekAgo && ['reprovado', 'rejected'].includes((a.status || '').toLowerCase())
