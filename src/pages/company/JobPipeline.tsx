@@ -174,7 +174,12 @@ export default function JobPipeline() {
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState<CandidateStageId>('triagem');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [noteDialog, setNoteDialog] = useState<{ app: any | null; open: boolean; value: string; saving: boolean }>({
+  const [noteDialog, setNoteDialog] = useState<{
+    app: any | null;
+    open: boolean;
+    value: string;
+    saving: boolean;
+  }>({
     app: null,
     open: false,
     value: '',
