@@ -373,7 +373,7 @@ export default function JobPipeline() {
         </div>
         <h1 className="text-3xl font-bold">{jobTitle || 'Vaga'}</h1>
         <p className="text-muted-foreground">
-          {applications.length} {applications.length === 1 ? 'candidato' : 'candidatos'} • Ordenados por aderência
+          {applications.length} {applications.length === 1 ? 'candidato no total' : 'candidatos no total'} • Ordenados por aderência
         </p>
       </div>
 
