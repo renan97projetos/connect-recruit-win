@@ -37,6 +37,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -66,6 +72,7 @@ import {
   User as UserIcon,
   FileText,
   Download,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -166,6 +173,123 @@ const daysAgo = (date: string) => {
   return Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
 };
 
+const SCORE_LABELS: Record<string, string> = {
+  skills: 'Habilidades',
+  location: 'Localização',
+  education: 'Escolaridade',
+  experience: 'Experiência',
+  screening: 'Triagem (perguntas)',
+};
+
+const SCORE_DETAIL_LABELS: Record<string, string> = {
+  matched: 'compatíveis',
+  required: 'exigidas',
+  years: 'anos',
+  has_area: 'área compatível',
+  skills_yes: 'respostas positivas',
+  skills_total: 'perguntas',
+  bonus: 'bônus',
+};
+
+function ScoreTooltip({
+  score,
+  breakdown,
+  className,
+  variant = 'badge',
+}: {
+  score: number;
+  breakdown: any;
+  className?: string;
+  variant?: 'badge' | 'pill';
+}) {
+  const hasBreakdown =
+    breakdown && typeof breakdown === 'object' && Object.keys(breakdown).length > 0;
+
+  const colorClass =
+    variant === 'pill'
+      ? score >= 80
+        ? 'bg-green-50 text-green-700'
+        : score >= 50
+        ? 'bg-amber-50 text-amber-700'
+        : 'bg-red-50 text-red-600'
+      : score >= 70
+      ? 'bg-green-100 text-green-700'
+      : score >= 40
+      ? 'bg-amber-100 text-amber-700'
+      : 'bg-red-100 text-red-600';
+
+  const badge = (
+    <span
+      className={cn(
+        variant === 'pill'
+          ? 'inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full text-xs'
+          : 'inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
+        colorClass,
+        hasBreakdown && 'cursor-help',
+        className,
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {Math.round(score)}%
+      {hasBreakdown && <Info className="h-3 w-3 opacity-70" />}
+    </span>
+  );
+
+  if (!hasBreakdown) return badge;
+
+  const entries = Object.entries(breakdown).filter(
+    ([, v]: any) => v && typeof v === 'object',
+  );
+
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>{badge}</TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-xs p-3 space-y-2">
+          <div className="text-xs font-semibold border-b border-border pb-1">
+            Composição do score: {Math.round(score)}%
+          </div>
+          <div className="space-y-1.5">
+            {entries.map(([key, val]: any) => {
+              const label = SCORE_LABELS[key] || key;
+              const earned = typeof val.earned === 'number' ? val.earned : null;
+              const max = typeof val.max === 'number' ? val.max : null;
+              const details = Object.entries(val)
+                .filter(([k]) => !['earned', 'max'].includes(k))
+                .map(([k, v]: any) => {
+                  if (typeof v === 'boolean') return v ? SCORE_DETAIL_LABELS[k] || k : null;
+                  if (v === null || v === undefined || v === '') return null;
+                  return `${SCORE_DETAIL_LABELS[k] || k}: ${v}`;
+                })
+                .filter(Boolean);
+              return (
+                <div key={key} className="text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-medium">{label}</span>
+                    <span className="font-mono tabular-nums text-muted-foreground">
+                      {earned !== null && max !== null
+                        ? `${earned}/${max}`
+                        : earned !== null
+                        ? `${earned} pts`
+                        : ''}
+                    </span>
+                  </div>
+                  {details.length > 0 && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      {details.join(' • ')}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+
 export default function JobPipeline() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -255,7 +379,7 @@ export default function JobPipeline() {
         supabase
           .from('applications')
           .select(
-            'id, candidate_id, candidate_name, candidate_email, status, current_stage, score, adherence_score, applied_at, updated_at, notes'
+            'id, candidate_id, candidate_name, candidate_email, status, current_stage, score, adherence_score, score_breakdown, applied_at, updated_at, notes'
           )
           .eq('job_id', id)
           .order('adherence_score', { ascending: false })
@@ -1026,18 +1150,11 @@ export default function JobPipeline() {
                       </TableCell>
                       <TableCell>
                         {score > 0 ? (
-                          <span
-                            className={cn(
-                              'inline-flex items-center justify-center min-w-[2.75rem] px-2 py-1 rounded-md text-sm font-bold',
-                              score >= 70
-                                ? 'bg-green-100 text-green-700'
-                                : score >= 40
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-red-100 text-red-600'
-                            )}
-                          >
-                            {Math.round(score)}%
-                          </span>
+                          <ScoreTooltip
+                            score={score}
+                            breakdown={app.score_breakdown}
+                            className="min-w-[2.75rem] justify-center text-sm"
+                          />
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
@@ -1203,18 +1320,7 @@ export default function JobPipeline() {
                         </p>
                       </div>
                       {score > 0 && (
-                        <span
-                          className={cn(
-                            'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
-                            score >= 70
-                              ? 'bg-green-100 text-green-700'
-                              : score >= 40
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-red-100 text-red-600'
-                          )}
-                        >
-                          {Math.round(score)}%
-                        </span>
+                        <ScoreTooltip score={score} breakdown={app.score_breakdown} />
                       )}
                     </div>
 
@@ -1405,18 +1511,7 @@ export default function JobPipeline() {
                     </p>
                   </div>
                   {score > 0 && (
-                    <span
-                      className={cn(
-                        'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
-                        score >= 70
-                          ? 'bg-green-100 text-green-700'
-                          : score >= 40
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-red-100 text-red-600'
-                      )}
-                    >
-                      {Math.round(score)}%
-                    </span>
+                    <ScoreTooltip score={score} breakdown={app.score_breakdown} />
                   )}
                 </div>
               );
@@ -1742,19 +1837,11 @@ export default function JobPipeline() {
                       Há {daysAgo(app.applied_at)} dia(s)
                     </span>
                     {score > 0 && (
-                      <span
-                        className={cn(
-                          'flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full',
-                          score >= 80
-                            ? 'bg-green-50 text-green-700'
-                            : score >= 50
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'bg-red-50 text-red-600'
-                        )}
-                      >
-                        {rank <= 3 && <Trophy className="h-3 w-3" />}
-                        {Math.round(score)}%
-                      </span>
+                      <ScoreTooltip
+                        score={score}
+                        breakdown={app.score_breakdown}
+                        variant="pill"
+                      />
                     )}
                   </div>
                   <div
