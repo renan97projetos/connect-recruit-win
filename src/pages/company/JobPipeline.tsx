@@ -21,6 +21,16 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -370,6 +380,18 @@ export default function JobPipeline() {
     saving: false,
   });
 
+  const [confirmReject, setConfirmReject] = useState<{ open: boolean; app: any | null }>({
+    open: false,
+    app: null,
+  });
+  const [confirmBulk, setConfirmBulk] = useState<{
+    open: boolean;
+    count: number;
+    nextLabel: string;
+    nextId: CandidateStageId | null;
+  }>({ open: false, count: 0, nextLabel: '', nextId: null });
+
+
   useEffect(() => {
     if (!id) return;
     const load = async () => {
@@ -484,7 +506,7 @@ export default function JobPipeline() {
     }
   };
 
-  const advanceAllInStage = async () => {
+  const advanceAllInStage = () => {
     const stageCandidates = applications.filter(
       (a) => getCandidateStage(a) === activeStage
     );
@@ -501,20 +523,28 @@ export default function JobPipeline() {
       });
       return;
     }
-    if (
-      !confirm(
-        `Avançar ${stageCandidates.length} candidato(s) de ${activeStageLabel} para ${next.label}?`
-      )
-    )
-      return;
+    setConfirmBulk({
+      open: true,
+      count: stageCandidates.length,
+      nextLabel: next.label,
+      nextId: next.id,
+    });
+  };
 
+  const performBulkAdvance = async () => {
+    const nextId = confirmBulk.nextId;
+    if (!nextId) return;
+    const stageCandidates = applications.filter(
+      (a) => getCandidateStage(a) === activeStage
+    );
+    setConfirmBulk({ open: false, count: 0, nextLabel: '', nextId: null });
     setActionLoading('bulk');
     let ok = 0;
     let fail = 0;
     for (const app of stageCandidates) {
       const success = await updateApplication(app.id, {
-        current_stage: next.id,
-        status: STATUS_FOR_STAGE[next.id],
+        current_stage: nextId,
+        status: STATUS_FOR_STAGE[nextId],
       });
       if (success) ok++;
       else fail++;
@@ -522,14 +552,20 @@ export default function JobPipeline() {
     setActionLoading(null);
 
     toast({
-      title: `${ok} candidato(s) movidos para ${next.label}`,
+      title: `${ok} candidato(s) movidos`,
       description: fail > 0 ? `${fail} falharam.` : undefined,
       variant: fail > 0 ? 'destructive' : 'default',
     });
   };
 
-  const rejectCandidate = async (app: any) => {
-    if (!confirm(`Rejeitar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
+  const rejectCandidate = (app: any) => {
+    setConfirmReject({ open: true, app });
+  };
+
+  const performReject = async () => {
+    const app = confirmReject.app;
+    if (!app) return;
+    setConfirmReject({ open: false, app: null });
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
     if (!ok) return;
     toast({ title: `${app.candidate_name} rejeitado`, description: 'E-mail enviado.' });
@@ -2423,6 +2459,53 @@ export default function JobPipeline() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog
+        open={confirmBulk.open}
+        onOpenChange={(open) =>
+          !open && setConfirmBulk({ open: false, count: 0, nextLabel: '', nextId: null })
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Avançar todos os candidatos?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmBulk.count} candidato(s) de {activeStageLabel} serão movidos para{' '}
+              <strong>{confirmBulk.nextLabel}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={performBulkAdvance}>
+              Avançar todos
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirmReject.open}
+        onOpenChange={(open) => !open && setConfirmReject({ open: false, app: null })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rejeitar candidato?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmReject.app?.candidate_name} será rejeitado e um e-mail de notificação
+              será enviado automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={performReject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Rejeitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CompanyLayout>
   );
 }
