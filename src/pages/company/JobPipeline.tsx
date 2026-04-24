@@ -417,8 +417,10 @@ export default function JobPipeline() {
       presencial: 'Presencial',
       telefone: 'Ligação telefônica',
     };
+    const jobUrl = `${window.location.origin}/jobs/${id}`;
     let msg = `Olá ${interviewApp.candidate_name}!\n\n`;
     msg += `Você avançou para a etapa de entrevista no processo seletivo da vaga *${jobTitle}* na ${companyName}.\n\n`;
+    msg += `Detalhes da vaga: ${jobUrl}\n\n`;
     msg += `*Detalhes do agendamento:*\n`;
     msg += `- Data e horário: ${dateFormatted}\n`;
     msg += `- Formato: ${formatLabels[interviewData.format] || interviewData.format}\n`;
@@ -431,8 +433,6 @@ export default function JobPipeline() {
     if (interviewData.interviewer_name) {
       msg += `- Entrevistador: ${interviewData.interviewer_name}\n`;
     }
-    const jobUrl = `${window.location.origin}/jobs/${id}`;
-    msg += `\nDetalhes da vaga: ${jobUrl}\n`;
     msg += `\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
     return msg;
   };
