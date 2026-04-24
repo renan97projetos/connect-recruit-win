@@ -20,6 +20,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -32,6 +49,13 @@ import {
   ThumbsDown,
   MessageCircle,
   StickyNote,
+  Video,
+  MapPin,
+  Phone,
+  Star,
+  CheckCircle2,
+  ClipboardList,
+  Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -155,6 +179,34 @@ export default function JobPipeline() {
     value: '',
     saving: false,
   });
+  const [interviewSheet, setInterviewSheet] = useState<{
+    open: boolean;
+    app: any | null;
+    tab: 'agendar' | 'feedback';
+    existing: any | null;
+    saving: boolean;
+    scheduledAt: string;
+    format: string;
+    meetingLink: string;
+    location: string;
+    interviewer: string;
+    feedbackText: string;
+    feedbackScore: number;
+  }>({
+    open: false,
+    app: null,
+    tab: 'agendar',
+    existing: null,
+    saving: false,
+    scheduledAt: '',
+    format: 'video',
+    meetingLink: '',
+    location: '',
+    interviewer: '',
+    feedbackText: '',
+    feedbackScore: 0,
+  });
+  const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -180,13 +232,17 @@ export default function JobPipeline() {
 
       if (apps.length) {
         const ids = Array.from(new Set(apps.map((a: any) => a.candidate_id)));
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id, avatar_url, phone')
-          .in('id', ids);
+        const appIds = apps.map((a: any) => a.id);
+        const [profsRes, intRes] = await Promise.all([
+          supabase.from('profiles').select('id, avatar_url, phone').in('id', ids),
+          supabase.from('interviews').select('*').in('application_id', appIds),
+        ]);
         const map: Record<string, any> = {};
-        (profs || []).forEach((p: any) => (map[p.id] = p));
+        (profsRes.data || []).forEach((p: any) => (map[p.id] = p));
         setProfilesById(map);
+        const intMap: Record<string, any> = {};
+        (intRes.data || []).forEach((i: any) => (intMap[i.application_id] = i));
+        setInterviewsByApp(intMap);
       }
       setLoading(false);
     };
@@ -263,6 +319,172 @@ export default function JobPipeline() {
         newStatus: 'rejected',
       },
     }).catch(console.error);
+  };
+
+  const openInterviewSheet = async (app: any, tab: 'agendar' | 'feedback' = 'agendar') => {
+    setInterviewSheet((prev) => ({
+      ...prev,
+      open: true,
+      app,
+      tab,
+      existing: null,
+      saving: false,
+      scheduledAt: '',
+      format: 'video',
+      meetingLink: '',
+      location: '',
+      interviewer: '',
+      feedbackText: '',
+      feedbackScore: 0,
+    }));
+
+    const { data } = await supabase
+      .from('interviews')
+      .select('*')
+      .eq('application_id', app.id)
+      .maybeSingle();
+
+    if (data) {
+      setInterviewSheet((prev) => ({
+        ...prev,
+        existing: data,
+        scheduledAt: data.scheduled_at
+          ? new Date(data.scheduled_at).toISOString().slice(0, 16)
+          : '',
+        format: data.format || 'video',
+        meetingLink: data.meeting_link || '',
+        location: data.location || '',
+        interviewer: data.interviewer_name || '',
+        feedbackText: data.feedback || '',
+        feedbackScore: data.feedback_score || 0,
+        tab: data.status === 'done' ? 'feedback' : tab,
+      }));
+    }
+  };
+
+  const saveInterview = async () => {
+    const {
+      app,
+      existing,
+      scheduledAt,
+      format,
+      meetingLink,
+      location,
+      interviewer,
+    } = interviewSheet;
+    if (!app || !scheduledAt) return;
+
+    setInterviewSheet((prev) => ({ ...prev, saving: true }));
+
+    const userRes = await supabase.auth.getUser();
+    const payload: any = {
+      application_id: app.id,
+      job_id: id,
+      company_id: userRes.data.user?.id,
+      scheduled_at: new Date(scheduledAt).toISOString(),
+      format,
+      meeting_link: meetingLink || null,
+      location: location || null,
+      interviewer_name: interviewer || null,
+      status: 'scheduled',
+      updated_at: new Date().toISOString(),
+    };
+
+    let saved: any = null;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('interviews')
+        .update(payload)
+        .eq('id', existing.id)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setInterviewSheet((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar entrevista', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    } else {
+      const { data, error } = await supabase
+        .from('interviews')
+        .insert(payload)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setInterviewSheet((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar entrevista', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    }
+    if (saved) {
+      setInterviewsByApp((prev) => ({ ...prev, [app.id]: saved }));
+    }
+
+    const dateFormatted = new Date(scheduledAt).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const formatLabels: Record<string, string> = {
+      video: 'Videochamada',
+      presencial: 'Presencial',
+      telefone: 'Ligação',
+    };
+
+    supabase.functions
+      .invoke('send-candidate-status-email', {
+        body: {
+          candidateName: app.candidate_name,
+          candidateEmail: app.candidate_email,
+          jobTitle,
+          companyName: companyName || 'Sinapse RH',
+          newStatus: 'interview',
+          customSubject: `Entrevista agendada — ${jobTitle}`,
+          customBody: `Olá ${app.candidate_name},\n\nSua entrevista foi agendada:\n\n📅 ${dateFormatted}\n📋 ${formatLabels[format] || format}${meetingLink ? `\n🔗 ${meetingLink}` : ''}${location ? `\n📍 ${location}` : ''}${interviewer ? `\n👤 ${interviewer}` : ''}\n\nQualquer dúvida, entre em contato.\n\nEquipe ${companyName || 'Sinapse RH'}`,
+        },
+      })
+      .catch(console.error);
+
+    setInterviewSheet((prev) => ({ ...prev, saving: false, open: false }));
+    toast({
+      title: 'Entrevista agendada!',
+      description: `E-mail enviado para ${app.candidate_name}.`,
+    });
+  };
+
+  const saveFeedback = async () => {
+    const { existing, app, feedbackText, feedbackScore } = interviewSheet;
+    if (!existing || !feedbackText.trim()) return;
+
+    setInterviewSheet((prev) => ({ ...prev, saving: true }));
+
+    const { data, error } = await supabase
+      .from('interviews')
+      .update({
+        feedback: feedbackText,
+        feedback_score: feedbackScore || null,
+        status: 'done',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      setInterviewSheet((prev) => ({ ...prev, saving: false }));
+      toast({ title: 'Erro ao registrar feedback', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    if (data && app) {
+      setInterviewsByApp((prev) => ({ ...prev, [app.id]: data }));
+    }
+
+    setInterviewSheet((prev) => ({ ...prev, saving: false, open: false }));
+    toast({ title: 'Feedback registrado!' });
   };
 
   const openNoteDialog = (app: any) => {
@@ -566,6 +788,213 @@ export default function JobPipeline() {
                 navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
               const isTerminal =
                 getCandidateStage(app) === 'aprovado' || getCandidateStage(app) === 'reprovado';
+              const interview = interviewsByApp[app.id];
+
+              // Card especializado para Entrevista
+              if (activeStage === 'entrevista') {
+                const noteText = app.notes
+                  ? typeof app.notes === 'string'
+                    ? app.notes
+                    : (app.notes as any)?.text || ''
+                  : '';
+                const hasNote = noteText.trim().length > 0;
+                const hasInterview = !!interview;
+                const interviewDone = interview?.status === 'done';
+                return (
+                  <div
+                    key={app.id}
+                    onClick={goToProfile}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                    }}
+                    className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarImage src={profile?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {initials(app.candidate_name || '?')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold group-hover:text-primary truncate">
+                          {app.candidate_name || 'Candidato'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          {app.candidate_email}
+                        </p>
+                      </div>
+                      {score > 0 && (
+                        <span
+                          className={cn(
+                            'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
+                            score >= 70
+                              ? 'bg-green-100 text-green-700'
+                              : score >= 40
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-red-100 text-red-600'
+                          )}
+                        >
+                          {Math.round(score)}%
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Status da entrevista */}
+                    {hasInterview && interview.scheduled_at && (
+                      <div className="mb-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-xs gap-1 font-medium',
+                            interviewDone
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : 'border-blue-200 bg-blue-50 text-blue-700'
+                          )}
+                        >
+                          {interviewDone ? (
+                            <CheckCircle2 className="h-3 w-3" />
+                          ) : (
+                            <Calendar className="h-3 w-3" />
+                          )}
+                          {interviewDone ? 'Entrevista realizada' : 'Agendada'} —{' '}
+                          {new Date(interview.scheduled_at).toLocaleString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Badge>
+                        {interview.feedback_score ? (
+                          <div className="flex items-center gap-0.5 mt-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={cn(
+                                  'h-3 w-3',
+                                  i < interview.feedback_score
+                                    ? 'fill-amber-400 text-amber-400'
+                                    : 'text-muted-foreground/30'
+                                )}
+                              />
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Há {daysAgo(app.applied_at)} dia(s) no processo
+                    </div>
+
+                    {/* Botões de ação */}
+                    <div
+                      className="flex items-center flex-wrap gap-1 pt-3 border-t border-border"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-500/10"
+                        onClick={() => openInterviewSheet(app, 'agendar')}
+                        title={hasInterview ? 'Reagendar entrevista' : 'Agendar entrevista'}
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0',
+                          interview?.feedback
+                            ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
+                            : 'text-purple-600 hover:bg-purple-500/10',
+                          !hasInterview && 'opacity-30'
+                        )}
+                        onClick={() => openInterviewSheet(app, 'feedback')}
+                        disabled={!hasInterview}
+                        title={interview?.feedback ? 'Editar feedback' : 'Registrar feedback'}
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                      </Button>
+                      {profile?.phone ? (
+                        <a
+                          href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                            `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-[#25D366] hover:bg-[#25D366]/10"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 opacity-30"
+                          disabled
+                          title="Sem telefone cadastrado"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0 relative',
+                          hasNote
+                            ? 'text-amber-600 bg-amber-500/10 hover:bg-amber-500/20'
+                            : 'text-amber-600 hover:bg-amber-500/10'
+                        )}
+                        onClick={() => openNoteDialog(app)}
+                        title={hasNote ? `Nota: ${noteText}` : 'Adicionar nota interna'}
+                      >
+                        <StickyNote className={cn('h-4 w-4', hasNote && 'fill-amber-500/30')} />
+                        {hasNote && (
+                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+                        )}
+                      </Button>
+                      <div className="ml-auto flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs gap-1"
+                          onClick={() => moveToNextStage(app)}
+                          disabled={actionLoading === app.id || !next}
+                          title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                          {next?.label || 'Final'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => rejectCandidate(app)}
+                          disabled={actionLoading === app.id}
+                          title="Reprovar (envia e-mail)"
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={app.id}
@@ -693,6 +1122,245 @@ export default function JobPipeline() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Sheet de Entrevista */}
+      <Sheet
+        open={interviewSheet.open}
+        onOpenChange={(open) => {
+          if (!open) setInterviewSheet((prev) => ({ ...prev, open: false }));
+        }}
+      >
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>
+              {interviewSheet.tab === 'feedback' ? 'Feedback da entrevista' : 'Agendar entrevista'}
+            </SheetTitle>
+            <SheetDescription>
+              {interviewSheet.app?.candidate_name
+                ? `Candidato: ${interviewSheet.app.candidate_name}`
+                : ''}
+            </SheetDescription>
+          </SheetHeader>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mt-4 mb-4 p-1 bg-muted rounded-lg">
+            <button
+              type="button"
+              onClick={() => setInterviewSheet((prev) => ({ ...prev, tab: 'agendar' }))}
+              className={cn(
+                'flex-1 text-xs font-semibold py-2 rounded-md transition-colors',
+                interviewSheet.tab === 'agendar'
+                  ? 'bg-background shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Agendamento
+            </button>
+            <button
+              type="button"
+              onClick={() => setInterviewSheet((prev) => ({ ...prev, tab: 'feedback' }))}
+              disabled={!interviewSheet.existing}
+              className={cn(
+                'flex-1 text-xs font-semibold py-2 rounded-md transition-colors',
+                interviewSheet.tab === 'feedback'
+                  ? 'bg-background shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+                !interviewSheet.existing && 'opacity-40 cursor-not-allowed'
+              )}
+            >
+              Feedback
+            </button>
+          </div>
+
+          {interviewSheet.tab === 'agendar' ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="scheduledAt">Data e hora *</Label>
+                <Input
+                  id="scheduledAt"
+                  type="datetime-local"
+                  value={interviewSheet.scheduledAt}
+                  onChange={(e) =>
+                    setInterviewSheet((prev) => ({ ...prev, scheduledAt: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="format">Formato</Label>
+                <Select
+                  value={interviewSheet.format}
+                  onValueChange={(v) =>
+                    setInterviewSheet((prev) => ({ ...prev, format: v }))
+                  }
+                >
+                  <SelectTrigger id="format">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">
+                      <span className="flex items-center gap-2">
+                        <Video className="h-4 w-4" /> Videochamada
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="presencial">
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" /> Presencial
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="telefone">
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" /> Ligação
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {interviewSheet.format === 'video' && (
+                <div className="space-y-2">
+                  <Label htmlFor="meetingLink">Link da reunião</Label>
+                  <Input
+                    id="meetingLink"
+                    type="url"
+                    placeholder="https://meet.google.com/..."
+                    value={interviewSheet.meetingLink}
+                    onChange={(e) =>
+                      setInterviewSheet((prev) => ({ ...prev, meetingLink: e.target.value }))
+                    }
+                  />
+                </div>
+              )}
+
+              {interviewSheet.format === 'presencial' && (
+                <div className="space-y-2">
+                  <Label htmlFor="location">Endereço</Label>
+                  <Input
+                    id="location"
+                    placeholder="Rua, número, sala..."
+                    value={interviewSheet.location}
+                    onChange={(e) =>
+                      setInterviewSheet((prev) => ({ ...prev, location: e.target.value }))
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="interviewer">Entrevistador</Label>
+                <Input
+                  id="interviewer"
+                  placeholder="Nome do responsável"
+                  value={interviewSheet.interviewer}
+                  onChange={(e) =>
+                    setInterviewSheet((prev) => ({ ...prev, interviewer: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setInterviewSheet((prev) => ({ ...prev, open: false }))}
+                  disabled={interviewSheet.saving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={saveInterview}
+                  disabled={interviewSheet.saving || !interviewSheet.scheduledAt}
+                >
+                  {interviewSheet.saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  {interviewSheet.existing ? 'Atualizar e notificar' : 'Agendar e notificar'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Avaliação geral</Label>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const value = i + 1;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() =>
+                          setInterviewSheet((prev) => ({ ...prev, feedbackScore: value }))
+                        }
+                        className="p-1"
+                      >
+                        <Star
+                          className={cn(
+                            'h-7 w-7 transition-colors',
+                            value <= interviewSheet.feedbackScore
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-muted-foreground/30 hover:text-amber-300'
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                  {interviewSheet.feedbackScore > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setInterviewSheet((prev) => ({ ...prev, feedbackScore: 0 }))
+                      }
+                      className="ml-2 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="feedback">Anotações da entrevista *</Label>
+                <Textarea
+                  id="feedback"
+                  rows={8}
+                  placeholder="Pontos fortes, pontos a melhorar, fit cultural, recomendações..."
+                  value={interviewSheet.feedbackText}
+                  onChange={(e) =>
+                    setInterviewSheet((prev) => ({ ...prev, feedbackText: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setInterviewSheet((prev) => ({ ...prev, open: false }))}
+                  disabled={interviewSheet.saving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={saveFeedback}
+                  disabled={
+                    interviewSheet.saving ||
+                    !interviewSheet.existing ||
+                    !interviewSheet.feedbackText.trim()
+                  }
+                >
+                  {interviewSheet.saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                  )}
+                  Salvar feedback
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </CompanyLayout>
   );
 }
