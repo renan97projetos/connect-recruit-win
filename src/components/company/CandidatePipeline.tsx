@@ -245,83 +245,106 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   };
 
   const openNoteSheet = async (app: ApplicationRow) => {
-    setNoteApp(app);
-    setNoteText('');
-    setNoteSheetOpen(true);
+    setSavingNote(true);
     const { data } = await supabase
       .from('applications')
       .select('notes')
       .eq('id', app.id)
       .maybeSingle();
-    if (data?.notes) {
-      const n = data.notes as any;
-      setNoteText(typeof n === 'string' ? n : n?.text || '');
-    }
-  };
 
-  const saveNote = async () => {
-    if (!noteApp) return;
-    setSavingNote(true);
+    const currentNotes = data?.notes
+      ? typeof data.notes === 'string'
+        ? data.notes
+        : ((data.notes as any)?.text || '')
+      : '';
+
+    const nextNote = window.prompt(`Notas internas para ${app.candidate_name}`, currentNotes);
+    if (nextNote === null) {
+      setSavingNote(false);
+      return;
+    }
+
     await supabase
       .from('applications')
-      .update({ notes: { text: noteText } as any })
-      .eq('id', noteApp.id);
+      .update({ notes: { text: nextNote } as any })
+      .eq('id', app.id);
+
     setSavingNote(false);
     toast({ title: 'Nota salva!' });
-    setNoteSheetOpen(false);
   };
 
   const openInterviewSheet = async (app: ApplicationRow) => {
-    setInterviewApp(app);
-    setInterviewTab('agendar');
-    setFeedbackText('');
-    setFeedbackScore(0);
-    setInterviewData({
-      scheduled_at: '',
-      format: 'video',
-      meeting_link: '',
-      location: '',
-      interviewer_name: '',
-    });
-    setExistingInterview(null);
-    setInterviewSheetOpen(true);
+    if (!user) return;
 
-    const { data } = await (supabase as any)
+    const { data: existingInterview } = await (supabase as any)
       .from('interviews')
       .select('*')
       .eq('application_id', app.id)
       .maybeSingle();
 
-    if (data) {
-      setExistingInterview(data);
-      setInterviewData({
-        scheduled_at: data.scheduled_at
-          ? new Date(data.scheduled_at).toISOString().slice(0, 16)
-          : '',
-        format: data.format || 'video',
-        meeting_link: data.meeting_link || '',
-        location: data.location || '',
-        interviewer_name: data.interviewer_name || '',
-      });
-      setFeedbackText(data.feedback || '');
-      setFeedbackScore(data.feedback_score || 0);
-      if (data.status === 'done') setInterviewTab('feedback');
-    }
-  };
+    const scheduledInput = window.prompt(
+      `Data e horário da entrevista para ${app.candidate_name} (YYYY-MM-DD HH:mm)`,
+      existingInterview?.scheduled_at
+        ? new Date(existingInterview.scheduled_at).toISOString().slice(0, 16).replace('T', ' ')
+        : ''
+    );
 
-  const saveInterview = async () => {
-    if (!interviewApp || !interviewData.scheduled_at || !user) return;
+    if (!scheduledInput) return;
+
+    const normalizedScheduled = scheduledInput.trim().replace(' ', 'T');
+    const scheduledDate = new Date(normalizedScheduled);
+
+    if (Number.isNaN(scheduledDate.getTime())) {
+      toast({
+        title: 'Data inválida',
+        description: 'Use o formato YYYY-MM-DD HH:mm.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const interviewerName = window.prompt(
+      'Entrevistador responsável',
+      existingInterview?.interviewer_name || ''
+    );
+
+    if (interviewerName === null) return;
+
+    const formatInput = window.prompt(
+      'Formato da entrevista: video, presencial ou telefone',
+      existingInterview?.format || 'video'
+    );
+
+    if (formatInput === null) return;
+
+    const normalizedFormat = formatInput.trim().toLowerCase();
+    const formatValue = ['video', 'presencial', 'telefone'].includes(normalizedFormat)
+      ? normalizedFormat
+      : 'video';
+
+    const meetingLink = formatValue === 'video'
+      ? window.prompt('Link da reunião', existingInterview?.meeting_link || '')
+      : '';
+
+    if (meetingLink === null) return;
+
+    const location = formatValue === 'presencial'
+      ? window.prompt('Local da entrevista', existingInterview?.location || '')
+      : '';
+
+    if (location === null) return;
+
     setSavingInterview(true);
 
     const payload = {
-      application_id: interviewApp.id,
+      application_id: app.id,
       job_id: jobId,
       company_id: user.id,
-      scheduled_at: new Date(interviewData.scheduled_at).toISOString(),
-      format: interviewData.format,
-      meeting_link: interviewData.meeting_link || null,
-      location: interviewData.location || null,
-      interviewer_name: interviewData.interviewer_name || null,
+      scheduled_at: scheduledDate.toISOString(),
+      format: formatValue,
+      meeting_link: formatValue === 'video' ? (meetingLink || null) : null,
+      location: formatValue === 'presencial' ? (location || null) : null,
+      interviewer_name: interviewerName || null,
       status: 'scheduled',
       updated_at: new Date().toISOString(),
     };
@@ -332,7 +355,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
       await (supabase as any).from('interviews').insert(payload);
     }
 
-    const dateFormatted = new Date(interviewData.scheduled_at).toLocaleString('pt-BR', {
+    const dateFormatted = scheduledDate.toLocaleString('pt-BR', {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
@@ -351,30 +374,18 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
 
     const companyName = jobData?.company_name || 'Sinapse RH';
 
-    const emailBody = `Olá ${interviewApp.candidate_name},
+    const emailBody = `Olá ${app.candidate_name},
 
-Seu perfil foi selecionado e temos uma ótima notícia: você avançou para a etapa de entrevista no processo seletivo para a vaga de ${jobTitle}.
-
-Segue o agendamento:
+Seu perfil foi selecionado e você avançou para a etapa de entrevista na vaga de ${jobTitle}.
 
 📅 Data e horário: ${dateFormatted}
-📋 Formato: ${formatLabels[interviewData.format] || interviewData.format}${
-      interviewData.format === 'video' && interviewData.meeting_link
-        ? `\n🔗 Link: ${interviewData.meeting_link}`
-        : ''
+📋 Formato: ${formatLabels[formatValue] || formatValue}${
+      formatValue === 'video' && meetingLink ? `\n🔗 Link: ${meetingLink}` : ''
     }${
-      interviewData.format === 'presencial' && interviewData.location
-        ? `\n📍 Local: ${interviewData.location}`
-        : ''
+      formatValue === 'presencial' && location ? `\n📍 Local: ${location}` : ''
     }${
-      interviewData.interviewer_name
-        ? `\n👤 Entrevistador: ${interviewData.interviewer_name}`
-        : ''
+      interviewerName ? `\n👤 Entrevistador: ${interviewerName}` : ''
     }
-
-Por favor, confirme sua presença respondendo este e-mail ou pelo WhatsApp.
-
-Em caso de imprevistos, entre em contato com antecedência.
 
 Att,
 Equipe de Recrutamento
@@ -382,8 +393,8 @@ ${companyName}`;
 
     supabase.functions.invoke('send-candidate-status-email', {
       body: {
-        candidateName: interviewApp.candidate_name,
-        candidateEmail: interviewApp.candidate_email,
+        candidateName: app.candidate_name,
+        candidateEmail: app.candidate_email,
         jobTitle,
         companyName,
         newStatus: 'interview',
@@ -393,27 +404,11 @@ ${companyName}`;
     }).catch(console.error);
 
     setSavingInterview(false);
-    toast({ title: 'Entrevista agendada!', description: `E-mail enviado para ${interviewApp.candidate_name}.` });
-    setInterviewSheetOpen(false);
+    toast({ title: 'Entrevista agendada!', description: `E-mail enviado para ${app.candidate_name}.` });
   };
 
   const saveFeedback = async () => {
-    if (!interviewApp || !existingInterview) return;
-    setSavingInterview(true);
-
-    await (supabase as any)
-      .from('interviews')
-      .update({
-        feedback: feedbackText,
-        feedback_score: feedbackScore || null,
-        status: 'done',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', existingInterview.id);
-
-    setSavingInterview(false);
-    toast({ title: 'Feedback registrado!' });
-    setInterviewSheetOpen(false);
+    return;
   };
 
   const openOfferDialog = (app: ApplicationRow) => {
