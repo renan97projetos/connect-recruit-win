@@ -292,6 +292,9 @@ export default function JobPipeline() {
   };
 
   const pendingApps = applications.filter((a) => a.status === 'pending');
+  const interviewApps = applications.filter((a) => a.status === 'interview');
+  const approvedApps = applications.filter((a) => a.status === 'approved');
+  const rejectedApps = applications.filter((a) => a.status === 'rejected');
   const allPendingSelected =
     pendingApps.length > 0 && pendingApps.every((a) => selectedIds.has(a.id));
 
