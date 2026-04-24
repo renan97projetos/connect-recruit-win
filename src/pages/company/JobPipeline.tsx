@@ -2459,6 +2459,53 @@ export default function JobPipeline() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog
+        open={confirmBulk.open}
+        onOpenChange={(open) =>
+          !open && setConfirmBulk({ open: false, count: 0, nextLabel: '', nextId: null })
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Avançar todos os candidatos?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmBulk.count} candidato(s) de {activeStageLabel} serão movidos para{' '}
+              <strong>{confirmBulk.nextLabel}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={performBulkAdvance}>
+              Avançar todos
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirmReject.open}
+        onOpenChange={(open) => !open && setConfirmReject({ open: false, app: null })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rejeitar candidato?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmReject.app?.candidate_name} será rejeitado e um e-mail de notificação
+              será enviado automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={performReject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Rejeitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CompanyLayout>
   );
 }
