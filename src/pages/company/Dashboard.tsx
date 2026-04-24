@@ -126,6 +126,146 @@ export default function CompanyDashboard() {
   const metricsRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // === Action dialogs ===
+  type ActionType = 'pause' | 'resume' | 'cancel' | 'delete' | 'cancel-request';
+  const [actionDialog, setActionDialog] = useState<{
+    open: boolean;
+    type: ActionType | null;
+    job: any | null;
+    reason: string;
+    saving: boolean;
+  }>({ open: false, type: null, job: null, reason: '', saving: false });
+
+  const openActionDialog = (type: ActionType, job: any) => {
+    setActionDialog({ open: true, type, job, reason: '', saving: false });
+  };
+
+  const closeActionDialog = () => {
+    setActionDialog({ open: false, type: null, job: null, reason: '', saving: false });
+  };
+
+  const notifyCandidates = async (
+    fnName: 'notify-candidates-job-cancelled' | 'notify-candidates-job-paused',
+    payload: Record<string, unknown>
+  ) => {
+    try {
+      await supabase.functions.invoke(fnName, { body: payload });
+    } catch (err) {
+      console.warn('[notifyCandidates]', fnName, err);
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, job, reason } = actionDialog;
+    if (!type || !job) return;
+    setActionDialog((p) => ({ ...p, saving: true }));
+    const candidateCount = job.applications?.length || 0;
+
+    try {
+      if (type === 'pause') {
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            is_paused: true,
+            paused_at: new Date().toISOString(),
+            paused_reason: reason || null,
+          })
+          .eq('id', job.id);
+        if (error) throw error;
+        if (candidateCount > 0) {
+          await notifyCandidates('notify-candidates-job-paused', {
+            jobId: job.id,
+            reason,
+            resumed: false,
+          });
+        }
+        toast({
+          title: 'Vaga pausada',
+          description:
+            candidateCount > 0
+              ? `Os ${candidateCount} candidatos foram notificados.`
+              : 'A vaga foi pausada.',
+        });
+      } else if (type === 'resume') {
+        const { error } = await supabase
+          .from('jobs')
+          .update({ is_paused: false, paused_reason: null })
+          .eq('id', job.id);
+        if (error) throw error;
+        if (candidateCount > 0) {
+          await notifyCandidates('notify-candidates-job-paused', {
+            jobId: job.id,
+            reason,
+            resumed: true,
+          });
+        }
+        toast({ title: 'Vaga reaberta' });
+      } else if (type === 'cancel') {
+        // Starter ou rascunho: cancela direto
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            is_active: false,
+            is_archived: true,
+            pipeline_stage: 'cancelada',
+            cancellation_reason: reason || null,
+            cancellation_status: 'approved',
+            cancellation_requested_by: user?.id,
+            cancellation_requested_at: new Date().toISOString(),
+            cancellation_decided_at: new Date().toISOString(),
+            cancellation_decided_by: user?.id,
+          })
+          .eq('id', job.id);
+        if (error) throw error;
+        if (candidateCount > 0) {
+          await notifyCandidates('notify-candidates-job-cancelled', {
+            jobId: job.id,
+            reason,
+          });
+        }
+        toast({
+          title: 'Vaga cancelada',
+          description:
+            candidateCount > 0
+              ? `Os ${candidateCount} candidatos foram notificados.`
+              : 'A vaga foi cancelada.',
+        });
+      } else if (type === 'cancel-request') {
+        // Pro com vaga publicada: solicita aprovação do gestor
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            cancellation_status: 'pending',
+            cancellation_reason: reason || null,
+            cancellation_requested_by: user?.id,
+            cancellation_requested_at: new Date().toISOString(),
+          })
+          .eq('id', job.id);
+        if (error) throw error;
+        toast({
+          title: 'Solicitação de cancelamento enviada',
+          description: 'Aguardando aprovação do gestor responsável.',
+        });
+      } else if (type === 'delete') {
+        const { error } = await supabase.from('jobs').delete().eq('id', job.id);
+        if (error) throw error;
+        toast({ title: 'Vaga excluída' });
+      }
+
+      closeActionDialog();
+      await loadData();
+    } catch (err: any) {
+      console.error('[handleConfirmAction]', err);
+      toast({
+        title: 'Erro ao executar ação',
+        description: err?.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+      setActionDialog((p) => ({ ...p, saving: false }));
+    }
+  };
+
+
   const handleExportPDF = async () => {
     if (!metricsRef.current) return;
     try {
