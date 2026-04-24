@@ -553,7 +553,7 @@ export default function JobForm() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="type">Tipo de contrato *</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })} disabled={fieldsLocked}>
                       <SelectTrigger id="type"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="full-time">Tempo Integral</SelectItem>
