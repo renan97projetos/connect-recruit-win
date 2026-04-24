@@ -567,7 +567,7 @@ export default function JobForm() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="location">Modalidade *</Label>
-                    <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
+                    <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })} disabled={fieldsLocked}>
                       <SelectTrigger id="location"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="remote">Remoto</SelectItem>
