@@ -94,6 +94,7 @@ export default function JobForm() {
     question_type: ScreeningQuestionType;
     required: boolean;
     options?: string[];
+    score_weight?: number;
   };
   const [questions, setQuestions] = useState<ScreeningQuestion[]>([]);
   const QUESTION_TYPES_WITH_OPTIONS: ScreeningQuestionType[] = ['multiple_choice', 'single_choice'];
@@ -230,7 +231,7 @@ export default function JobForm() {
         }
         const { data: qs } = await supabase
           .from('screening_questions')
-          .select('question, question_type, required, order_position, options')
+          .select('question, question_type, required, order_position, options, score_weight')
           .eq('job_id', id)
           .order('order_position');
         if (qs && qs.length > 0) {
@@ -246,6 +247,7 @@ export default function JobForm() {
                 : 'text') as ScreeningQuestion['question_type'],
               required: !!q.required,
               options: Array.isArray(q.options) ? q.options : undefined,
+              score_weight: typeof q.score_weight === 'number' ? q.score_weight : 0,
             })),
           );
         }
@@ -364,6 +366,7 @@ export default function JobForm() {
               required: q.required,
               order_position: i,
               options: QUESTION_TYPES_WITH_OPTIONS.includes(q.question_type) && q.options ? q.options.filter(o => o.trim()) : null,
+              score_weight: typeof q.score_weight === 'number' && q.score_weight > 0 ? q.score_weight : 0,
             })),
           );
         }
@@ -1154,21 +1157,70 @@ export default function JobForm() {
                           </div>
                         )}
 
-                        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer pl-1">
-                          <input
-                            type="checkbox"
-                            checked={q.required}
-                            onChange={(e) =>
-                              setQuestions(prev =>
-                                prev.map((item, idx) =>
-                                  idx === i ? { ...item, required: e.target.checked } : item,
-                                ),
-                              )
-                            }
-                            className="h-3.5 w-3.5 rounded border-input"
-                          />
-                          Resposta obrigatória
-                        </label>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-1">
+                          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={q.required}
+                              onChange={(e) =>
+                                setQuestions(prev =>
+                                  prev.map((item, idx) =>
+                                    idx === i ? { ...item, required: e.target.checked } : item,
+                                  ),
+                                )
+                              }
+                              className="h-3.5 w-3.5 rounded border-input"
+                            />
+                            Resposta obrigatória
+                          </label>
+
+                          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={(q.score_weight ?? 0) > 0}
+                              onChange={(e) =>
+                                setQuestions(prev =>
+                                  prev.map((item, idx) =>
+                                    idx === i
+                                      ? { ...item, score_weight: e.target.checked ? (item.score_weight && item.score_weight > 0 ? item.score_weight : 5) : 0 }
+                                      : item,
+                                  ),
+                                )
+                              }
+                              className="h-3.5 w-3.5 rounded border-input"
+                            />
+                            Contar no Score de Aderência
+                          </label>
+
+                          {(q.score_weight ?? 0) > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <Label className="text-xs text-muted-foreground">Pontos:</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={100}
+                                step={1}
+                                value={q.score_weight ?? 0}
+                                onChange={(e) => {
+                                  const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                                  setQuestions(prev =>
+                                    prev.map((item, idx) =>
+                                      idx === i ? { ...item, score_weight: val } : item,
+                                    ),
+                                  );
+                                }}
+                                className="h-7 w-20 text-xs"
+                              />
+                              <span className="text-xs text-muted-foreground">/ 100</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {(q.score_weight ?? 0) > 0 && (
+                          <p className="text-[11px] text-muted-foreground pl-1 italic">
+                            Esta pergunta entra na soma dos 100 pontos do score, junto com as categorias padrão (Habilidades, Experiência, Formação, Localização). Ajuste os pesos das categorias se necessário.
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>

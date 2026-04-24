@@ -1444,6 +1444,7 @@ export type Database = {
           question: string
           question_type: string
           required: boolean
+          score_weight: number
           source_key: string | null
         }
         Insert: {
@@ -1457,6 +1458,7 @@ export type Database = {
           question: string
           question_type?: string
           required?: boolean
+          score_weight?: number
           source_key?: string | null
         }
         Update: {
@@ -1470,6 +1472,7 @@ export type Database = {
           question?: string
           question_type?: string
           required?: boolean
+          score_weight?: number
           source_key?: string | null
         }
         Relationships: [
