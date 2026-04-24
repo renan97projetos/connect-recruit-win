@@ -119,6 +119,20 @@ const stageStatusMap: Record<string, string> = {
   rejected: 'rejected',
 };
 
+const NEXT_STAGE: Record<string, string> = {
+  screening: 'interview',
+  interview: 'assessment',
+  assessment: 'approved',
+  approved: 'approved',
+};
+
+const NEXT_STAGE_LABEL: Record<string, string> = {
+  screening: 'Mover para Entrevista',
+  interview: 'Mover para Avaliação',
+  assessment: 'Aprovar candidato',
+  approved: 'Aprovado',
+};
+
 function getStageBucket(app: ApplicationRow): string {
   const key = (app.current_stage || app.status || '').toLowerCase();
   return STAGE_ALIASES[key] || 'screening';
