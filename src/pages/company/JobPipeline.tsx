@@ -1558,6 +1558,65 @@ export default function JobPipeline() {
                       <Calendar className="h-3 w-3" />
                       Há {daysAgo(app.applied_at)} dia(s) no processo
                     </div>
+
+                    {/* Documentos enviados pelo candidato */}
+                    {(() => {
+                      const docs = documentsByApp[app.id] || [];
+                      return (
+                        <div
+                          className="mb-3 rounded-lg border border-border bg-muted/30 p-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                              <FileText className="h-3.5 w-3.5 text-teal-600" />
+                              Documentos recebidos
+                            </div>
+                            <span
+                              className={cn(
+                                'text-[10px] font-semibold px-1.5 py-0.5 rounded',
+                                docs.length > 0
+                                  ? 'bg-teal-500/10 text-teal-700'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              {docs.length}
+                            </span>
+                          </div>
+                          {docs.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground italic">
+                              Nenhum documento enviado ainda.
+                            </p>
+                          ) : (
+                            <ul className="space-y-1 max-h-32 overflow-y-auto">
+                              {docs.map((file: any) => (
+                                <li
+                                  key={file.name}
+                                  className="flex items-center gap-1.5 text-[11px]"
+                                >
+                                  <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                  <span className="truncate flex-1" title={file.name}>
+                                    {formatDocLabel(file.name)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDocument(app.id, file.name);
+                                    }}
+                                    className="text-primary hover:text-primary/80 p-0.5 rounded"
+                                    title="Abrir / baixar"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {renderStageActions(
                       <Button
                         size="sm"
