@@ -583,6 +583,7 @@ export default function JobForm() {
                   <Select
                     value={formData.experienceLevel || 'none'}
                     onValueChange={(v) => setFormData({ ...formData, experienceLevel: v === 'none' ? '' : v })}
+                    disabled={fieldsLocked}
                   >
                     <SelectTrigger id="experienceLevel">
                       <SelectValue placeholder="Selecione o nível" />
