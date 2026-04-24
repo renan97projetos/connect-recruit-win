@@ -42,6 +42,7 @@ import {
   StickyNote,
   ArrowRight,
   Trophy,
+  MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -800,8 +801,32 @@ ${companyName}`;
                           {format(new Date(app.applied_at), 'dd/MM/yyyy', { locale: ptBR })}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center justify-end gap-1">
-                            {profile?.phone && (
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                              onClick={() => moveCandidate(app.id, 'interview')}
+                              disabled={updating === app.id}
+                              title="Mover para Entrevista"
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (confirm(`Reprovar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) {
+                                  moveCandidate(app.id, 'rejected');
+                                }
+                              }}
+                              disabled={updating === app.id}
+                              title="Reprovar (envia e-mail)"
+                            >
+                              <ThumbsDown className="h-4 w-4" />
+                            </Button>
+                            {profile?.phone ? (
                               <a
                                 href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
                                   `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
@@ -810,39 +835,23 @@ ${companyName}`;
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-600 hover:bg-green-50" title="WhatsApp">
-                                  <Phone className="h-3.5 w-3.5" />
+                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-[#25D366] hover:bg-[#25D366]/10" title="WhatsApp">
+                                  <MessageCircle className="h-4 w-4" />
                                 </Button>
                               </a>
+                            ) : (
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 opacity-30" disabled title="Sem telefone cadastrado">
+                                <MessageCircle className="h-4 w-4" />
+                              </Button>
                             )}
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 px-2"
+                              className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-500/10"
                               onClick={(e) => { e.stopPropagation(); openNoteSheet(app); }}
-                              title="Nota"
+                              title="Notas internas"
                             >
-                              <StickyNote className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                              onClick={() => moveCandidate(app.id, 'interview')}
-                              disabled={updating === app.id}
-                              title="Mover para Entrevista"
-                            >
-                              <ArrowRight className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2 text-destructive hover:bg-destructive/10"
-                              onClick={() => moveCandidate(app.id, 'rejected')}
-                              disabled={updating === app.id}
-                              title="Reprovar"
-                            >
-                              <ThumbsDown className="h-3.5 w-3.5" />
+                              <StickyNote className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
