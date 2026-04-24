@@ -561,11 +561,21 @@ export default function JobPipeline() {
               const score = app.adherence_score ?? app.score ?? 0;
               const rank = idx + 1;
               const profile = profilesById[app.candidate_id];
+              const next = getNextStage(getCandidateStage(app));
+              const goToProfile = () =>
+                navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
+              const isTerminal =
+                getCandidateStage(app) === 'aprovado' || getCandidateStage(app) === 'reprovado';
               return (
-                <button
+                <div
                   key={app.id}
-                  onClick={() => navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`)}
-                  className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group"
+                  onClick={goToProfile}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') goToProfile();
+                  }}
+                  className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/50 hover:shadow-sm transition-all group cursor-pointer"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <Avatar className="h-10 w-10 flex-shrink-0">
@@ -584,7 +594,7 @@ export default function JobPipeline() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-xs mb-3">
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       Há {daysAgo(app.applied_at)} dia(s)
@@ -605,7 +615,35 @@ export default function JobPipeline() {
                       </span>
                     )}
                   </div>
-                </button>
+                  {!isTerminal && (
+                    <div
+                      className="flex items-center gap-2 pt-3 border-t border-border"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-8 text-xs gap-1"
+                        onClick={() => moveToNextStage(app)}
+                        disabled={actionLoading === app.id || !next}
+                        title={next ? `Mover para ${next.label}` : 'Etapa final'}
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                        {next ? next.label : 'Final'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => rejectCandidate(app)}
+                        disabled={actionLoading === app.id}
+                        title="Reprovar (envia e-mail)"
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               );
             })}
 
