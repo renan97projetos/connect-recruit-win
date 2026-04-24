@@ -110,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div style="padding:30px;">
               <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Olá, ${candidateName}</h2>
-              <p style="font-size:15px;color:#444;">${body}</p>
+              ${bodyHtml}
               ${feedbackHtml}
               <div style="background:#f9f9f9;padding:16px;border-radius:6px;margin:20px 0;">
                 <p style="margin:4px 0;font-size:14px;"><strong>Vaga:</strong> ${jobTitle}</p>
