@@ -16,6 +16,8 @@ import { ArrowLeft, Plus, X, Save, Send, DollarSign, Gift, ListChecks, Target, S
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { JobPreview } from '@/components/jobs/JobPreview';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Lock, Unlock, AlertTriangle } from 'lucide-react';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 import { ProFeatureGate } from '@/components/ProFeatureGate';
@@ -59,6 +61,15 @@ export default function JobForm() {
     requiresApproval: false,
   });
   const [hasDefaultApprover, setHasDefaultApprover] = useState(false);
+  const [jobApprovalStatus, setJobApprovalStatus] = useState<string>('');
+  const [activeApplicationsCount, setActiveApplicationsCount] = useState(0);
+  const [editUnlocked, setEditUnlocked] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+
+  // Vaga é considerada "publicada" quando o status não é rascunho nem aguardando aprovação
+  const isPublishedJob = isEditing && !!jobApprovalStatus && !['draft', 'pending_approval'].includes(jobApprovalStatus);
+  // Bloqueia campos quando vaga publicada e ainda não foi destravada manualmente
+  const fieldsLocked = isPublishedJob && !editUnlocked;
 
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
@@ -181,9 +192,18 @@ export default function JobForm() {
             isActive: job.is_active,
             requiresApproval: !!(job as any).requires_approval,
           });
+          setJobApprovalStatus((job as any).approval_status || '');
           setRequirements(job.requirements?.length > 0 ? job.requirements : ['']);
           setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : ['']);
           setBenefits(job.benefits?.length > 0 ? job.benefits : ['']);
+
+          // Conta candidaturas ativas (não rejeitadas/retiradas)
+          const { count } = await supabase
+            .from('applications')
+            .select('id', { count: 'exact', head: true })
+            .eq('job_id', id)
+            .not('status', 'in', '(rejected,withdrawn)');
+          setActiveApplicationsCount(count || 0);
           const j = job as any;
           setScoreConfig({
             required_skills: j.required_skills || [],
@@ -426,6 +446,56 @@ export default function JobForm() {
 
         {!isEditing && <PlanLimitBanner resource="jobs" className="mb-4" />}
 
+        {fieldsLocked && (
+          <Card className="mb-4 border-amber-300 bg-amber-50">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Lock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Vaga publicada — apenas o título pode ser editado
+                  </p>
+                  <p className="text-xs text-amber-800 mt-0.5">
+                    {activeApplicationsCount > 0
+                      ? `Esta vaga tem ${activeApplicationsCount} candidatura${activeApplicationsCount > 1 ? 's' : ''} ativa${activeApplicationsCount > 1 ? 's' : ''} — as alterações não retroagem para quem já aplicou.`
+                      : 'Para alterar os demais campos, destrave a edição.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 border-amber-400 bg-white text-amber-900 hover:bg-amber-100"
+                onClick={() => setUnlockDialogOpen(true)}
+              >
+                <Unlock className="mr-1.5 h-3.5 w-3.5" />
+                Destravar edição
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {isPublishedJob && editUnlocked && (
+          <Card className="mb-4 border-blue-300 bg-blue-50">
+            <CardContent className="flex items-center gap-3 p-3">
+              <Unlock className="h-4 w-4 shrink-0 text-blue-700" />
+              <p className="text-xs text-blue-900 flex-1">
+                Edição completa habilitada. As alterações <strong>não retroagem</strong> para quem já aplicou.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-blue-800 hover:bg-blue-100"
+                onClick={() => setEditUnlocked(false)}
+              >
+                Bloquear novamente
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
           {/* COLUNA ESQUERDA — FORMULÁRIO */}
           <div className="space-y-5">
@@ -468,6 +538,7 @@ export default function JobForm() {
                     id="description"
                     rows={6}
                     value={formData.description}
+                    disabled={fieldsLocked}
                     onChange={(e) => {
                       setFormData({ ...formData, description: e.target.value });
                       if (errors.description) setErrors({ ...errors, description: undefined });
@@ -482,7 +553,7 @@ export default function JobForm() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="type">Tipo de contrato *</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                    <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })} disabled={fieldsLocked}>
                       <SelectTrigger id="type"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="full-time">Tempo Integral</SelectItem>
@@ -496,7 +567,7 @@ export default function JobForm() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="location">Modalidade *</Label>
-                    <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
+                    <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })} disabled={fieldsLocked}>
                       <SelectTrigger id="location"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="remote">Remoto</SelectItem>
@@ -512,6 +583,7 @@ export default function JobForm() {
                   <Select
                     value={formData.experienceLevel || 'none'}
                     onValueChange={(v) => setFormData({ ...formData, experienceLevel: v === 'none' ? '' : v })}
+                    disabled={fieldsLocked}
                   >
                     <SelectTrigger id="experienceLevel">
                       <SelectValue placeholder="Selecione o nível" />
@@ -541,6 +613,7 @@ export default function JobForm() {
                         if (errors.state) setErrors({ ...errors, state: undefined });
                         if (errors.city) setErrors({ ...errors, city: undefined });
                       }}
+                      disabled={fieldsLocked}
                     >
                       <SelectTrigger
                         id="state"
@@ -569,7 +642,7 @@ export default function JobForm() {
                         setFormData({ ...formData, city: v });
                         if (errors.city) setErrors({ ...errors, city: undefined });
                       }}
-                      disabled={!formData.state || citiesLoading}
+                      disabled={fieldsLocked || !formData.state || citiesLoading}
                     >
                       <SelectTrigger
                         id="city"
@@ -600,6 +673,10 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
+            <div
+              className={fieldsLocked ? 'pointer-events-none opacity-60 select-none space-y-5' : 'space-y-5 contents'}
+              aria-disabled={fieldsLocked}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Detalhes opcionais</CardTitle>
@@ -1111,6 +1188,7 @@ export default function JobForm() {
                 </CardContent>
               </Card>
             )}
+            </div>
 
             {/* Rodapé sticky com 2 CTAs */}
             <div className="sticky bottom-0 -mx-2 flex flex-col-reverse gap-2 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
@@ -1184,6 +1262,39 @@ export default function JobForm() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              Destravar edição da vaga?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 pt-2">
+              <span className="block">
+                {activeApplicationsCount > 0 ? (
+                  <>
+                    Esta vaga tem <strong>{activeApplicationsCount} candidatura{activeApplicationsCount > 1 ? 's' : ''} ativa{activeApplicationsCount > 1 ? 's' : ''}</strong> — as alterações <strong>não retroagem</strong> para quem já aplicou. Deseja prosseguir para a alteração?
+                  </>
+                ) : (
+                  <>Deseja prosseguir para alterar todos os campos desta vaga publicada?</>
+                )}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setEditUnlocked(true);
+                setUnlockDialogOpen(false);
+              }}
+            >
+              Sim, prosseguir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CompanyLayout>
   );
 }
