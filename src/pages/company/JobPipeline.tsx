@@ -72,6 +72,7 @@ import {
   User as UserIcon,
   FileText,
   Download,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -261,7 +262,7 @@ export default function JobPipeline() {
         supabase
           .from('applications')
           .select(
-            'id, candidate_id, candidate_name, candidate_email, status, current_stage, score, adherence_score, applied_at, updated_at, notes'
+            'id, candidate_id, candidate_name, candidate_email, status, current_stage, score, adherence_score, score_breakdown, applied_at, updated_at, notes'
           )
           .eq('job_id', id)
           .order('adherence_score', { ascending: false })
