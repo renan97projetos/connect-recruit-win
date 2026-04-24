@@ -168,7 +168,7 @@ export default function Home() {
     }).format(value);
   };
   return <div className="min-h-screen bg-background">
-      <VideoPresentationModal />
+      {/* <VideoPresentationModal /> — temporariamente oculto */}
       <Navbar />
       
       {/* Marquee Banner - Neubrutalist */}
