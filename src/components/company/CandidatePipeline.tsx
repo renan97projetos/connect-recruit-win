@@ -151,6 +151,28 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
   const [offerNotes, setOfferNotes] = useState('');
   const [savingOffer, setSavingOffer] = useState(false);
 
+  // Interview scheduling
+  const [interviewSheetOpen, setInterviewSheetOpen] = useState(false);
+  const [interviewApp, setInterviewApp] = useState<ApplicationRow | null>(null);
+  const [interviewData, setInterviewData] = useState<{
+    scheduled_at: string;
+    format: string;
+    meeting_link: string;
+    location: string;
+    interviewer_name: string;
+  }>({
+    scheduled_at: '',
+    format: 'video',
+    meeting_link: '',
+    location: '',
+    interviewer_name: '',
+  });
+  const [existingInterview, setExistingInterview] = useState<any>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackScore, setFeedbackScore] = useState(0);
+  const [savingInterview, setSavingInterview] = useState(false);
+  const [interviewTab, setInterviewTab] = useState<'agendar' | 'feedback'>('agendar');
+
   useEffect(() => {
     if (!jobId) return;
     loadData();
