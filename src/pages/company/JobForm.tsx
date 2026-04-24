@@ -23,7 +23,9 @@ import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 import { ProFeatureGate } from '@/components/ProFeatureGate';
 import { BRAZIL_STATES, fetchCitiesByState } from '@/lib/brazilLocations';
 import { REQUIREMENT_CATEGORIES } from '@/lib/jobRequirements';
-import { JobScoreConfig, ScoreConfig } from '@/components/jobs/JobScoreConfig';
+import { JobScoreConfig, ScoreConfig, CustomScoredQuestion } from '@/components/jobs/JobScoreConfig';
+
+const MAX_CUSTOM_SCORED_QUESTIONS = 5;
 import { usePlanType } from '@/hooks/usePlanType';
 
 interface FormErrors {
