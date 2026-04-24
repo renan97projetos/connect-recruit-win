@@ -213,15 +213,11 @@ export default function JobPipeline() {
     open: boolean;
     app: any | null;
     targetStage: CandidateStageId | '';
-    reason: string;
-    notify: boolean;
     saving: boolean;
   }>({
     open: false,
     app: null,
     targetStage: '',
-    reason: '',
-    notify: true,
     saving: false,
   });
 
