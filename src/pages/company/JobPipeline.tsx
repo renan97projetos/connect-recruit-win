@@ -58,6 +58,10 @@ import {
   Send,
   MoveHorizontal,
   AlertTriangle,
+  DollarSign,
+  FileCheck,
+  UserCheck,
+  BriefcaseBusiness,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
