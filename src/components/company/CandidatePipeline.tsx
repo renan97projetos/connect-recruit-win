@@ -516,7 +516,7 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/company/jobs/${jobId}/candidates`)}
+                      onClick={() => navigate(`/company/jobs/${jobId}`)}
                     >
                       <Users className="h-4 w-4 mr-2" />
                       Ver todos os candidatos
