@@ -1552,6 +1552,92 @@ export default function JobPipeline() {
         )}
       </div>
 
+      {/* Dialog de Proposta Salarial */}
+      <Dialog
+        open={offerDialog.open}
+        onOpenChange={(open) => setOfferDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-orange-600" />
+              Proposta salarial
+            </DialogTitle>
+            <DialogDescription>
+              {offerDialog.app?.candidate_name
+                ? `Registrar proposta para ${offerDialog.app.candidate_name} e enviar e-mail.`
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div>
+              <Label htmlFor="offerSalary" className="text-xs">
+                Salário ofertado (R$) *
+              </Label>
+              <Input
+                id="offerSalary"
+                type="number"
+                placeholder="5000"
+                value={offerDialog.salary}
+                onChange={(e) =>
+                  setOfferDialog((prev) => ({ ...prev, salary: e.target.value }))
+                }
+                className="mt-1 h-9 text-sm"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="offerBenefits" className="text-xs">
+                Benefícios
+              </Label>
+              <Input
+                id="offerBenefits"
+                placeholder="VR, VT, Plano de saúde..."
+                value={offerDialog.benefits}
+                onChange={(e) =>
+                  setOfferDialog((prev) => ({ ...prev, benefits: e.target.value }))
+                }
+                className="mt-1 h-9 text-sm"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="offerNotes" className="text-xs">
+                Observações
+              </Label>
+              <Textarea
+                id="offerNotes"
+                placeholder="Informações adicionais..."
+                value={offerDialog.notes}
+                onChange={(e) =>
+                  setOfferDialog((prev) => ({ ...prev, notes: e.target.value }))
+                }
+                rows={3}
+                className="mt-1 text-sm resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOfferDialog((prev) => ({ ...prev, open: false }))}
+              disabled={offerDialog.saving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={saveOffer}
+              disabled={!offerDialog.salary || offerDialog.saving}
+            >
+              {offerDialog.saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {offerDialog.saving ? 'Salvando...' : 'Registrar e enviar e-mail'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog
         open={noteDialog.open}
         onOpenChange={(open) => {
