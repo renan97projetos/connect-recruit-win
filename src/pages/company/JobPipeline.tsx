@@ -392,6 +392,16 @@ export default function JobPipeline() {
     nextId: CandidateStageId | null;
   }>({ open: false, count: 0, nextLabel: '', nextId: null });
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelected = (appId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(appId)) next.delete(appId);
+      else next.add(appId);
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!id) return;
