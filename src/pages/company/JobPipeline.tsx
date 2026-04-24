@@ -847,8 +847,7 @@ export default function JobPipeline() {
               const next = getNextStage(getCandidateStage(app));
               const goToProfile = () =>
                 navigate(`/company/candidates/${app.candidate_id}?jobId=${id}`);
-              const isTerminal =
-                getCandidateStage(app) === 'aprovado' || getCandidateStage(app) === 'reprovado';
+              const isTerminal = getCandidateStage(app) === 'reprovado';
               const interview = interviewsByApp[app.id];
 
               // Card especializado para Entrevista
