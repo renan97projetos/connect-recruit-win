@@ -179,6 +179,34 @@ export default function JobPipeline() {
     value: '',
     saving: false,
   });
+  const [interviewSheet, setInterviewSheet] = useState<{
+    open: boolean;
+    app: any | null;
+    tab: 'agendar' | 'feedback';
+    existing: any | null;
+    saving: boolean;
+    scheduledAt: string;
+    format: string;
+    meetingLink: string;
+    location: string;
+    interviewer: string;
+    feedbackText: string;
+    feedbackScore: number;
+  }>({
+    open: false,
+    app: null,
+    tab: 'agendar',
+    existing: null,
+    saving: false,
+    scheduledAt: '',
+    format: 'video',
+    meetingLink: '',
+    location: '',
+    interviewer: '',
+    feedbackText: '',
+    feedbackScore: 0,
+  });
+  const [interviewsByApp, setInterviewsByApp] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!id) return;
