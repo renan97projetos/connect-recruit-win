@@ -360,6 +360,50 @@ export default function JobPipeline() {
     }
   };
 
+  const advanceAllInStage = async () => {
+    const stageCandidates = applications.filter(
+      (a) => getCandidateStage(a) === activeStage
+    );
+    if (stageCandidates.length === 0) {
+      toast({ title: 'Nenhum candidato nesta etapa', variant: 'destructive' });
+      return;
+    }
+    const next = getNextStage(activeStage);
+    if (!next) {
+      toast({
+        title: 'Etapa final',
+        description: 'Não há próxima etapa para avançar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (
+      !confirm(
+        `Avançar ${stageCandidates.length} candidato(s) de ${activeStageLabel} para ${next.label}?`
+      )
+    )
+      return;
+
+    setActionLoading('bulk');
+    let ok = 0;
+    let fail = 0;
+    for (const app of stageCandidates) {
+      const success = await updateApplication(app.id, {
+        current_stage: next.id,
+        status: STATUS_FOR_STAGE[next.id],
+      });
+      if (success) ok++;
+      else fail++;
+    }
+    setActionLoading(null);
+
+    toast({
+      title: `${ok} candidato(s) movidos para ${next.label}`,
+      description: fail > 0 ? `${fail} falharam.` : undefined,
+      variant: fail > 0 ? 'destructive' : 'default',
+    });
+  };
+
   const rejectCandidate = async (app: any) => {
     if (!confirm(`Reprovar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
@@ -889,11 +933,40 @@ export default function JobPipeline() {
 
       {/* Conteúdo da etapa selecionada */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             {activeStageLabel} — {candidatesInActiveStage.length}{' '}
             {candidatesInActiveStage.length === 1 ? 'candidato' : 'candidatos'}
           </h2>
+          {(() => {
+            const next = getNextStage(activeStage);
+            const canBulk =
+              !!next && candidatesInActiveStage.length > 0;
+            return (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!canBulk || actionLoading === 'bulk'}
+                onClick={advanceAllInStage}
+                className="gap-2"
+                title={
+                  next
+                    ? `Mover todos para ${next.label}`
+                    : 'Etapa final — não há próxima etapa'
+                }
+              >
+                {actionLoading === 'bulk' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+                Avançar todos
+                {next && (
+                  <span className="text-muted-foreground">→ {next.label}</span>
+                )}
+              </Button>
+            );
+          })()}
         </div>
 
         {isTriagem ? (
