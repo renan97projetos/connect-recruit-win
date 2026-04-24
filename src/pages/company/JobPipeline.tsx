@@ -232,13 +232,17 @@ export default function JobPipeline() {
 
       if (apps.length) {
         const ids = Array.from(new Set(apps.map((a: any) => a.candidate_id)));
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id, avatar_url, phone')
-          .in('id', ids);
+        const appIds = apps.map((a: any) => a.id);
+        const [profsRes, intRes] = await Promise.all([
+          supabase.from('profiles').select('id, avatar_url, phone').in('id', ids),
+          supabase.from('interviews').select('*').in('application_id', appIds),
+        ]);
         const map: Record<string, any> = {};
-        (profs || []).forEach((p: any) => (map[p.id] = p));
+        (profsRes.data || []).forEach((p: any) => (map[p.id] = p));
         setProfilesById(map);
+        const intMap: Record<string, any> = {};
+        (intRes.data || []).forEach((i: any) => (intMap[i.application_id] = i));
+        setInterviewsByApp(intMap);
       }
       setLoading(false);
     };
