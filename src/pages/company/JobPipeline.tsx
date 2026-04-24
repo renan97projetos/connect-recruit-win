@@ -1150,18 +1150,11 @@ export default function JobPipeline() {
                       </TableCell>
                       <TableCell>
                         {score > 0 ? (
-                          <span
-                            className={cn(
-                              'inline-flex items-center justify-center min-w-[2.75rem] px-2 py-1 rounded-md text-sm font-bold',
-                              score >= 70
-                                ? 'bg-green-100 text-green-700'
-                                : score >= 40
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-red-100 text-red-600'
-                            )}
-                          >
-                            {Math.round(score)}%
-                          </span>
+                          <ScoreTooltip
+                            score={score}
+                            breakdown={app.score_breakdown}
+                            className="min-w-[2.75rem] justify-center text-sm"
+                          />
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
@@ -1327,18 +1320,7 @@ export default function JobPipeline() {
                         </p>
                       </div>
                       {score > 0 && (
-                        <span
-                          className={cn(
-                            'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
-                            score >= 70
-                              ? 'bg-green-100 text-green-700'
-                              : score >= 40
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-red-100 text-red-600'
-                          )}
-                        >
-                          {Math.round(score)}%
-                        </span>
+                        <ScoreTooltip score={score} breakdown={app.score_breakdown} />
                       )}
                     </div>
 
@@ -1529,18 +1511,7 @@ export default function JobPipeline() {
                     </p>
                   </div>
                   {score > 0 && (
-                    <span
-                      className={cn(
-                        'text-xs font-bold px-2 py-1 rounded-md flex-shrink-0',
-                        score >= 70
-                          ? 'bg-green-100 text-green-700'
-                          : score >= 40
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-red-100 text-red-600'
-                      )}
-                    >
-                      {Math.round(score)}%
-                    </span>
+                    <ScoreTooltip score={score} breakdown={app.score_breakdown} />
                   )}
                 </div>
               );
@@ -1866,19 +1837,11 @@ export default function JobPipeline() {
                       Há {daysAgo(app.applied_at)} dia(s)
                     </span>
                     {score > 0 && (
-                      <span
-                        className={cn(
-                          'flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full',
-                          score >= 80
-                            ? 'bg-green-50 text-green-700'
-                            : score >= 50
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'bg-red-50 text-red-600'
-                        )}
-                      >
-                        {rank <= 3 && <Trophy className="h-3 w-3" />}
-                        {Math.round(score)}%
-                      </span>
+                      <ScoreTooltip
+                        score={score}
+                        breakdown={app.score_breakdown}
+                        variant="pill"
+                      />
                     )}
                   </div>
                   <div
