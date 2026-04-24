@@ -527,7 +527,7 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
               )}
 
             <button
-              onClick={() => navigate(`/company/jobs/${job.id}/candidates`)}
+              onClick={() => navigate(`/company/jobs/${job.id}`)}
               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-primary/50 hover:bg-primary/5 text-sm font-medium text-gray-700 transition-colors"
             >
               <Users className="h-4 w-4 text-primary" /> Ver candidatos
