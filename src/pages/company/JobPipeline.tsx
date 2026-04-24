@@ -2498,25 +2498,89 @@ export default function JobPipeline() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setInterviewSheet((prev) => ({ ...prev, open: false }))}
-                  disabled={interviewSheet.saving}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={saveInterview}
-                  disabled={interviewSheet.saving || !interviewSheet.scheduledAt}
-                >
-                  {interviewSheet.saving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="mr-2 h-4 w-4" />
-                  )}
-                  {interviewSheet.existing ? 'Atualizar e notificar' : 'Agendar e notificar'}
-                </Button>
+              <div className="flex flex-col gap-2 pt-4">
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setInterviewSheet((prev) => ({ ...prev, open: false }))}
+                    disabled={interviewSheet.saving}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={saveInterview}
+                    disabled={interviewSheet.saving || !interviewSheet.scheduledAt}
+                  >
+                    {interviewSheet.saving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="mr-2 h-4 w-4" />
+                    )}
+                    {interviewSheet.existing ? 'Atualizar e notificar' : 'Agendar e notificar'}
+                  </Button>
+                </div>
+                {(() => {
+                  const app = interviewSheet.app;
+                  const phone = app ? profilesById[app.candidate_id]?.phone : null;
+                  if (!app || !phone) return null;
+                  const formatLabelsWa: Record<string, string> = {
+                    video: 'Videochamada',
+                    presencial: 'Presencial',
+                    telefone: 'Ligação',
+                  };
+                  const jobUrl = `${window.location.origin}/jobs/${id}`;
+                  let waMessage = `Olá ${app.candidate_name}!\n\nVocê avançou para a etapa de entrevista no processo seletivo da vaga "${jobTitle}"${companyName ? ` na "${companyName}"` : ''}.\n\nDetalhes da vaga: ${jobUrl}`;
+                  if (interviewSheet.scheduledAt) {
+                    const dt = new Date(interviewSheet.scheduledAt).toLocaleString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+                    waMessage += `\n\nDetalhes do agendamento:\n- Data e horário: ${dt}\n- Formato: ${formatLabelsWa[interviewSheet.format] || interviewSheet.format || '-'}`;
+                    if (interviewSheet.meetingLink) waMessage += `\n- Link: ${interviewSheet.meetingLink}`;
+                    if (interviewSheet.location) waMessage += `\n- Local: ${interviewSheet.location}`;
+                    if (interviewSheet.interviewer) waMessage += `\n- Entrevistador: ${interviewSheet.interviewer}`;
+                  }
+                  waMessage += `\n\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
+                  const waSent = !!waSentByApp[app.id];
+                  const disabled = !interviewSheet.scheduledAt;
+                  return (
+                    <a
+                      href={disabled ? undefined : `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(waMessage)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        if (disabled) {
+                          e.preventDefault();
+                          return;
+                        }
+                        markWaSent(app.id);
+                      }}
+                      className={cn('w-full', disabled && 'pointer-events-none')}
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={disabled}
+                        className={cn(
+                          'w-full gap-2',
+                          waSent
+                            ? 'border-green-500/40 text-green-700 hover:bg-green-500/10'
+                            : 'border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/10'
+                        )}
+                      >
+                        {waSent ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <MessageCircle className="h-4 w-4" />
+                        )}
+                        {waSent ? 'Notificação WhatsApp enviada — reenviar' : 'Notificar via WhatsApp'}
+                      </Button>
+                    </a>
+                  );
+                })()}
               </div>
             </div>
           ) : (
