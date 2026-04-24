@@ -806,6 +806,18 @@ ${companyName}`;
                               >
                                 <Eye className="h-3.5 w-3.5 mr-1" /> Ver
                               </Button>
+                              {getStageBucket(app) === 'interview' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-500/10"
+                                  onClick={(e) => { e.stopPropagation(); openInterviewSheet(app); }}
+                                  aria-label="Agendar entrevista"
+                                  title="Agendar entrevista"
+                                >
+                                  <Calendar className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                               {getStageBucket(app) === 'approved' && (
                                 <ProFeatureGate compact featureName="Proposta">
                                   <Button
