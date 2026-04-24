@@ -918,6 +918,39 @@ ${companyName}`;
                               <CalendarPlus className="h-3.5 w-3.5" />
                               Agendar
                             </Button>
+                            <div
+                              className="flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 border-destructive/40 text-destructive hover:bg-destructive/10 hover:border-destructive"
+                                    onClick={() => handleUpdateStatus(app.id, 'rejected')}
+                                    aria-label="Reprovar candidato"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Reprovar</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary"
+                                    onClick={() => handleUpdateStatus(app.id, 'technical')}
+                                    aria-label="Mover para avaliação"
+                                  >
+                                    <ArrowRight className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Mover para avaliação</TooltipContent>
+                              </Tooltip>
+                            </div>
                             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
                               Entrevista
                             </Badge>
