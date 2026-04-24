@@ -360,7 +360,49 @@ export default function JobPipeline() {
     }
   };
 
-  const rejectCandidate = async (app: any) => {
+  const advanceAllInStage = async () => {
+    const stageCandidates = applications.filter(
+      (a) => getCandidateStage(a) === activeStage
+    );
+    if (stageCandidates.length === 0) {
+      toast({ title: 'Nenhum candidato nesta etapa', variant: 'destructive' });
+      return;
+    }
+    const next = getNextStage(activeStage);
+    if (!next) {
+      toast({
+        title: 'Etapa final',
+        description: 'Não há próxima etapa para avançar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (
+      !confirm(
+        `Avançar ${stageCandidates.length} candidato(s) de ${activeStageLabel} para ${next.label}?`
+      )
+    )
+      return;
+
+    setActionLoading('bulk');
+    let ok = 0;
+    let fail = 0;
+    for (const app of stageCandidates) {
+      const success = await updateApplication(app.id, {
+        current_stage: next.id,
+        status: STATUS_FOR_STAGE[next.id],
+      });
+      if (success) ok++;
+      else fail++;
+    }
+    setActionLoading(null);
+
+    toast({
+      title: `${ok} candidato(s) movidos para ${next.label}`,
+      description: fail > 0 ? `${fail} falharam.` : undefined,
+      variant: fail > 0 ? 'destructive' : 'default',
+    });
+  };
     if (!confirm(`Reprovar ${app.candidate_name}? Um e-mail será enviado ao candidato.`)) return;
     const ok = await updateApplication(app.id, { current_stage: 'reprovado', status: 'rejected' });
     if (!ok) return;
