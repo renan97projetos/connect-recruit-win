@@ -673,6 +673,10 @@ export default function JobForm() {
               </CardContent>
             </Card>
 
+            <div
+              className={fieldsLocked ? 'pointer-events-none opacity-60 select-none space-y-5' : 'space-y-5 contents'}
+              aria-disabled={fieldsLocked}
+            >
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Detalhes opcionais</CardTitle>
