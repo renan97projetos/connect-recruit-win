@@ -56,6 +56,8 @@ import {
   CheckCircle2,
   ClipboardList,
   Send,
+  MoveHorizontal,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
