@@ -266,6 +266,33 @@ export function CandidatePipeline({ jobId, jobTitle, onChanged }: PipelineProps)
     setLoading(false);
   };
 
+  const openNoteSheet = async (app: ApplicationRow) => {
+    setNoteApp(app);
+    setNoteText('');
+    setNoteSheetOpen(true);
+    const { data } = await supabase
+      .from('applications')
+      .select('notes')
+      .eq('id', app.id)
+      .maybeSingle();
+    if (data?.notes) {
+      const n = data.notes as any;
+      setNoteText(typeof n === 'string' ? n : n?.text || '');
+    }
+  };
+
+  const saveNote = async () => {
+    if (!noteApp) return;
+    setSavingNote(true);
+    await supabase
+      .from('applications')
+      .update({ notes: { text: noteText } as any })
+      .eq('id', noteApp.id);
+    setSavingNote(false);
+    toast({ title: 'Nota salva!' });
+    setNoteSheetOpen(false);
+  };
+
   const openInterviewSheet = async (app: ApplicationRow) => {
     setInterviewApp(app);
     setInterviewTab('agendar');
