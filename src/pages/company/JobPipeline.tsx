@@ -1109,37 +1109,83 @@ export default function JobPipeline() {
       {/* Conteúdo da etapa selecionada */}
       <div>
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            {activeStageLabel} — {candidatesInActiveStage.length}{' '}
-            {candidatesInActiveStage.length === 1 ? 'candidato' : 'candidatos'}
-          </h2>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              {activeStageLabel} — {candidatesInActiveStage.length}{' '}
+              {candidatesInActiveStage.length === 1 ? 'candidato' : 'candidatos'}
+            </h2>
+            {candidatesInActiveStage.length > 0 && (
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                <Checkbox
+                  checked={
+                    candidatesInActiveStage.every((a) => selectedIds.has(a.id))
+                      ? true
+                      : candidatesInActiveStage.some((a) => selectedIds.has(a.id))
+                      ? 'indeterminate'
+                      : false
+                  }
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedIds(
+                        new Set(candidatesInActiveStage.map((a) => a.id))
+                      );
+                    } else {
+                      setSelectedIds(new Set());
+                    }
+                  }}
+                />
+                Selecionar todos
+              </label>
+            )}
+          </div>
           {(() => {
             const next = getNextStage(activeStage);
-            const canBulk =
-              !!next && candidatesInActiveStage.length > 0;
+            const selectedCount = candidatesInActiveStage.filter((a) =>
+              selectedIds.has(a.id)
+            ).length;
+            const canBulk = !!next && selectedCount > 0;
             return (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!canBulk || actionLoading === 'bulk'}
-                onClick={advanceAllInStage}
-                className="gap-2"
-                title={
-                  next
-                    ? `Mover todos para ${next.label}`
-                    : 'Etapa final — não há próxima etapa'
-                }
-              >
-                {actionLoading === 'bulk' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {selectedCount > 0 && (
+                  <>
+                    <Badge variant="secondary" className="gap-1">
+                      {selectedCount} selecionado{selectedCount === 1 ? '' : 's'}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSelectedIds(new Set())}
+                      disabled={actionLoading === 'bulk'}
+                    >
+                      Limpar
+                    </Button>
+                  </>
                 )}
-                Avançar todos
-                {next && (
-                  <span className="text-muted-foreground">→ {next.label}</span>
-                )}
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!canBulk || actionLoading === 'bulk'}
+                  onClick={advanceSelectedInStage}
+                  className="gap-2"
+                  title={
+                    !next
+                      ? 'Etapa final — não há próxima etapa'
+                      : selectedCount === 0
+                      ? 'Selecione candidatos para avançar'
+                      : `Mover selecionados para ${next.label}`
+                  }
+                >
+                  {actionLoading === 'bulk' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" />
+                  )}
+                  Avançar selecionados
+                  {next && (
+                    <span className="text-muted-foreground">→ {next.label}</span>
+                  )}
+                </Button>
+              </div>
             );
           })()}
         </div>
