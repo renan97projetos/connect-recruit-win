@@ -1073,7 +1073,10 @@ export default function JobPipeline() {
           return (
             <button
               key={stage.id}
-              onClick={() => setActiveStage(stage.id)}
+              onClick={() => {
+                setActiveStage(stage.id);
+                setSelectedIds(new Set());
+              }}
               className={cn(
                 'flex-shrink-0 min-w-[110px] p-3 rounded-xl border text-left transition-all',
                 isActive
