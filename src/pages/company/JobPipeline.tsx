@@ -517,12 +517,12 @@ export default function JobPipeline() {
     }
   };
 
-  const advanceAllInStage = () => {
+  const advanceSelectedInStage = () => {
     const stageCandidates = applications.filter(
-      (a) => getCandidateStage(a) === activeStage
+      (a) => getCandidateStage(a) === activeStage && selectedIds.has(a.id)
     );
     if (stageCandidates.length === 0) {
-      toast({ title: 'Nenhum candidato nesta etapa', variant: 'destructive' });
+      toast({ title: 'Nenhum candidato selecionado', variant: 'destructive' });
       return;
     }
     const next = getNextStage(activeStage);
@@ -546,7 +546,7 @@ export default function JobPipeline() {
     const nextId = confirmBulk.nextId;
     if (!nextId) return;
     const stageCandidates = applications.filter(
-      (a) => getCandidateStage(a) === activeStage
+      (a) => getCandidateStage(a) === activeStage && selectedIds.has(a.id)
     );
     setConfirmBulk({ open: false, count: 0, nextLabel: '', nextId: null });
     setActionLoading('bulk');
@@ -561,6 +561,7 @@ export default function JobPipeline() {
       else fail++;
     }
     setActionLoading(null);
+    setSelectedIds(new Set());
 
     toast({
       title: `${ok} candidato(s) movidos`,
