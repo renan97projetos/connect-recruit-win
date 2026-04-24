@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown, Video, MapPin, Phone, Loader2, CalendarPlus } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown, Video, MapPin, Phone, Loader2, CalendarPlus, MessageCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
