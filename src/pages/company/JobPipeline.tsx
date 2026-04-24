@@ -285,6 +285,20 @@ export default function JobPipeline() {
         const offMap: Record<string, any> = {};
         (offersRes.data || []).forEach((o: any) => (offMap[o.application_id] = o));
         setOffersByApp(offMap);
+
+        // Carrega documentos enviados pelo candidato (bucket hiring-documents)
+        const docsMap: Record<string, any[]> = {};
+        await Promise.all(
+          appIds.map(async (appId: string) => {
+            const { data: files } = await supabase.storage
+              .from('hiring-documents')
+              .list(appId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+            if (files && files.length) {
+              docsMap[appId] = files.filter((f: any) => f.name && !f.name.startsWith('.'));
+            }
+          })
+        );
+        setDocumentsByApp(docsMap);
       }
       setLoading(false);
     };
