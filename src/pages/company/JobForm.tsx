@@ -61,6 +61,15 @@ export default function JobForm() {
     requiresApproval: false,
   });
   const [hasDefaultApprover, setHasDefaultApprover] = useState(false);
+  const [jobApprovalStatus, setJobApprovalStatus] = useState<string>('');
+  const [activeApplicationsCount, setActiveApplicationsCount] = useState(0);
+  const [editUnlocked, setEditUnlocked] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+
+  // Vaga é considerada "publicada" quando o status não é rascunho nem aguardando aprovação
+  const isPublishedJob = isEditing && !!jobApprovalStatus && !['draft', 'pending_approval'].includes(jobApprovalStatus);
+  // Bloqueia campos quando vaga publicada e ainda não foi destravada manualmente
+  const fieldsLocked = isPublishedJob && !editUnlocked;
 
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
