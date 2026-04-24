@@ -1369,6 +1369,34 @@ ${companyName}`;
         </div>
       </SheetContent>
     </Sheet>
+
+    <Sheet open={noteSheetOpen} onOpenChange={setNoteSheetOpen}>
+      <SheetContent className="w-full sm:max-w-md flex flex-col">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-amber-500" />
+            Nota interna
+          </SheetTitle>
+          <p className="text-xs text-muted-foreground">{noteApp?.candidate_name}</p>
+        </SheetHeader>
+        <div className="flex flex-col flex-1 mt-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Visível apenas para sua equipe.
+          </p>
+          <Textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Ex: Ligou às 14h, perfil forte mas sem disponibilidade imediata..."
+            className="flex-1 resize-none text-sm min-h-[180px]"
+          />
+          <Button onClick={saveNote} disabled={savingNote} className="w-full">
+            {savingNote
+              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>
+              : 'Salvar nota'}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
     </>
   );
 }
