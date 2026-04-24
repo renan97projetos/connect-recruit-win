@@ -380,6 +380,18 @@ export default function JobPipeline() {
     saving: false,
   });
 
+  const [confirmReject, setConfirmReject] = useState<{ open: boolean; app: any | null }>({
+    open: false,
+    app: null,
+  });
+  const [confirmBulk, setConfirmBulk] = useState<{
+    open: boolean;
+    count: number;
+    nextLabel: string;
+    nextId: CandidateStageId | null;
+  }>({ open: false, count: 0, nextLabel: '', nextId: null });
+
+
   useEffect(() => {
     if (!id) return;
     const load = async () => {
