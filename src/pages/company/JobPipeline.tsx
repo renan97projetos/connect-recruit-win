@@ -1564,58 +1564,25 @@ export default function JobPipeline() {
                           <CheckCircle2 className="absolute -top-1 -right-1 h-3.5 w-3.5 text-green-600 bg-background rounded-full" />
                         )}
                       </Button>
-                      {profile?.phone ? (() => {
-                        const formatLabelsWa: Record<string, string> = {
-                          video: 'Videochamada',
-                          presencial: 'Presencial',
-                          telefone: 'Ligação',
-                        };
-                        const jobUrl = `${window.location.origin}/jobs/${id}`;
-                        let waMessage = `Olá ${app.candidate_name}!\n\nVocê avançou para a etapa de entrevista no processo seletivo da vaga "${jobTitle}"${companyName ? ` na "${companyName}"` : ''}.\n\nDetalhes da vaga: ${jobUrl}`;
-                        if (hasInterview && interview?.scheduled_at) {
-                          const dt = new Date(interview.scheduled_at).toLocaleString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          });
-                          waMessage += `\n\nDetalhes do agendamento:\n- Data e horário: ${dt}\n- Formato: ${formatLabelsWa[interview.format] || interview.format || '-'}`;
-                          if (interview.meeting_link) waMessage += `\n- Link: ${interview.meeting_link}`;
-                          if (interview.location) waMessage += `\n- Local: ${interview.location}`;
-                          if (interview.interviewer_name) waMessage += `\n- Entrevistador: ${interview.interviewer_name}`;
-                        }
-                        waMessage += `\n\nPor favor, confirme sua presença. Em caso de imprevistos, avise com antecedência.\n\nObrigado!`;
-                        const waSent = !!waSentByApp[app.id];
-                        return (
-                          <a
-                            href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waMessage)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markWaSent(app.id);
-                            }}
+                      {profile?.phone ? (
+                        <a
+                          href={`https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                            `Olá ${app.candidate_name}, vimos sua candidatura para ${jobTitle}.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-[#25D366] hover:bg-[#25D366]/10"
+                            title="WhatsApp — contato direto"
                           >
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className={cn(
-                                'h-8 w-8 p-0 relative',
-                                waSent
-                                  ? 'text-green-600 bg-green-500/10 hover:bg-green-500/20'
-                                  : 'text-[#25D366] hover:bg-[#25D366]/10'
-                              )}
-                              title={waSent ? 'WhatsApp já enviado — clique para reenviar' : 'WhatsApp'}
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                              {waSent && (
-                                <CheckCircle2 className="absolute -top-1 -right-1 h-3.5 w-3.5 text-green-600 bg-background rounded-full" />
-                              )}
-                            </Button>
-                          </a>
-                        );
-                      })() : (
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      ) : (
                         <Button
                           size="sm"
                           variant="ghost"
