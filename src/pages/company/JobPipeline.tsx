@@ -288,6 +288,7 @@ export default function JobPipeline() {
       approved: 'Candidato aprovado',
       rejected: 'Candidato reprovado',
       interview: 'Candidato movido para entrevista',
+      technical: 'Candidato movido para avaliação',
     };
     toast.success(messages[newStatus]);
 
