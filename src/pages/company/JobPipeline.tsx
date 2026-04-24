@@ -14,7 +14,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Info, MessageSquare, Trash2, Trophy, CheckCircle2, XCircle, ArrowRight, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -291,6 +292,9 @@ export default function JobPipeline() {
   };
 
   const pendingApps = applications.filter((a) => a.status === 'pending');
+  const interviewApps = applications.filter((a) => a.status === 'interview');
+  const approvedApps = applications.filter((a) => a.status === 'approved');
+  const rejectedApps = applications.filter((a) => a.status === 'rejected');
   const allPendingSelected =
     pendingApps.length > 0 && pendingApps.every((a) => selectedIds.has(a.id));
 
@@ -369,7 +373,7 @@ export default function JobPipeline() {
         </div>
         <h1 className="text-3xl font-bold">{jobTitle || 'Vaga'}</h1>
         <p className="text-muted-foreground">
-          {applications.length} {applications.length === 1 ? 'candidato' : 'candidatos'} • Ordenados por aderência
+          {applications.length} {applications.length === 1 ? 'candidato no total' : 'candidatos no total'} • Ordenados por aderência
         </p>
       </div>
 
@@ -418,6 +422,10 @@ export default function JobPipeline() {
               const phoneDigits = sanitizePhone(app.candidate_phone);
               const isSelectable = app.status === 'pending';
               const isSelected = selectedIds.has(app.id);
+              const isPending = app.status === 'pending';
+
+              // Esconde candidatos já movidos da lista principal — eles aparecem nas seções abaixo
+              if (!isPending) return null;
 
               return (
                 <Card
@@ -471,8 +479,8 @@ export default function JobPipeline() {
                       </div>
                     </div>
 
-                    {/* Ações de triagem: Aprovar / Reprovar / Mover para entrevista */}
-                    {app.status === 'pending' && (
+                    {/* Ações de triagem: Reprovar / Mover para entrevista */}
+                    {isPending && (
                       <div
                         className="flex items-center gap-1 flex-shrink-0"
                         onClick={(e) => e.stopPropagation()}
@@ -654,7 +662,139 @@ export default function JobPipeline() {
                 </Card>
               );
             })}
+
+            {pendingApps.length === 0 && (
+              <Card className="p-8 text-center text-sm text-muted-foreground">
+                Nenhum candidato pendente nesta etapa. Todos já foram avaliados.
+              </Card>
+            )}
           </div>
+
+          {/* Seções de candidatos já movidos */}
+          {(interviewApps.length > 0 || rejectedApps.length > 0 || approvedApps.length > 0) && (
+            <div className="mt-8 space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Candidatos já avaliados
+              </h2>
+
+              {interviewApps.length > 0 && (
+                <Collapsible defaultOpen>
+                  <Card>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors rounded-lg group">
+                      <div className="flex items-center gap-3">
+                        <ArrowRight className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Em entrevista</span>
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          {interviewApps.length}
+                        </Badge>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-4 pb-4 space-y-2">
+                        {interviewApps.map((app) => (
+                          <div
+                            key={app.id}
+                            className="flex items-center gap-3 p-3 rounded-md border bg-background hover:bg-muted/30 cursor-pointer"
+                            onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                          >
+                            <Avatar className="h-9 w-9">
+                              <AvatarFallback>{initials(app.candidate_name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{app.candidate_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{app.candidate_email}</p>
+                            </div>
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                              Entrevista
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              )}
+
+              {approvedApps.length > 0 && (
+                <Collapsible>
+                  <Card>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors rounded-lg group">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                        <span className="font-medium">Aprovados</span>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                          {approvedApps.length}
+                        </Badge>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-4 pb-4 space-y-2">
+                        {approvedApps.map((app) => (
+                          <div
+                            key={app.id}
+                            className="flex items-center gap-3 p-3 rounded-md border bg-background hover:bg-muted/30 cursor-pointer"
+                            onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                          >
+                            <Avatar className="h-9 w-9">
+                              <AvatarFallback>{initials(app.candidate_name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{app.candidate_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{app.candidate_email}</p>
+                            </div>
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                              Aprovado
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              )}
+
+              {rejectedApps.length > 0 && (
+                <Collapsible>
+                  <Card>
+                    <CollapsibleTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors rounded-lg group">
+                      <div className="flex items-center gap-3">
+                        <XCircle className="h-4 w-4 text-destructive" />
+                        <span className="font-medium">Reprovados</span>
+                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                          {rejectedApps.length}
+                        </Badge>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-4 pb-4 space-y-2">
+                        {rejectedApps.map((app) => (
+                          <div
+                            key={app.id}
+                            className="flex items-center gap-3 p-3 rounded-md border bg-background hover:bg-muted/30 cursor-pointer opacity-75"
+                            onClick={() => navigate(`/company/candidates/${app.candidate_id}`)}
+                          >
+                            <Avatar className="h-9 w-9">
+                              <AvatarFallback>{initials(app.candidate_name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{app.candidate_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{app.candidate_email}</p>
+                            </div>
+                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
+                              Reprovado
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              )}
+            </div>
+          )}
         </TooltipProvider>
       )}
 
