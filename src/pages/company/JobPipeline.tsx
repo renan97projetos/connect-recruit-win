@@ -591,6 +591,103 @@ export default function JobPipeline() {
     toast({ title: 'Nota salva' });
   };
 
+  const openOfferDialog = (app: any) => {
+    const existing = offersByApp[app.id];
+    setOfferDialog({
+      open: true,
+      app,
+      salary: existing?.offered_salary?.toString() || '',
+      benefits: existing?.benefits_offered || '',
+      notes: existing?.notes || '',
+      saving: false,
+    });
+  };
+
+  const saveOffer = async () => {
+    const { app, salary, benefits, notes } = offerDialog;
+    if (!app || !salary) return;
+    setOfferDialog((prev) => ({ ...prev, saving: true }));
+
+    const existing = offersByApp[app.id];
+    const userRes = await supabase.auth.getUser();
+    const payload: any = {
+      application_id: app.id,
+      job_id: id,
+      company_id: userRes.data.user?.id,
+      offered_salary: parseFloat(salary),
+      benefits_offered: benefits || null,
+      notes: notes || null,
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    };
+
+    let saved: any = null;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('job_offers')
+        .update(payload)
+        .eq('id', existing.id)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setOfferDialog((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar proposta', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    } else {
+      const { data, error } = await supabase
+        .from('job_offers')
+        .insert(payload)
+        .select()
+        .maybeSingle();
+      if (error) {
+        setOfferDialog((prev) => ({ ...prev, saving: false }));
+        toast({ title: 'Erro ao salvar proposta', description: error.message, variant: 'destructive' });
+        return;
+      }
+      saved = data;
+    }
+    if (saved) {
+      setOffersByApp((prev) => ({ ...prev, [app.id]: saved }));
+    }
+
+    supabase.functions
+      .invoke('send-job-offer-email', {
+        body: {
+          candidateName: app.candidate_name,
+          candidateEmail: app.candidate_email,
+          jobTitle,
+          companyName: companyName || 'Sinapse RH',
+          offeredSalary: parseFloat(salary),
+          benefits: benefits || '',
+        },
+      })
+      .catch(console.error);
+
+    setOfferDialog((prev) => ({ ...prev, saving: false, open: false }));
+    toast({
+      title: 'Proposta registrada!',
+      description: `E-mail enviado para ${app.candidate_name}.`,
+    });
+  };
+
+  const requestHiringDocuments = async (app: any) => {
+    await supabase.functions
+      .invoke('send-hiring-documents-email', {
+        body: {
+          candidateEmail: app.candidate_email,
+          candidateName: app.candidate_name,
+          jobTitle,
+        },
+      })
+      .catch(console.error);
+    toast({
+      title: 'Documentos solicitados!',
+      description: `E-mail enviado para ${app.candidate_name}.`,
+    });
+  };
+
   if (loading) {
     return (
       <CompanyLayout>
