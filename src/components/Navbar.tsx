@@ -4,7 +4,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Menu, X, Zap, LayoutDashboard } from 'lucide-react';
+import { LogOut, User, Menu, X, LayoutDashboard } from 'lucide-react';
 import { SRHIcon } from '@/components/icons/SRHIcon';
 import { 
   DropdownMenu, 
