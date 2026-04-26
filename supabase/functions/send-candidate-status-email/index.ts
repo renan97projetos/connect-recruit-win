@@ -10,7 +10,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type StatusKey = "in-review" | "interview" | "approved" | "rejected";
+type StatusKey =
+  | "in-review"
+  | "interview"
+  | "assessment"
+  | "offer"
+  | "approved"
+  | "rejected";
 
 interface StatusEmailRequest {
   candidateName: string;
