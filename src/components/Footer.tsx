@@ -32,9 +32,7 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-lg border-3 border-background flex items-center justify-center">
-                <Zap className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <SRHIcon size={40} />
               <span className="font-black text-xl">SinapseRH</span>
             </div>
             <p className="text-sm opacity-70 leading-relaxed">
