@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Linkedin, Instagram, Zap, ArrowUpRight } from 'lucide-react';
+import { Linkedin, Instagram, ArrowUpRight } from 'lucide-react';
+import { SRHIcon } from '@/components/icons/SRHIcon';
 import { supabase } from '@/integrations/supabase/client';
 export function Footer() {
   const [socialLinks, setSocialLinks] = useState({
