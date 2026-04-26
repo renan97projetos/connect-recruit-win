@@ -173,6 +173,13 @@
     transform: none !important;
   }
 
+  /* Dropdown / popover separators must be subtle gray, never near-black */
+  [role="separator"].bg-foreground,
+  [role="menuitem"] + [role="separator"],
+  [data-radix-popper-content-wrapper] [role="separator"] {
+    background-color: hsl(214 32% 91%) !important;
+  }
+
   button.uppercase,
   a.uppercase {
     text-transform: none;
