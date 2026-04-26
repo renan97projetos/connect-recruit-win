@@ -141,9 +141,7 @@ const App = () => {
               <Route path="/backoffice/login" element={<BackofficeLogin />} />
               <Route path="/backoffice" element={<BackofficeProtectedRoute><BackofficeDashboard /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/dashboard" element={<BackofficeProtectedRoute><BackofficeDashboard /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/jobs" element={<BackofficeProtectedRoute><BackofficeJobs /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/jobs/new" element={<BackofficeProtectedRoute><BackofficeJobForm /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/jobs/:id/edit" element={<BackofficeProtectedRoute><BackofficeJobForm /></BackofficeProtectedRoute>} />
+              <Route path="/backoffice/tenants" element={<BackofficeProtectedRoute><BackofficeTenants /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/tenants" element={<BackofficeProtectedRoute><BackofficeTenants /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/plans" element={<BackofficeProtectedRoute><BackofficePlans /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/users" element={<BackofficeProtectedRoute><BackofficeUsers /></BackofficeProtectedRoute>} />
