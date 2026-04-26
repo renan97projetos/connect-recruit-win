@@ -158,7 +158,7 @@ export function Navbar() {
                       </span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.preventDefault();
