@@ -38,6 +38,14 @@ const STATUS_MESSAGES: Record<StatusKey, { subject: string; body: string }> = {
     subject: "Parabéns! Você avançou no processo seletivo",
     body: "Olá {{candidato_nome}},\n\nÓtimas notícias! Você avançou no processo seletivo para a vaga de {{vaga_titulo}} em {{empresa_nome}}.\n\nNossa equipe entrará em contato para combinar os próximos passos. Fique atento ao seu e-mail e WhatsApp.",
   },
+  assessment: {
+    subject: "Você avançou para a etapa de Avaliação",
+    body: "Olá {{candidato_nome}},\n\nParabéns! Você foi selecionado(a) para a etapa de Avaliação no processo seletivo para a vaga de {{vaga_titulo}} em {{empresa_nome}}.\n\nNossa equipe entrará em contato com as instruções e próximos passos. Fique atento ao seu e-mail e WhatsApp.",
+  },
+  offer: {
+    subject: "Você chegou à etapa de Proposta — {{vaga_titulo}}",
+    body: "Olá {{candidato_nome}},\n\nExcelente notícia! Após todas as etapas do processo seletivo, você chegou à fase de Proposta para a vaga de {{vaga_titulo}} em {{empresa_nome}}.\n\nNossa equipe entrará em contato em breve com os detalhes da proposta para formalizar os próximos passos.\n\nParabéns pela sua trajetória no processo!",
+  },
   approved: {
     subject: "Você foi aprovado(a)! 🎉",
     body: "Olá {{candidato_nome}},\n\nTemos ótimas notícias para você! Após todo o processo seletivo, você foi aprovado(a) para a vaga de {{vaga_titulo}} em {{empresa_nome}}.\n\nNossa equipe entrará em contato em breve com os próximos passos para formalizar a sua contratação.\n\nParabéns e seja bem-vindo(a)!",
