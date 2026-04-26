@@ -70,8 +70,6 @@ import BackofficeUsers from "./pages/backoffice/Users";
 import BackofficeMetrics from "./pages/backoffice/Metrics";
 import BackofficeAuditLogs from "./pages/backoffice/AuditLogs";
 import BackofficeSettings from "./pages/backoffice/Settings";
-import BackofficeJobs from "./pages/backoffice/Jobs";
-import BackofficeJobForm from "./pages/backoffice/JobForm";
 import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
