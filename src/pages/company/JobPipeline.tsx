@@ -993,6 +993,7 @@ export default function JobPipeline() {
     await supabase.functions
       .invoke('send-hiring-documents-email', {
         body: {
+          applicationId: app.id,
           candidateEmail: app.candidate_email,
           candidateName: app.candidate_name,
           jobTitle,
