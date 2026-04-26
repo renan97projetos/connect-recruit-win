@@ -175,7 +175,7 @@ export function Navbar() {
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     {loading || !userRole ? 'Carregando...' : 'Minha Área'}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive font-semibold">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
