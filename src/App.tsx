@@ -142,7 +142,6 @@ const App = () => {
               <Route path="/backoffice" element={<BackofficeProtectedRoute><BackofficeDashboard /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/dashboard" element={<BackofficeProtectedRoute><BackofficeDashboard /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/tenants" element={<BackofficeProtectedRoute><BackofficeTenants /></BackofficeProtectedRoute>} />
-              <Route path="/backoffice/tenants" element={<BackofficeProtectedRoute><BackofficeTenants /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/plans" element={<BackofficeProtectedRoute><BackofficePlans /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/users" element={<BackofficeProtectedRoute><BackofficeUsers /></BackofficeProtectedRoute>} />
               <Route path="/backoffice/metrics" element={<BackofficeProtectedRoute><BackofficeMetrics /></BackofficeProtectedRoute>} />
