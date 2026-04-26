@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, LogOut, Home } from 'lucide-react';
+import { LogOut, Home } from 'lucide-react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { SRHIcon } from '@/components/icons/SRHIcon';
 
 interface CompanyHeaderProps {
   showHubLink?: boolean;
