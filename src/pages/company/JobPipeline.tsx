@@ -164,12 +164,12 @@ const STATUS_FOR_STAGE: Record<CandidateStageId, string> = {
 
 // Status do e-mail de notificação (mantém compatibilidade com send-candidate-status-email)
 const EMAIL_STATUS_FOR_STAGE: Record<CandidateStageId, string | null> = {
-  triagem: null,
+  triagem:    null,
   entrevista: 'interview',
-  avaliacao: 'interview',
-  proposta: 'interview',
-  admissao: 'approved',
-  reprovado: 'rejected',
+  avaliacao:  'assessment',
+  proposta:   'offer',
+  admissao:   'approved',
+  reprovado:  'rejected',
 };
 
 const initials = (name: string) =>
