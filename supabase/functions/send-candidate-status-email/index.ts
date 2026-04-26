@@ -96,28 +96,31 @@ const handler = async (req: Request): Promise<Response> => {
          </div>`
       : "";
 
+    const content = `
+      ${bodyHtml}
+      ${feedbackHtml}
+      <div style="background:#f9f9f9;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:4px 0;font-size:14px;color:#374151;"><strong>Vaga:</strong> ${jobTitle}</p>
+        <p style="margin:4px 0;font-size:14px;color:#374151;"><strong>Empresa:</strong> ${companyName}</p>
+      </div>
+    `;
+
     const html = `
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        </head>
+        <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /></head>
         <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5;margin:0;padding:0;">
           <div style="max-width:600px;margin:0 auto;background:white;">
-            <div style="background:linear-gradient(135deg,hsl(222.2 47.4% 11.2%) 0%,hsl(222.2 47.4% 20%) 100%);color:white;padding:30px;text-align:center;">
-              <h1 style="margin:0;font-size:24px;">SinapseRH</h1>
+            <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 100%);color:white;padding:30px;text-align:center;">
+              <h1 style="margin:0;font-size:22px;font-weight:700;">SinapseRH</h1>
+              <p style="margin:6px 0 0;font-size:13px;opacity:0.8;">Recrutamento inteligente para PMEs</p>
             </div>
-            <div style="padding:30px;">
-              <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Olá, ${candidateName}</h2>
-              ${bodyHtml}
-              ${feedbackHtml}
-              <div style="background:#f9f9f9;padding:16px;border-radius:6px;margin:20px 0;">
-                <p style="margin:4px 0;font-size:14px;"><strong>Vaga:</strong> ${jobTitle}</p>
-                <p style="margin:4px 0;font-size:14px;"><strong>Empresa:</strong> ${companyName}</p>
-              </div>
-              <p style="font-size:13px;color:#888;margin-top:30px;text-align:center;">
-                Este é um e-mail automático da plataforma SinapseRH.
+            <div style="padding:32px;">
+              ${content}
+            </div>
+            <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
+              <p style="margin:0;font-size:12px;color:#999;">
+                Este é um e-mail automático da plataforma SinapseRH. Por favor, não responda.
               </p>
             </div>
           </div>
