@@ -149,7 +149,7 @@ export function Navbar() {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 border-3 border-foreground shadow-brutal">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span className="font-bold">{user?.email}</span>
@@ -158,7 +158,7 @@ export function Navbar() {
                       </span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.preventDefault();
@@ -175,7 +175,7 @@ export function Navbar() {
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     {loading || !userRole ? 'Carregando...' : 'Minha Área'}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive font-semibold">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
