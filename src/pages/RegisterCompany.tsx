@@ -116,16 +116,21 @@ export default function RegisterCompany() {
     }
     setCnpjLoading(true);
     try {
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
-      if (res.status === 404) {
-        toast({ title: 'CNPJ não encontrado', description: 'Não localizado na Receita Federal.', variant: 'destructive' });
-        return;
-      }
-      if (!res.ok) {
+      const { data, error: fnError } = await supabase.functions.invoke('lookup-cnpj', {
+        body: { cnpj: digits },
+      });
+      if (fnError) {
         toast({ title: 'Erro ao validar CNPJ', description: 'Tente novamente em instantes.', variant: 'destructive' });
         return;
       }
-      const data = await res.json();
+      if (data?.error) {
+        toast({
+          title: data.error === 'CNPJ inválido' ? 'CNPJ inválido' : 'CNPJ não encontrado',
+          description: 'Não localizado na Receita Federal.',
+          variant: 'destructive',
+        });
+        return;
+      }
       const situacao = (data?.descricao_situacao_cadastral || '').toUpperCase();
       if (situacao && situacao !== 'ATIVA') {
         toast({
