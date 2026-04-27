@@ -67,7 +67,7 @@ serve(async (req) => {
 
   const jobsXml = jobs.map((job: any) => {
     const companyName = escapeXml(
-      job.profiles?.company_name || job.company_name || "SinapseRH"
+      profileMap[job.company_id] || job.company_name || "SinapseRH"
     );
     const title = escapeXml(job.title || "");
     const description = escapeXml(
