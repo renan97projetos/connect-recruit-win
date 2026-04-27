@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
-
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,12 +25,9 @@ const TITLES: Record<Action, string> = {
 };
 
 const MESSAGES: Record<Action, string> = {
-  approved:
-    "Sua requisição foi aprovada e seguirá para a próxima etapa do processo.",
-  rejected:
-    "Sua requisição foi rejeitada. Veja o motivo abaixo e ajuste se necessário.",
-  published:
-    "A vaga foi aprovada e publicada. Os candidatos já podem se inscrever.",
+  approved: "Sua requisição foi aprovada e seguirá para a próxima etapa do processo.",
+  rejected: "Sua requisição foi rejeitada. Veja o motivo abaixo e ajuste se necessário.",
+  published: "A vaga foi aprovada e publicada. Os candidatos já podem se inscrever.",
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -51,23 +45,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: { username: GMAIL_USER!, password: GMAIL_APP_PASSWORD! },
-      },
-    });
-
     const url = `https://www.sinapserh.com.br/company/job-requests/${requestId}`;
-
-    await client.send({
-      from: GMAIL_USER!,
-      to: recipientEmail,
-      subject: `${TITLES[action]} — ${positionTitle}`,
-      content: "auto",
-      html: `
+    const html = `
         <!DOCTYPE html>
         <html>
           <body style="font-family: Arial, sans-serif; background:#FFFEF7; padding:24px; color:#0D0D0D;">
@@ -82,14 +61,23 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin-top:24px;">
                 <a href="${url}" style="background:#7C3AED; color:#fff; padding:12px 22px; border:2px solid #0D0D0D; border-radius:8px; box-shadow:4px 4px 0 #0D0D0D; text-decoration:none; font-weight:bold;">Ver requisição</a>
               </p>
-              <p style="font-size:12px; color:#737373; margin-top:32px;">SinapseRH — notificação automática.</p>
             </div>
           </body>
         </html>
-      `,
+      `;
+
+    const result = await sendLovableEmail({
+      to: recipientEmail,
+      subject: `${TITLES[action]} — ${positionTitle}`,
+      html,
+      idempotencyKey: `job-req-${requestId}-${action}`,
     });
 
-    await client.close();
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
