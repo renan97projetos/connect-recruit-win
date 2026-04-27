@@ -567,31 +567,28 @@ export default function CompanyRegister() {
                 <div>
                   <h2 className="text-2xl md:text-3xl font-black text-foreground">Escolha seu plano</h2>
                   <p className="text-sm text-foreground/70 mt-1 font-medium">
-                    Você poderá alterar a qualquer momento.
+                    Sem surpresas. Cancele quando quiser.
                   </p>
                 </div>
                 {loadingPlans ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2 className="h-6 w-6 animate-spin text-foreground" />
                   </div>
-                ) : plans.length === 0 ? (
-                  <p className="text-foreground/70 font-medium">Nenhum plano disponível no momento.</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {plans.map((plan, idx) => {
-                      const selected = form.plan_id === plan.id;
-                      const features = Array.isArray(plan.features) ? plan.features : [];
-                      const planBgs = ['bg-cyan', 'bg-lime', 'bg-yellow'];
-                      const planBg = planBgs[idx % planBgs.length];
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Starter */}
+                    {(() => {
+                      const starter = plans.find(p => p.name?.toLowerCase() === 'starter');
+                      const selected = starter && form.plan_id === starter.id;
                       return (
                         <button
                           type="button"
-                          key={plan.id}
-                          onClick={() => handleChange('plan_id', plan.id)}
-                          className={`text-left p-5 rounded-xl border-3 border-foreground transition-all relative ${
+                          disabled={!starter}
+                          onClick={() => starter && handleChange('plan_id', starter.id)}
+                          className={`text-left p-6 rounded-xl border-3 border-foreground transition-all relative bg-background flex flex-col ${
                             selected
-                              ? `${planBg} shadow-brutal-lg translate-x-[-2px] translate-y-[-2px]`
-                              : 'bg-background shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover'
+                              ? 'shadow-brutal-lg translate-x-[-2px] translate-y-[-2px] bg-yellow'
+                              : 'shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover'
                           }`}
                         >
                           {selected && (
@@ -599,47 +596,73 @@ export default function CompanyRegister() {
                               <Check className="h-4 w-4 text-background" />
                             </div>
                           )}
-                          <h3 className="font-black text-foreground text-xl">{plan.name}</h3>
-                          <div className="mt-2 mb-3">
-                            <span className="text-3xl font-black text-foreground tracking-tight">
-                              {formatPrice(plan.price_monthly)}
-                            </span>
-                            <span className="text-sm text-foreground/60 font-bold">/mês</span>
+                          <div className="inline-block bg-yellow text-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-foreground mb-4 self-start">
+                            STARTER
                           </div>
-                          {plan.description && (
-                            <p className="text-sm text-foreground/80 mb-4 font-medium">{plan.description}</p>
-                          )}
-                          <div className="flex flex-wrap gap-1.5 mb-4">
-                            {plan.max_users && (
-                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-foreground text-background font-bold">
-                                {plan.max_users} usuários
-                              </span>
-                            )}
-                            {plan.max_jobs && (
-                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-foreground text-background font-bold">
-                                {plan.max_jobs} vagas
-                              </span>
-                            )}
-                            {plan.max_employees && (
-                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md bg-foreground text-background font-bold">
-                                {plan.max_employees} colaboradores
-                              </span>
-                            )}
-                          </div>
-                          {features.length > 0 && (
-                            <ul className="space-y-1.5 text-sm text-foreground/80 font-medium">
-                              {features.slice(0, 4).map((f: any, i: number) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <Check className="h-4 w-4 mt-0.5 shrink-0 text-foreground" />
-                                  <span>{typeof f === 'string' ? f : f?.name || ''}</span>
-                                </li>
-                              ))}
-                              <li className="text-xs italic text-foreground/60 pl-6">E muito mais...</li>
-                            </ul>
-                          )}
+                          <p className="text-foreground/70 mb-4 text-sm font-medium">
+                            Substitua suas planilhas. Ideal para PMEs organizando o RH.
+                          </p>
+                          <div className="text-4xl font-black mb-1 text-foreground">Grátis</div>
+                          <p className="text-xs text-foreground/60 mb-6 font-medium">
+                            até 2 usuários · até 5 vagas ativas
+                          </p>
+                          <ul className="space-y-2 mb-2 text-sm flex-1">
+                            {["Pipeline Kanban de vagas", "Publicação de vagas", "Gestão de candidatos", "Score e notas", "Dashboard básico", "Career page pública"].map(f => (
+                              <li key={f} className="flex items-center gap-2 text-foreground/80 font-medium">
+                                <span className="text-success font-bold">✓</span>{f}
+                              </li>
+                            ))}
+                          </ul>
                         </button>
                       );
-                    })}
+                    })()}
+
+                    {/* Pro */}
+                    {(() => {
+                      const pro = plans.find(p => p.name?.toLowerCase() === 'pro');
+                      const selected = pro && form.plan_id === pro.id;
+                      return (
+                        <button
+                          type="button"
+                          disabled={!pro}
+                          onClick={() => pro && handleChange('plan_id', pro.id)}
+                          className={`text-left p-6 rounded-xl border-3 border-foreground transition-all relative flex flex-col ${
+                            selected
+                              ? 'bg-primary text-primary-foreground shadow-brutal-lg translate-x-[-2px] translate-y-[-2px]'
+                              : 'bg-primary text-primary-foreground shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover'
+                          }`}
+                        >
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow text-foreground text-xs font-bold px-4 py-1 rounded-full border-2 border-foreground whitespace-nowrap">
+                            ✦ MAIS POPULAR
+                          </div>
+                          {selected && (
+                            <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-foreground border-3 border-foreground flex items-center justify-center">
+                              <Check className="h-4 w-4 text-background" />
+                            </div>
+                          )}
+                          <div className="inline-block bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-primary-foreground/30 mb-4 self-start mt-2">
+                            PRO
+                          </div>
+                          <p className="text-primary-foreground/80 mb-4 text-sm font-medium">
+                            Automação, IA e gestão completa para crescer.
+                          </p>
+                          <div className="text-4xl font-black mb-1">Sob consulta</div>
+                          <p className="text-xs opacity-70 mb-6 font-medium">
+                            usuários ilimitados · vagas ilimitadas
+                          </p>
+                          <ul className="space-y-2 mb-2 text-sm flex-1">
+                            {["Tudo do Starter", "Workflow configurável por vaga", "IA para descrição e score", "Banco de talentos", "Permissões granulares", "Career page própria", "Analytics completo", "Suporte prioritário"].map(f => (
+                              <li key={f} className="flex items-center gap-2">
+                                <span className="text-yellow font-bold">✓</span>{f}
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="text-xs opacity-90 mt-4 font-bold border-t-2 border-primary-foreground/30 pt-3">
+                            Ao escolher Pro, faremos seu pré-cadastro e nosso time entrará em contato pelo WhatsApp.
+                          </p>
+                        </button>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
