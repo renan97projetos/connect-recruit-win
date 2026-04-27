@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,15 +42,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Resolver e-mails
     let recipientEmail: string | null = null;
     let recipientName = '';
-    const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '') || '';
-    const appUrl = req.headers.get('origin') || 'https://connect-recruit-win.lovable.app';
+    const appUrl = req.headers.get('origin') || 'https://www.sinapserh.com.br';
     const jobLink = `${appUrl}/company/dashboard`;
 
     if (type === 'request') {
-      // notificar aprovador
       if (!job.approver_id) {
         return new Response(JSON.stringify({ error: 'No approver set' }), {
           status: 400,
@@ -57,21 +55,13 @@ Deno.serve(async (req) => {
         });
       }
       const { data: approverProfile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', job.approver_id)
-        .maybeSingle();
-      // pegar email via auth admin
+        .from('profiles').select('name').eq('id', job.approver_id).maybeSingle();
       const { data: authUser } = await supabase.auth.admin.getUserById(job.approver_id);
       recipientEmail = authUser?.user?.email ?? null;
       recipientName = approverProfile?.name || 'Aprovador';
     } else {
-      // notificar recrutador (owner = company_id)
       const { data: ownerProfile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', job.company_id)
-        .maybeSingle();
+        .from('profiles').select('name').eq('id', job.company_id).maybeSingle();
       const { data: authUser } = await supabase.auth.admin.getUserById(job.company_id);
       recipientEmail = authUser?.user?.email ?? null;
       recipientName = ownerProfile?.name || 'Recrutador';
@@ -84,13 +74,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Montar conteúdo
     let subject = '';
     let html = '';
     if (type === 'request') {
       const deadline = job.approval_deadline_at
-        ? new Date(job.approval_deadline_at).toLocaleDateString('pt-BR')
-        : '—';
+        ? new Date(job.approval_deadline_at).toLocaleDateString('pt-BR') : '—';
       subject = `[Aprovação] Nova vaga: ${job.title}`;
       html = `
         <div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#111">
@@ -100,12 +88,10 @@ Deno.serve(async (req) => {
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:16px 0">
             <p style="margin:0;font-weight:600;font-size:16px">${job.title}</p>
             <p style="margin:4px 0 0;color:#6b7280;font-size:13px">${job.company_name}</p>
-            <p style="margin:8px 0 0;color:#6b7280;font-size:13px">Prazo para resposta: <strong>${deadline}</strong></p>
+            <p style="margin:8px 0 0;color:#6b7280;font-size:13px">Prazo: <strong>${deadline}</strong></p>
           </div>
-          <a href="${jobLink}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:500">Ver e decidir no sistema</a>
-          <p style="margin-top:24px;color:#6b7280;font-size:12px">Acesse o painel para aprovar ou recusar a vaga.</p>
-        </div>
-      `;
+          <a href="${jobLink}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:500">Ver e decidir</a>
+        </div>`;
     } else if (type === 'approved') {
       subject = `[Aprovada] Vaga "${job.title}" foi aprovada`;
       html = `
@@ -114,8 +100,7 @@ Deno.serve(async (req) => {
           <p>Olá ${recipientName},</p>
           <p>A vaga <strong>${job.title}</strong> foi aprovada e já está publicada.</p>
           <a href="${jobLink}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:500;margin-top:12px">Abrir painel</a>
-        </div>
-      `;
+        </div>`;
     } else {
       subject = `[Reprovada] Vaga "${job.title}" foi devolvida`;
       html = `
@@ -128,44 +113,24 @@ Deno.serve(async (req) => {
             <p style="margin:6px 0 0;color:#111">${reason || '—'}</p>
           </div>
           <a href="${jobLink}" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:500">Ajustar e reenviar</a>
-        </div>
-      `;
+        </div>`;
     }
 
-    // Enviar via Resend
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    if (!RESEND_API_KEY) {
-      console.error('RESEND_API_KEY not configured');
-      return new Response(JSON.stringify({ error: 'Email service not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'Sinapse RH <onboarding@resend.dev>',
-        to: [recipientEmail],
-        subject,
-        html,
-      }),
+    const result = await sendLovableEmail({
+      to: recipientEmail,
+      subject,
+      html,
+      idempotencyKey: `job-approval-${jobId}-${type}`,
     });
 
-    const result = await resp.json();
-    if (!resp.ok) {
-      console.error('Resend error', result);
-      return new Response(JSON.stringify({ error: 'Failed to send', detail: result }), {
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, id: result.id }), {
+    return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
