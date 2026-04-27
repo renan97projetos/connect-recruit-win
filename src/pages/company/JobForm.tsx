@@ -428,6 +428,7 @@ export default function JobForm() {
           navigate('/company/dashboard');
         }
       }
+    } catch (e) {
       console.error('Error saving job:', e);
       toast({
         title: 'Erro ao salvar',
