@@ -14,7 +14,7 @@ project_id = "herfafjqjvlaehabfxss"
   [functions.send-candidate-status-email]
     verify_jwt = false
   [functions.send-transactional-email]
-    verify_jwt = false
+    verify_jwt = true
   [functions.preview-transactional-email]
     verify_jwt = false
   [functions.handle-email-unsubscribe]
