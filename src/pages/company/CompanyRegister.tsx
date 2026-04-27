@@ -266,7 +266,7 @@ export default function CompanyRegister() {
           `Olá! Acabei de fazer o pré-cadastro PRO no SinapseRH.\n\nEmpresa: ${form.company_name}\nCNPJ: ${form.cnpj}\nResponsável: ${form.responsible_name}\nE-mail: ${form.company_email}`
         );
         setTimeout(() => {
-          window.location.href = `https://wa.me/5527998119863?text=${waMsg}`;
+          window.location.href = `https://wa.me/5527999058730?text=${waMsg}`;
         }, 1400);
         return;
       }
