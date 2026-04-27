@@ -15,7 +15,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = 'SinapseRH'
-const CONTACT_URL = 'https://sinapserh.com.br/contact'
+const CONTACT_URL = 'https://wa.me/5527998119863?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20SinapseRH'
 const COMPANY_LOGIN_URL = 'https://sinapserh.com.br/empresa/acesso'
 
 interface CompanyWelcomeProps {
