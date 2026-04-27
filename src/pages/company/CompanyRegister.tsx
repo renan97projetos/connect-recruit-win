@@ -4,6 +4,7 @@ import { Building2, Check, Eye, EyeOff, Loader2, Sparkles, ShieldCheck, ArrowRig
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { SRHIcon } from '@/components/icons/SRHIcon';
 
 interface Plan {
   id: string;
