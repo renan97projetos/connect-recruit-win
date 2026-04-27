@@ -20,51 +20,79 @@ export default function PrivacyPolicy() {
       const row = Array.isArray(data) ? data[0] : data;
       setContent(row?.privacy_policy_content || `<h2>Política de Privacidade</h2>
         <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR')}</em></p>
-        
-        <h3>1. Informações que Coletamos</h3>
-        <p>Coletamos informações que você nos fornece diretamente, incluindo:</p>
+
+        <p>A Sinapse RH está comprometida com a proteção dos seus dados pessoais em conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018).</p>
+
+        <h3>1. Quem somos</h3>
+        <p>A Sinapse RH é uma plataforma SaaS de recrutamento e seleção para pequenas e médias empresas brasileiras. Atuamos como controlador dos dados das empresas clientes e dos candidatos que utilizam a plataforma.</p>
+        <p><strong>Encarregado de Dados (DPO):</strong> privacidade@sinapserh.com.br</p>
+
+        <h3>2. Quais dados coletamos</h3>
         <ul>
-          <li>Dados pessoais (nome, e-mail, telefone, CPF/CNPJ)</li>
-          <li>Informações profissionais (currículo, experiências, formação)</li>
-          <li>Dados de navegação e uso da plataforma</li>
+          <li><strong>Empresas clientes:</strong> razão social, CNPJ, endereço, dados de contato, usuários cadastrados, informações de vagas e processos seletivos, dados de faturamento.</li>
+          <li><strong>Candidatos:</strong> nome, e-mail, telefone, data de nascimento, endereço, currículo, experiências profissionais, formação, habilidades, respostas às perguntas de triagem, documentos de admissão, score de compatibilidade.</li>
+          <li><strong>Dados automáticos:</strong> endereço IP, dispositivo, navegador, páginas acessadas, cookies de sessão.</li>
         </ul>
-        
-        <h3>2. Como Usamos Suas Informações</h3>
-        <p>Utilizamos suas informações para:</p>
+
+        <h3>3. Para que usamos seus dados</h3>
         <ul>
-          <li>Conectar candidatos com oportunidades de emprego</li>
-          <li>Permitir que empresas avaliem perfis de candidatos</li>
-          <li>Melhorar nossos serviços e experiência do usuário</li>
-          <li>Enviar comunicações relevantes sobre vagas e serviços</li>
-          <li>Cumprir obrigações legais</li>
+          <li><strong>Execução de contrato:</strong> criação e gestão da conta, operação da plataforma, processamento de candidaturas</li>
+          <li><strong>Legítimo interesse:</strong> melhoria da plataforma, prevenção de fraudes, suporte técnico</li>
+          <li><strong>Consentimento:</strong> comunicações de marketing (quando você optar por receber)</li>
+          <li><strong>Obrigação legal:</strong> cumprimento de obrigações fiscais e regulatórias</li>
         </ul>
-        
-        <h3>3. Compartilhamento de Dados</h3>
-        <p>Compartilhamos suas informações apenas:</p>
+
+        <h3>4. Compartilhamento de dados</h3>
+        <p>Não vendemos seus dados. Compartilhamos apenas com:</p>
         <ul>
-          <li>Com empresas recrutadoras, quando você se candidata a uma vaga</li>
-          <li>Com prestadores de serviços que nos auxiliam na operação da plataforma</li>
-          <li>Quando exigido por lei ou para proteção de direitos</li>
+          <li><strong>Prestadores de serviço:</strong> Supabase (infraestrutura), Anthropic (IA), provedores de e-mail — todos com cláusulas de proteção de dados</li>
+          <li><strong>Empresas e candidatos:</strong> dados do candidato são compartilhados com a empresa do processo seletivo ao qual ele se candidatou</li>
+          <li><strong>Obrigação legal:</strong> quando exigido por autoridade competente ou ordem judicial</li>
         </ul>
-        
-        <h3>4. Segurança dos Dados</h3>
-        <p>Implementamos medidas de segurança técnicas e organizacionais para proteger seus dados contra acesso não autorizado, perda ou alteração.</p>
-        
-        <h3>5. Seus Direitos</h3>
-        <p>De acordo com a LGPD, você tem direito a:</p>
+
+        <h3>5. Retenção dos dados</h3>
         <ul>
-          <li>Acessar seus dados pessoais</li>
-          <li>Corrigir dados incompletos ou desatualizados</li>
-          <li>Solicitar a exclusão de seus dados</li>
-          <li>Revogar consentimento a qualquer momento</li>
-          <li>Portabilidade dos dados</li>
+          <li><strong>Candidatos:</strong> mantidos enquanto a conta estiver ativa; excluídos em até 30 dias após solicitação, salvo obrigação legal</li>
+          <li><strong>Empresas:</strong> mantidos durante o período contratual e por até 5 anos, conforme obrigações fiscais</li>
+          <li><strong>Logs de acesso:</strong> 6 meses conforme Marco Civil da Internet (Lei nº 12.965/2014)</li>
         </ul>
-        
-        <h3>6. Cookies</h3>
-        <p>Utilizamos cookies para melhorar sua experiência. Você pode gerenciar suas preferências de cookies nas configurações do navegador.</p>
-        
-        <h3>7. Contato</h3>
-        <p>Para exercer seus direitos ou esclarecer dúvidas sobre privacidade, entre em contato conosco através da página de contato.</p>`);
+
+        <h3>6. Seus direitos (Art. 18 da LGPD)</h3>
+        <ul>
+          <li><strong>Acesso:</strong> confirmar existência e obter cópia dos seus dados</li>
+          <li><strong>Correção:</strong> corrigir dados incompletos ou desatualizados</li>
+          <li><strong>Eliminação:</strong> solicitar exclusão dos dados tratados por consentimento</li>
+          <li><strong>Portabilidade:</strong> receber dados em formato estruturado e interoperável</li>
+          <li><strong>Oposição:</strong> opor-se ao tratamento por legítimo interesse</li>
+          <li><strong>Revogação:</strong> retirar consentimento a qualquer momento</li>
+        </ul>
+        <p>Para exercer seus direitos: <strong>privacidade@sinapserh.com.br</strong>. Respondemos em até 15 dias úteis.</p>
+
+        <h3>7. Segurança</h3>
+        <ul>
+          <li>Criptografia em trânsito (TLS/HTTPS) e em repouso</li>
+          <li>Controle de acesso por funções (RLS — Row Level Security)</li>
+          <li>Autenticação com tokens JWT</li>
+          <li>Backups periódicos com retenção de 7 dias</li>
+          <li>Audit log de operações sensíveis</li>
+        </ul>
+
+        <h3>8. Cookies</h3>
+        <p>Usamos apenas cookies estritamente necessários para sessão e autenticação. Não utilizamos cookies de rastreamento publicitário de terceiros.</p>
+
+        <h3>9. Transferência internacional</h3>
+        <p>Alguns prestadores operam fora do Brasil (Supabase e Anthropic — EUA). Garantimos que essas transferências seguem o Art. 33 da LGPD com cláusulas contratuais adequadas.</p>
+
+        <h3>10. Menores de idade</h3>
+        <p>Nossa plataforma não é destinada a menores de 18 anos. Dados de menores identificados sem consentimento dos responsáveis serão excluídos imediatamente.</p>
+
+        <h3>11. Alterações</h3>
+        <p>Podemos atualizar esta Política periodicamente. Alterações relevantes serão comunicadas com antecedência mínima de 15 dias.</p>
+
+        <h3>12. Contato</h3>
+        <p><strong>DPO:</strong> privacidade@sinapserh.com.br<br/>
+        <strong>Suporte:</strong> contato@sinapserh.com.br<br/>
+        <strong>ANPD:</strong> www.gov.br/anpd</p>`);
     } catch (error) {
       console.error('Error fetching privacy policy content:', error);
       setContent(`<h2>Política de Privacidade</h2>
