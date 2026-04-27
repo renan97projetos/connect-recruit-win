@@ -297,14 +297,12 @@ export default function CompanyRegister() {
       {/* Header */}
       <header className="border-b-3 border-foreground bg-background">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-primary border-3 border-foreground shadow-brutal flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-primary-foreground" />
-            </div>
+          <div className="inline-flex items-center gap-3">
+            <SRHIcon size={40} />
             <span className="font-black text-xl tracking-tight text-foreground">
               SinapseRH <span className="text-muted-foreground font-bold">Empresas</span>
             </span>
-          </Link>
+          </div>
           <Link
             to="/empresa/acesso"
             className="text-sm font-bold text-foreground hover:underline underline-offset-4"
