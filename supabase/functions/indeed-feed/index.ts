@@ -42,6 +42,21 @@ serve(async (req) => {
     return new Response("Error fetching jobs", { status: 500, headers: corsHeaders });
   }
 
+  // Lookup company names from profiles (no FK relationship to embed)
+  const companyIds = Array.from(
+    new Set(jobs.map((j: any) => j.company_id).filter(Boolean))
+  );
+  const profileMap: Record<string, string> = {};
+  if (companyIds.length > 0) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, company_name")
+      .in("id", companyIds);
+    (profs || []).forEach((p: any) => {
+      if (p?.id && p?.company_name) profileMap[p.id] = p.company_name;
+    });
+  }
+
   const escapeXml = (str: string) =>
     (str || "")
       .replace(/&/g, "&amp;")
