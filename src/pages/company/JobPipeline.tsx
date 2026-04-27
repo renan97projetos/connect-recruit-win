@@ -60,6 +60,9 @@ import {
   ArrowLeft,
   Loader2,
   Mail,
+  Share2,
+  Copy,
+  Check,
   Calendar,
   Trophy,
   ArrowRight,
@@ -308,6 +311,14 @@ export default function JobPipeline() {
 
   const [jobTitle, setJobTitle] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [jobCity, setJobCity] = useState('');
+  const [jobState, setJobState] = useState('');
+  const [jobSalaryMin, setJobSalaryMin] = useState<number | null>(null);
+  const [jobSalaryMax, setJobSalaryMax] = useState<number | null>(null);
+  const [jobType, setJobType] = useState('');
+  const [jobIsRemote, setJobIsRemote] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [applications, setApplications] = useState<any[]>([]);
   const [profilesById, setProfilesById] = useState<Record<string, { avatar_url?: string | null; phone?: string | null }>>({});
   const [loading, setLoading] = useState(true);
@@ -426,7 +437,7 @@ export default function JobPipeline() {
     const load = async () => {
       setLoading(true);
       const [jobRes, appsRes] = await Promise.all([
-        supabase.from('jobs').select('title, company_name').eq('id', id).maybeSingle(),
+        supabase.from('jobs').select('title, company_name, description, city, state, salary_min, salary_max, job_type, is_remote, location, created_at').eq('id', id).maybeSingle(),
         supabase
           .from('applications')
           .select(
@@ -439,6 +450,13 @@ export default function JobPipeline() {
       if (jobRes.data) {
         setJobTitle(jobRes.data.title);
         setCompanyName((jobRes.data as any).company_name || '');
+        setJobDescription((jobRes.data as any).description || '');
+        setJobCity((jobRes.data as any).city || '');
+        setJobState((jobRes.data as any).state || '');
+        setJobSalaryMin((jobRes.data as any).salary_min || null);
+        setJobSalaryMax((jobRes.data as any).salary_max || null);
+        setJobType((jobRes.data as any).job_type || '');
+        setJobIsRemote((jobRes.data as any).is_remote || false);
       }
       const apps = appsRes.data || [];
       setApplications(apps);
@@ -1061,6 +1079,25 @@ export default function JobPipeline() {
       )
     : candidatesInActiveStage;
 
+  const shareJobUrl = `https://www.sinapserh.com.br/jobs/${id}`;
+  const shareLocationText = jobIsRemote
+    ? 'Remoto'
+    : [jobCity, jobState].filter(Boolean).join(', ') || 'Brasil';
+  const shareSalaryText = jobSalaryMin
+    ? `R$ ${jobSalaryMin.toLocaleString('pt-BR')}${jobSalaryMax ? ` - R$ ${jobSalaryMax.toLocaleString('pt-BR')}` : '+'}`
+    : '';
+  const shareLinkedinUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareJobUrl)}&title=${encodeURIComponent(`Vaga: ${jobTitle} | ${companyName}`)}&summary=${encodeURIComponent(`Estamos contratando ${jobTitle}! ${shareLocationText}. ${shareSalaryText ? `Salário: ${shareSalaryText}.` : ''} Candidate-se agora:`)}`;
+  const shareWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(
+    `🚀 *Vaga: ${jobTitle}*\n🏢 ${companyName}\n📍 ${shareLocationText}${shareSalaryText ? `\n💰 ${shareSalaryText}` : ''}\n\n👉 Candidate-se agora:\n${shareJobUrl}`
+  )}`;
+  const shareIndeedUrl = `https://www.indeed.com.br/empregos?q=${encodeURIComponent(jobTitle)}&l=${encodeURIComponent(jobCity || jobState || 'Brasil')}`;
+  const shareGoogleUrl = `https://www.google.com/search?q=${encodeURIComponent(`${jobTitle} ${companyName} vaga emprego`)}`;
+  const copyShareLink = () => {
+    navigator.clipboard.writeText(shareJobUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <CompanyLayout>
       {/* Header */}
@@ -1083,6 +1120,59 @@ export default function JobPipeline() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Divulgar vaga */}
+      <div className="mb-6 p-4 rounded-xl border bg-card">
+        <div className="flex items-center gap-2 mb-3">
+          <Share2 className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold">Divulgar vaga</h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={shareLinkedinUrl} target="_blank" rel="noopener noreferrer">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="#0A66C2">
+                <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.95v5.66H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
+              </svg>
+              LinkedIn
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={shareWhatsappUrl} target="_blank" rel="noopener noreferrer">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="#25D366">
+                <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.607zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.71.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
+              </svg>
+              WhatsApp
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={shareIndeedUrl} target="_blank" rel="noopener noreferrer">
+              <span className="font-bold text-[#003A9B] mr-2">in</span>
+              Indeed
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={shareGoogleUrl} target="_blank" rel="noopener noreferrer">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18a11 11 0 000 9.86l3.66-2.84z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 00-9.82 6.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+              </svg>
+              Google Jobs
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" onClick={copyShareLink}>
+            {copied ? (
+              <><Check className="h-4 w-4 mr-2" /> Copiado!</>
+            ) : (
+              <><Copy className="h-4 w-4 mr-2" /> Copiar link</>
+            )}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          💡 Para aparecer no Google for Jobs automaticamente, a vaga precisa estar publicada (ativa) com título, descrição e localização preenchidos.
+        </p>
       </div>
 
       {/* Pipeline — contadores clicáveis */}
