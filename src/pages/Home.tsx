@@ -532,60 +532,65 @@ export default function Home() {
               Sem surpresas. Cancele quando quiser.
             </p>
           </div>
-          <div className="flex justify-center max-w-lg mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Starter */}
-            <div className="bg-background border-3 border-foreground rounded-2xl p-8 shadow-brutal">
-              <div className="inline-block bg-yellow text-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-foreground mb-4">
+            <div className="bg-background border-3 border-foreground rounded-2xl p-8 shadow-brutal flex flex-col">
+              <div className="inline-block bg-yellow text-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-foreground mb-4 self-start">
                 STARTER
               </div>
-              <p className="text-muted-foreground mb-6 text-sm">
+              <p className="text-muted-foreground mb-4 text-sm">
                 Substitua suas planilhas. Ideal para PMEs organizando o RH.
               </p>
+              <div className="text-4xl font-black mb-1">
+                Grátis
+              </div>
               <p className="text-xs text-muted-foreground mb-6">
                 até 2 usuários · até 5 vagas ativas
               </p>
-              <ul className="space-y-2 mb-8 text-sm">
+              <ul className="space-y-2 mb-8 text-sm flex-1">
                 {["Pipeline Kanban de vagas", "Publicação de vagas", "Gestão de candidatos", "Score e notas", "Dashboard básico", "Career page pública"].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <span className="text-success font-bold">✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <a href="https://wa.me/5527998119863?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Starter%20do%20SinapseRH" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="w-full border-3 border-foreground font-bold shadow-brutal">
-                  Falar com time de vendas →
-                </Button>
-              </a>
+              <Button asChild className="w-full border-3 border-foreground font-bold shadow-brutal">
+                <Link to="/register-company">
+                  Comece agora mesmo →
+                </Link>
+              </Button>
             </div>
-            {/* Card Pro temporariamente oculto
-            <div className="bg-primary text-primary-foreground border-3 border-foreground rounded-2xl p-8 shadow-brutal-lg relative">
+
+            {/* Pro */}
+            <div className="bg-primary text-primary-foreground border-3 border-foreground rounded-2xl p-8 shadow-brutal-lg relative flex flex-col">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow text-foreground text-xs font-bold px-4 py-1 rounded-full border-2 border-foreground whitespace-nowrap">
                 ✦ MAIS POPULAR
               </div>
-              <div className="inline-block bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-primary-foreground/30 mb-4">
+              <div className="inline-block bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-primary-foreground/30 mb-4 self-start">
                 PRO
               </div>
-              <p className="text-primary-foreground/80 mb-6 text-sm">
+              <p className="text-primary-foreground/80 mb-4 text-sm">
                 Automação, IA e gestão completa para crescer.
               </p>
               <div className="text-4xl font-black mb-1">
-                R$ XX<span className="text-lg font-normal opacity-70">/mês</span>
+                Sob consulta
               </div>
               <p className="text-xs opacity-70 mb-6">
                 usuários ilimitados · vagas ilimitadas
               </p>
-              <ul className="space-y-2 mb-8 text-sm">
+              <ul className="space-y-2 mb-8 text-sm flex-1">
                 {["Tudo do Starter", "Workflow configurável por vaga", "IA para descrição e score", "Banco de talentos", "Permissões granulares", "Career page própria", "Analytics completo", "Suporte prioritário"].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <span className="text-yellow font-bold">✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Button className="w-full bg-yellow text-foreground border-3 border-foreground font-bold shadow-brutal hover:shadow-brutal-lg">
-                Começar com Pro →
-              </Button>
+              <a href="https://wa.me/5527998119863?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Pro%20do%20SinapseRH" target="_blank" rel="noopener noreferrer">
+                <Button className="w-full bg-yellow text-foreground border-3 border-foreground font-bold shadow-brutal hover:shadow-brutal-lg">
+                  Falar com time de vendas →
+                </Button>
+              </a>
             </div>
-            */}
           </div>
         </div>
       </section>
