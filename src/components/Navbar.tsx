@@ -115,14 +115,26 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
-              <Link 
-                key={link.label}
-                to={link.to} 
-                className="px-4 py-2 font-semibold text-sm uppercase tracking-wide hover:bg-secondary rounded-lg transition-colors"
-                onClick={(e) => handleNavClick(e, link.to)}
-              >
-                {link.label}
-              </Link>
+              link.external ? (
+                <a
+                  key={link.label}
+                  href={link.to}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 font-semibold text-sm uppercase tracking-wide hover:bg-secondary rounded-lg transition-colors"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link 
+                  key={link.label}
+                  to={link.to} 
+                  className="px-4 py-2 font-semibold text-sm uppercase tracking-wide hover:bg-secondary rounded-lg transition-colors"
+                  onClick={(e) => handleNavClick(e, link.to)}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -201,17 +213,30 @@ export function Navbar() {
           <div className="md:hidden py-4 border-t-3 border-foreground">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
-                <Link 
-                  key={link.label}
-                  to={link.to} 
-                  className="font-semibold py-3 px-4 rounded-lg hover:bg-secondary transition-colors uppercase tracking-wide"
-                  onClick={(e) => {
-                    handleNavClick(e, link.to);
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  {link.label}
-                </Link>
+                link.external ? (
+                  <a
+                    key={link.label}
+                    href={link.to}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold py-3 px-4 rounded-lg hover:bg-secondary transition-colors uppercase tracking-wide"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link 
+                    key={link.label}
+                    to={link.to} 
+                    className="font-semibold py-3 px-4 rounded-lg hover:bg-secondary transition-colors uppercase tracking-wide"
+                    onClick={(e) => {
+                      handleNavClick(e, link.to);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                )
               ))}
               <div className="border-t-3 border-foreground mt-2 pt-4 flex flex-col gap-2">
                 {!isAuthenticated ? (
