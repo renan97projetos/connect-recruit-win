@@ -170,7 +170,7 @@ export default function CandidateDashboard() {
       <p className="text-gray-500 mb-4">{text}</p>
       {withCta && (
         <Button asChild>
-          <Link to="/">Ver vagas disponíveis</Link>
+          <Link to="/candidate/jobs">Ver vagas disponíveis</Link>
         </Button>
       )}
     </div>
