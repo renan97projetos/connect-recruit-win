@@ -20,64 +20,76 @@ export default function TermsOfUse() {
       const row = Array.isArray(data) ? data[0] : data;
       setContent(row?.terms_of_use_content || `<h2>Termos de Uso</h2>
         <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR')}</em></p>
-        
-        <h3>1. Aceitação dos Termos</h3>
-        <p>Ao acessar e usar nossa plataforma, você concorda com estes Termos de Uso. Se não concordar, não utilize nossos serviços.</p>
-        
-        <h3>2. Cadastro e Conta</h3>
+
+        <p>Estes Termos regulam o acesso e uso da plataforma Sinapse RH em <strong>www.sinapserh.com.br</strong>. Ao criar uma conta ou usar qualquer funcionalidade, você concorda com estes termos na integralidade.</p>
+
+        <h3>1. Definições</h3>
         <ul>
-          <li>Você deve fornecer informações verdadeiras e atualizadas</li>
-          <li>É responsável pela segurança de sua senha</li>
-          <li>Deve ter pelo menos 18 anos para criar uma conta</li>
-          <li>Cada usuário pode ter apenas uma conta ativa</li>
+          <li><strong>Plataforma:</strong> o software SaaS Sinapse RH e todos os seus módulos</li>
+          <li><strong>Empresa:</strong> pessoa jurídica que contrata o Sinapse RH para gestão de recrutamento</li>
+          <li><strong>Candidato:</strong> pessoa física que usa a plataforma para se candidatar a vagas</li>
+          <li><strong>Plano:</strong> modalidade de assinatura contratada (Starter ou Pro)</li>
         </ul>
-        
-        <h3>3. Uso Permitido</h3>
-        <p>Você pode usar a plataforma para:</p>
+
+        <h3>2. Aceitação e capacidade</h3>
+        <p>Para usar a plataforma, você declara que é maior de 18 anos ou representante legal autorizado de uma pessoa jurídica, que as informações fornecidas são verdadeiras e que aceita estes Termos e a Política de Privacidade.</p>
+
+        <h3>3. Cadastro e segurança da conta</h3>
         <ul>
-          <li>Candidatar-se a vagas de emprego (candidatos)</li>
-          <li>Publicar vagas e avaliar candidatos (empresas)</li>
-          <li>Gerenciar processos seletivos</li>
+          <li>Você é responsável pela confidencialidade de suas credenciais</li>
+          <li>Notifique imediatamente sobre uso não autorizado: <strong>suporte@sinapserh.com.br</strong></li>
+          <li>É proibido compartilhar credenciais com terceiros não autorizados</li>
         </ul>
-        
-        <h3>4. Uso Proibido</h3>
-        <p>É expressamente proibido:</p>
+
+        <h3>4. Planos e pagamento</h3>
         <ul>
-          <li>Fornecer informações falsas ou enganosas</li>
-          <li>Usar a plataforma para fins ilegais</li>
-          <li>Coletar dados de outros usuários sem autorização</li>
-          <li>Interferir no funcionamento da plataforma</li>
-          <li>Criar múltiplas contas ou usar automação não autorizada</li>
+          <li>A plataforma é oferecida nos planos Starter e Pro com funcionalidades descritas na página de planos</li>
+          <li>O acesso é condicionado ao pagamento da assinatura vigente</li>
+          <li>Em caso de inadimplência, o acesso poderá ser suspenso após aviso prévio de 5 dias úteis</li>
+          <li>Reembolsos analisados caso a caso mediante solicitação em até 7 dias corridos após a cobrança</li>
+          <li>Valores dos planos podem ser reajustados com comunicação prévia de 30 dias</li>
         </ul>
-        
-        <h3>5. Conteúdo do Usuário</h3>
+
+        <h3>5. Uso permitido</h3>
         <ul>
-          <li>Você mantém os direitos sobre seu conteúdo (currículos, descrições, etc.)</li>
-          <li>Nos concede licença para exibir e processar seu conteúdo conforme necessário</li>
-          <li>É responsável pela veracidade e legalidade de seu conteúdo</li>
+          <li>Publicação e gestão de vagas de emprego legítimas</li>
+          <li>Condução de processos seletivos e avaliação de candidatos</li>
+          <li>Candidatura a vagas e acompanhamento de processos seletivos</li>
         </ul>
-        
-        <h3>6. Propriedade Intelectual</h3>
-        <p>Todo o conteúdo da plataforma (textos, design, código, logotipos) é de nossa propriedade e protegido por direitos autorais.</p>
-        
-        <h3>7. Suspensão e Cancelamento</h3>
-        <p>Podemos suspender ou cancelar sua conta se você violar estes termos ou por motivos legais. Você pode cancelar sua conta a qualquer momento.</p>
-        
-        <h3>8. Isenção de Responsabilidade</h3>
+
+        <h3>6. Uso proibido</h3>
         <ul>
-          <li>Não garantimos a contratação de candidatos</li>
-          <li>Não somos responsáveis pelas relações entre empresas e candidatos</li>
-          <li>Não verificamos todas as informações fornecidas pelos usuários</li>
+          <li>Publicar vagas falsas, enganosas ou com requisitos discriminatórios ilegais</li>
+          <li>Coletar dados de candidatos para finalidades distintas do processo seletivo</li>
+          <li>Spam, phishing ou qualquer atividade fraudulenta</li>
+          <li>Engenharia reversa, cópia ou distribuição do código da plataforma</li>
+          <li>Praticar discriminação vedada pela CLT e Lei nº 9.029/1995</li>
         </ul>
-        
-        <h3>9. Alterações nos Termos</h3>
-        <p>Podemos modificar estes termos a qualquer momento. Alterações significativas serão comunicadas com antecedência.</p>
-        
-        <h3>10. Lei Aplicável</h3>
-        <p>Estes termos são regidos pelas leis brasileiras. Disputas serão resolvidas no foro da comarca de São Paulo/SP.</p>
-        
-        <h3>11. Contato</h3>
-        <p>Para dúvidas sobre estes termos, entre em contato através da página de contato.</p>`);
+
+        <h3>7. Responsabilidades das empresas</h3>
+        <p>As empresas são responsáveis pela veracidade das vagas publicadas, cumprimento da LGPD no tratamento dos dados dos candidatos, decisões de contratação e reprovação, e cumprimento da legislação trabalhista.</p>
+
+        <h3>8. Propriedade intelectual</h3>
+        <p>Todo o conteúdo da plataforma — código, design, marca, logotipos — é de propriedade exclusiva do Sinapse RH, protegido pela Lei nº 9.610/1998. Os dados inseridos pelas empresas permanecem de propriedade do cliente.</p>
+
+        <h3>9. Limitação de responsabilidade</h3>
+        <p>O Sinapse RH não se responsabiliza por decisões de contratação, informações inverídicas de usuários, perdas indiretas ou lucros cessantes. Nossa responsabilidade total fica limitada ao valor pago pelo plano nos últimos 3 meses.</p>
+
+        <h3>10. Suspensão e cancelamento</h3>
+        <ul>
+          <li>O usuário pode cancelar a conta pelo painel ou por <strong>suporte@sinapserh.com.br</strong></li>
+          <li>Dados mantidos por 30 dias após cancelamento para recuperação, depois excluídos</li>
+          <li>O Sinapse RH pode suspender contas que violem estes Termos</li>
+        </ul>
+
+        <h3>11. Alterações</h3>
+        <p>Alterações substanciais serão comunicadas com antecedência mínima de 15 dias. O uso continuado implica aceitação das alterações.</p>
+
+        <h3>12. Lei aplicável e foro</h3>
+        <p>Estes Termos são regidos pelas leis brasileiras. Fica eleito o foro da comarca de Vitória, Espírito Santo, com renúncia a qualquer outro por mais privilegiado que seja.</p>
+
+        <h3>13. Contato</h3>
+        <p><strong>suporte@sinapserh.com.br</strong> — www.sinapserh.com.br</p>`);
     } catch (error) {
       console.error('Error fetching terms of use content:', error);
       setContent(`<h2>Termos de Uso</h2>
