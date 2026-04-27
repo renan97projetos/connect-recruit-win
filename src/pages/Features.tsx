@@ -269,7 +269,7 @@ export default function Features() {
               className="border-3 border-background font-bold bg-transparent text-background hover:bg-background hover:text-foreground"
             >
               <a
-                href="https://wa.me/5527998119863?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20SinapseRH"
+                href="https://wa.me/5527999058730?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20SinapseRH"
                 target="_blank"
                 rel="noopener noreferrer"
               >

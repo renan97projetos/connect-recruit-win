@@ -585,7 +585,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href="https://wa.me/5527998119863?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Pro%20do%20SinapseRH" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/5527999058730?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Pro%20do%20SinapseRH" target="_blank" rel="noopener noreferrer">
                 <Button className="w-full bg-yellow text-foreground border-3 border-foreground font-bold shadow-brutal hover:shadow-brutal-lg">
                   Falar com time de vendas →
                 </Button>
