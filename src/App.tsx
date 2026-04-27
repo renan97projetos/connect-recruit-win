@@ -42,10 +42,6 @@ import Permissions from "./pages/company/Permissions";
 import AuditLog from "./pages/company/AuditLog";
 import UploadDocuments from "./pages/UploadDocuments";
 
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import SystemSettings from "./pages/admin/SystemSettings";
-import ContentManagement from "./pages/admin/ContentManagement";
-import TeamManagement from "./pages/admin/TeamManagement";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
