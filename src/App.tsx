@@ -42,10 +42,6 @@ import Permissions from "./pages/company/Permissions";
 import AuditLog from "./pages/company/AuditLog";
 import UploadDocuments from "./pages/UploadDocuments";
 
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import SystemSettings from "./pages/admin/SystemSettings";
-import ContentManagement from "./pages/admin/ContentManagement";
-import TeamManagement from "./pages/admin/TeamManagement";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
@@ -126,10 +122,6 @@ const App = () => {
               <Route path="/company/email-templates" element={<ProtectedRoute requiredRole="company"><EmailTemplates /></ProtectedRoute>} />
               <Route path="/careers/:slug" element={<CareerPage />} />
               
-              <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><SystemSettings /></ProtectedRoute>} />
-              <Route path="/admin/content" element={<ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>} />
-              <Route path="/admin/team" element={<ProtectedRoute requiredRole="admin"><TeamManagement /></ProtectedRoute>} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-use" element={<TermsOfUse />} />
