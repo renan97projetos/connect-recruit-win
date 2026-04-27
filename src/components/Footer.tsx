@@ -48,10 +48,15 @@ export function Footer() {
                 Sobre
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <Link to="/contact" className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group">
+              <a
+                href="https://wa.me/5527998119863?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20SinapseRH"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm opacity-70 hover:opacity-100 transition-opacity inline-flex items-center gap-1 group"
+              >
                 Contato
                 <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
+              </a>
             </nav>
           </div>
 
