@@ -73,6 +73,7 @@ export default function RegisterCompany() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [cnpjValidated, setCnpjValidated] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [form, setForm] = useState({
     company_name: '',
     cnpj: '',
