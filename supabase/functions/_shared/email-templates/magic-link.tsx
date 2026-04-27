@@ -49,16 +49,16 @@ export const MagicLinkEmail = ({
 export default MagicLinkEmail
 
 const main = {
-  backgroundColor: '#ffffff',
+  backgroundColor: '#f5f5f5',
   fontFamily: '"DM Sans", Arial, sans-serif',
   padding: '40px 20px',
 }
 const container = { maxWidth: '560px', margin: '0 auto' }
 const card = {
-  backgroundColor: '#FFFEF7',
-  border: '2px solid #0D0D0D',
+  backgroundColor: '#ffffff',
+  border: '1px solid #e5e7eb',
   borderRadius: '12px',
-  boxShadow: '6px 6px 0 #0D0D0D',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
   padding: '32px 28px',
 }
 const h1 = {
@@ -78,11 +78,11 @@ const button = {
   color: '#ffffff',
   fontSize: '15px',
   fontWeight: 'bold' as const,
-  border: '2px solid #0D0D0D',
+  border: 'none',
   borderRadius: '8px',
   padding: '14px 24px',
   textDecoration: 'none',
-  boxShadow: '4px 4px 0 #0D0D0D',
+  boxShadow: 'none',
   display: 'inline-block',
   margin: '8px 0 24px',
 }
