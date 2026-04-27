@@ -201,6 +201,9 @@ export default function CompanyRegister() {
       console.error('Falha ao verificar email:', err);
     }
 
+    const selectedPlan = plans.find(p => p.id === form.plan_id);
+    const isProPlan = selectedPlan?.name?.toLowerCase() === 'pro';
+
     try {
       const { data, error } = await supabase.functions.invoke('create-tenant-user', {
         body: {
@@ -213,14 +216,63 @@ export default function CompanyRegister() {
             form.address && `Endereço: ${form.address}`,
             form.city && `Cidade: ${form.city}`,
             form.state && `UF: ${form.state}`,
+            isProPlan && 'PRÉ-CADASTRO PRO — aguardando contato comercial',
           ].filter(Boolean).join(' | '),
         },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
+      const tenantId = (data as any)?.tenant?.id || (data as any)?.user_id;
+
+      if (isProPlan) {
+        // Notificação interna para o time SinapseRH
+        try {
+          const html = `
+            <h2 style="color:#000;font-family:Arial,sans-serif">Novo pré-cadastro PRO</h2>
+            <p style="font-family:Arial,sans-serif;color:#333">Uma empresa selecionou o plano <strong>PRO</strong> e foi direcionada ao WhatsApp comercial.</p>
+            <table style="font-family:Arial,sans-serif;color:#333;border-collapse:collapse;font-size:14px">
+              <tr><td style="padding:6px 12px"><strong>Empresa:</strong></td><td style="padding:6px 12px">${form.company_name}</td></tr>
+              <tr><td style="padding:6px 12px"><strong>CNPJ:</strong></td><td style="padding:6px 12px">${form.cnpj}</td></tr>
+              <tr><td style="padding:6px 12px"><strong>E-mail:</strong></td><td style="padding:6px 12px">${form.company_email}</td></tr>
+              <tr><td style="padding:6px 12px"><strong>Telefone:</strong></td><td style="padding:6px 12px">${form.company_phone}</td></tr>
+              <tr><td style="padding:6px 12px"><strong>Responsável:</strong></td><td style="padding:6px 12px">${form.responsible_name}${form.responsible_role ? ` (${form.responsible_role})` : ''}</td></tr>
+              <tr><td style="padding:6px 12px"><strong>Endereço:</strong></td><td style="padding:6px 12px">${[form.address, form.city, form.state].filter(Boolean).join(', ') || '—'}</td></tr>
+              <tr><td style="padding:6px 12px"><strong>Tenant ID:</strong></td><td style="padding:6px 12px">${tenantId || '—'}</td></tr>
+            </table>
+            <p style="font-family:Arial,sans-serif;color:#666;margin-top:16px;font-size:13px">Entre em contato pelo WhatsApp para fechar a contratação.</p>
+          `;
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'raw-html',
+              recipientEmail: 'srhsistemasaas@gmail.com',
+              idempotencyKey: `pro-lead-${tenantId || form.company_email}`,
+              templateData: {
+                subject: `[SinapseRH] Novo pré-cadastro PRO — ${form.company_name}`,
+                html,
+              },
+            },
+          });
+        } catch (emailErr) {
+          console.warn('Pro lead notification email failed:', emailErr);
+        }
+
+        toast({
+          title: 'Pré-cadastro recebido!',
+          description: 'Você será redirecionado ao WhatsApp do nosso time comercial.',
+        });
+
+        const waMsg = encodeURIComponent(
+          `Olá! Acabei de fazer o pré-cadastro PRO no SinapseRH.\n\nEmpresa: ${form.company_name}\nCNPJ: ${form.cnpj}\nResponsável: ${form.responsible_name}\nE-mail: ${form.company_email}`
+        );
+        setTimeout(() => {
+          window.location.href = `https://wa.me/5527998119863?text=${waMsg}`;
+        }, 1400);
+        return;
+      }
+
+      // Fluxo Starter — envia welcome e direciona ao login
       try {
-        const tenantId = (data as any)?.tenant?.id || (data as any)?.user_id;
         const loginUrl = `${window.location.origin}/empresa/acesso`;
         await supabase.functions.invoke('send-transactional-email', {
           body: {
