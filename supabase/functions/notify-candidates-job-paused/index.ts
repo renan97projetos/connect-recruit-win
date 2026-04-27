@@ -67,18 +67,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: {
-          username: GMAIL_USER!,
-          password: GMAIL_APP_PASSWORD!,
-        },
-      },
-    });
-
     let sent = 0;
     const errors: string[] = [];
 
@@ -118,30 +106,21 @@ Deno.serve(async (req) => {
                 </p>
                 <p style="font-size:15px;color:#444;">${body}</p>
                 ${reasonHtml}
-                <p style="font-size:13px;color:#888;margin-top:30px;text-align:center;">
-                  Este é um e-mail automático da plataforma SinapseRH.
-                </p>
               </div>
             </div>
           </body>
         </html>
       `;
 
-      try {
-        await client.send({
-          from: GMAIL_USER!,
-          to: r.candidate_email,
-          subject,
-          content: "auto",
-          html,
-        });
-        sent++;
-      } catch (err: any) {
-        errors.push(`${r.candidate_email}: ${err?.message || String(err)}`);
-      }
+      const result = await sendLovableEmail({
+        to: r.candidate_email,
+        subject,
+        html,
+        idempotencyKey: `job-${resumed ? 'resumed' : 'paused'}-${jobId}-${r.id}`,
+      });
+      if (result.ok) sent++;
+      else errors.push(`${r.candidate_email}: ${result.error}`);
     }
-
-    await client.close();
 
     return new Response(
       JSON.stringify({ success: true, sent, total: recipients.length, errors }),
