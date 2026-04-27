@@ -15,15 +15,16 @@ interface Body {
   applicationId?: string;
 }
 
+const LOGO_URL = "https://herfafjqjvlaehabfxss.supabase.co/storage/v1/object/public/email-assets/srh-logo-official.png";
+
 const buildHtml = (content: string) => `
   <!DOCTYPE html>
   <html>
     <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5;margin:0;padding:0;">
       <div style="max-width:600px;margin:0 auto;background:white;">
-        <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 100%);color:white;padding:30px;text-align:center;">
-          <h1 style="margin:0;font-size:22px;font-weight:700;">SinapseRH</h1>
-          <p style="margin:6px 0 0;font-size:13px;opacity:0.8;">Recrutamento inteligente para PMEs</p>
+        <div style="background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 100%);padding:30px;text-align:center;">
+          <img src="${LOGO_URL}" alt="SinapseRH" style="max-height:48px;width:auto;display:inline-block;" />
         </div>
         <div style="padding:32px;">
           ${content}
