@@ -118,6 +118,73 @@ export default function JobDetails() {
     loadData();
   }, [id, user]);
 
+  // Inject Google for Jobs JSON-LD structured data
+  useEffect(() => {
+    if (!job) return;
+    const employmentTypeMap: Record<string, string> = {
+      'full-time': 'FULL_TIME',
+      'part-time': 'PART_TIME',
+      'contract': 'CONTRACTOR',
+      'internship': 'INTERN',
+      'temporary': 'TEMPORARY',
+    };
+    const data: any = {
+      '@context': 'https://schema.org/',
+      '@type': 'JobPosting',
+      title: job.title,
+      description: job.description || job.title,
+      hiringOrganization: {
+        '@type': 'Organization',
+        name: job.company_name || 'SinapseRH',
+        sameAs: 'https://www.sinapserh.com.br',
+      },
+      jobLocation: job.is_remote
+        ? { '@type': 'Place', address: { '@type': 'PostalAddress', addressCountry: 'BR' } }
+        : {
+            '@type': 'Place',
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: job.city || '',
+              addressRegion: job.state || '',
+              addressCountry: 'BR',
+            },
+          },
+      employmentType: employmentTypeMap[job.job_type] || 'FULL_TIME',
+      datePosted: job.created_at
+        ? new Date(job.created_at).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0],
+      validThrough: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      directApply: true,
+      url: `https://www.sinapserh.com.br/jobs/${job.id}`,
+    };
+    if (job.salary_min) {
+      data.baseSalary = {
+        '@type': 'MonetaryAmount',
+        currency: 'BRL',
+        value: {
+          '@type': 'QuantitativeValue',
+          minValue: job.salary_min,
+          maxValue: job.salary_max || job.salary_min,
+          unitText: 'MONTH',
+        },
+      };
+    }
+    if (job.is_remote) data.jobLocationType = 'TELECOMMUTE';
+
+    const existing = document.getElementById('job-posting-schema');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'job-posting-schema';
+    script.textContent = JSON.stringify(data);
+    document.head.appendChild(script);
+
+    return () => {
+      const el = document.getElementById('job-posting-schema');
+      if (el) el.remove();
+    };
+  }, [job]);
+
   const handleApply = async () => {
     if (!user) {
       toast({
