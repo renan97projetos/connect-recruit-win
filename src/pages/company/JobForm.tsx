@@ -421,9 +421,13 @@ export default function JobForm() {
           navigate(`/company/jobs/${jobId}/edit`, { replace: true });
         }
       } else {
-        navigate('/company/dashboard');
+        if (willPublish && !requiresApproval && !isEditing && jobId) {
+          setPublishedJobId(jobId);
+          setPublishedDialog(true);
+        } else {
+          navigate('/company/dashboard');
+        }
       }
-    } catch (e) {
       console.error('Error saving job:', e);
       toast({
         title: 'Erro ao salvar',
