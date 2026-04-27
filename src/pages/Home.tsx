@@ -589,54 +589,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="bg-foreground text-background py-20 border-y-3 border-foreground">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-black mb-4">O que dizem sobre nós</h2>
-              <p className="text-lg opacity-70">Histórias reais de sucesso</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {[{
-              quote: "Preenchemos 3 vagas técnicas em menos de 10 dias. A automação economizou horas!",
-              name: "João P.",
-              role: "RH Lead",
-              accent: "border-yellow"
-            }, {
-              quote: "Interface intuitiva e dashboard incrível. Tomada de decisões muito mais fácil.",
-              name: "Ana M.",
-              role: "Recrutadora",
-              accent: "border-cyan"
-            }, {
-              quote: "A IA de recomendação é surreal. Encontra talentos que encaixam na cultura.",
-              name: "Carlos R.",
-              role: "Gerente",
-              accent: "border-pink"
-            }, {
-              quote: "Como candidato, o processo é transparente. Recebi feedback super rápido!",
-              name: "Marina S.",
-              role: "Dev",
-              accent: "border-lime"
-            }].map((testimonial, i) => <div key={i} className={`bg-primary/10 border-3 border-primary/30 ${testimonial.accent} border-t-4 p-6 rounded-xl shadow-brutal-lg`}>
-                  <Quote className="h-8 w-8 opacity-50 mb-4" />
-                  <p className="text-lg font-semibold mb-6 leading-relaxed">"{testimonial.quote}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-background/20 flex items-center justify-center font-black">
-                      {testimonial.name[0]}
-                    </div>
-                    <div>
-                      <p className="font-bold">{testimonial.name}</p>
-                      <p className="text-sm opacity-70 font-mono">{testimonial.role}</p>
-                    </div>
-                  </div>
-                </div>)}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Final */}
       <section className="py-24">
         <div className="container mx-auto px-4">
