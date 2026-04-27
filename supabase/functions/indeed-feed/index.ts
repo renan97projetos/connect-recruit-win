@@ -30,8 +30,7 @@ serve(async (req) => {
       id, title, description, city, state,
       salary_min, salary_max, job_type,
       is_remote, location, created_at,
-      company_name, company_id,
-      profiles:company_id (company_name, avatar_url)
+      company_name, company_id
     `)
     .eq("is_active", true)
     .eq("is_archived", false)
