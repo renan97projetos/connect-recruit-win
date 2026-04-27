@@ -211,7 +211,7 @@ export default function JobDetails() {
       // Disparar emails (não bloqueia o fluxo se falhar)
       try {
         // 1) Confirmação ao candidato
-        supabase.functions.invoke('send-application-confirmation', {
+        await supabase.functions.invoke('send-application-confirmation', {
           body: {
             candidateName: profile?.name || user.email,
             candidateEmail: user.email,
