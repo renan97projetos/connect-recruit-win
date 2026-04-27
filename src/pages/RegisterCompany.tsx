@@ -73,6 +73,7 @@ export default function RegisterCompany() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [cnpjValidated, setCnpjValidated] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [form, setForm] = useState({
     company_name: '',
     cnpj: '',
@@ -562,7 +563,7 @@ export default function RegisterCompany() {
             <Button type="button" variant="outline" onClick={() => navigate('/')}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={submitting} className="min-w-[200px]">
+            <Button type="submit" disabled={submitting || !acceptedTerms} className="min-w-[200px]">
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cadastrando...
@@ -573,11 +574,26 @@ export default function RegisterCompany() {
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Ao se cadastrar, você concorda com nossos{' '}
-            <Link to="/terms-of-use" className="underline">Termos de Uso</Link> e{' '}
-            <Link to="/privacy-policy" className="underline">Política de Privacidade</Link>.
-          </p>
+          <div className="flex items-start gap-2.5">
+            <input
+              type="checkbox"
+              id="terms-company"
+              checked={acceptedTerms}
+              onChange={e => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-primary flex-shrink-0 cursor-pointer"
+            />
+            <label htmlFor="terms-company" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+              Li e aceito os{' '}
+              <a href="/terms-of-use" target="_blank" className="underline text-primary">
+                Termos de Uso
+              </a>{' '}
+              e a{' '}
+              <a href="/privacy-policy" target="_blank" className="underline text-primary">
+                Política de Privacidade
+              </a>
+              . Autorizo o tratamento dos dados da empresa conforme a LGPD.
+            </label>
+          </div>
         </form>
       </div>
     </div>

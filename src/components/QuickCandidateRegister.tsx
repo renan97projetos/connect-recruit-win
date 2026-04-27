@@ -33,6 +33,7 @@ export function QuickCandidateRegister() {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { signUp } = useSupabaseAuth();
   const navigate = useNavigate();
@@ -413,7 +414,28 @@ export function QuickCandidateRegister() {
           )}
         </div>
 
-        <Button type="submit" size="lg" className="w-full" disabled={loading}>
+        <div className="flex items-start gap-2.5">
+          <input
+            type="checkbox"
+            id="terms-candidate"
+            checked={acceptedTerms}
+            onChange={e => setAcceptedTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-primary flex-shrink-0 cursor-pointer"
+          />
+          <label htmlFor="terms-candidate" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+            Li e aceito os{' '}
+            <a href="/terms-of-use" target="_blank" className="underline text-primary">
+              Termos de Uso
+            </a>{' '}
+            e a{' '}
+            <a href="/privacy-policy" target="_blank" className="underline text-primary">
+              Política de Privacidade
+            </a>
+            . Autorizo o tratamento dos meus dados pessoais conforme a LGPD.
+          </label>
+        </div>
+
+        <Button type="submit" size="lg" className="w-full" disabled={loading || !acceptedTerms}>
           {loading ? 'Cadastrando...' : (
             <>
               Criar minha conta
