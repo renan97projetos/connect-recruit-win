@@ -555,7 +555,7 @@ export default function Home() {
                 ))}
               </ul>
               <Button asChild className="w-full border-3 border-foreground font-bold shadow-brutal">
-                <Link to="/register-company">
+                <Link to="/cadastro-empresa">
                   Comece agora mesmo →
                 </Link>
               </Button>
