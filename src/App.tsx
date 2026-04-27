@@ -126,10 +126,6 @@ const App = () => {
               <Route path="/company/email-templates" element={<ProtectedRoute requiredRole="company"><EmailTemplates /></ProtectedRoute>} />
               <Route path="/careers/:slug" element={<CareerPage />} />
               
-              <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><SystemSettings /></ProtectedRoute>} />
-              <Route path="/admin/content" element={<ProtectedRoute requiredRole="admin"><ContentManagement /></ProtectedRoute>} />
-              <Route path="/admin/team" element={<ProtectedRoute requiredRole="admin"><TeamManagement /></ProtectedRoute>} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-use" element={<TermsOfUse />} />
