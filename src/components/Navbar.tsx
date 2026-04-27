@@ -72,7 +72,7 @@ export function Navbar() {
     { to: "/#vagas", label: "Vagas" },
     { to: "/about", label: "Empresas" },
     { to: "/about", label: "Sobre" },
-    { to: "/contact", label: "Ajuda" },
+    { to: "https://wa.me/5527998119863?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20SinapseRH", label: "Ajuda", external: true },
   ];
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
