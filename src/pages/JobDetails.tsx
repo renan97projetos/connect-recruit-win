@@ -217,6 +217,7 @@ export default function JobDetails() {
             candidateEmail: user.email,
             jobTitle: job.title,
             companyName: job.company_name,
+            applicationId: appInserted?.id,
           },
         });
 
