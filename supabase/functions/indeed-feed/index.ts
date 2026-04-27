@@ -65,58 +65,55 @@ serve(async (req) => {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
 
-  const jobsXml = jobs.map((job: any) => {
-    const companyName = escapeXml(
-      profileMap[job.company_id] || job.company_name || "SinapseRH"
-    );
-    const title = escapeXml(job.title || "");
-    const description = escapeXml(
-      (job.description || "").replace(/<[^>]+>/g, " ").trim()
-    );
-    const city = escapeXml(job.city || "");
-    const state = escapeXml(job.state || "");
-    const jobUrl = `https://www.sinapserh.com.br/jobs/${job.id}`;
-    const jobType = JOB_TYPE_MAP[job.job_type] || "fulltime";
-    const datePosted = job.created_at
-      ? new Date(job.created_at).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0];
-
-    const locationXml = job.is_remote
-      ? `<city>Remoto</city><country>BR</country>`
-      : `${city ? `<city>${city}</city>` : ""}
-         ${state ? `<state>${state}</state>` : ""}
-         <country>BR</country>`;
-
-    const salaryXml = job.salary_min
-      ? `<salary>${
-          job.salary_max
-            ? `R$ ${Number(job.salary_min).toLocaleString("pt-BR")} - R$ ${Number(job.salary_max).toLocaleString("pt-BR")}`
-            : `A partir de R$ ${Number(job.salary_min).toLocaleString("pt-BR")}`
-        } por mês</salary>`
-      : "";
-
-    return `
-    <job>
-      <title><![CDATA[${title}]]></title>
-      <date><![CDATA[${datePosted}]]></date>
-      <referencenumber><![CDATA[${job.id}]]></referencenumber>
-      <url><![CDATA[${jobUrl}]]></url>
-      <company><![CDATA[${companyName}]]></company>
-      <sourcename><![CDATA[SinapseRH]]></sourcename>
-      <jobtype><![CDATA[${jobType}]]></jobtype>
-      ${locationXml}
-      ${salaryXml}
-      <description><![CDATA[${description || title}]]></description>
-    </job>`;
-  }).join("\n");
-
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<source>
-  <publisher><![CDATA[SinapseRH]]></publisher>
-  <publisherurl><![CDATA[https://www.sinapserh.com.br]]></publisherurl>
-  <lastBuildDate><![CDATA[${new Date().toUTCString()}]]></lastBuildDate>
-${jobsXml}
-</source>`;
+<rss version="2.0" xmlns:indeed="http://www.indeed.com/about/feeds">
+  <channel>
+    <title>Vagas SinapseRH</title>
+    <link>https://www.sinapserh.com.br</link>
+    <description>Vagas de emprego publicadas na plataforma SinapseRH</description>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <language>pt-BR</language>
+${jobs.map((job: any) => {
+  const companyName = escapeXml(
+    profileMap[job.company_id] || job.company_name || "SinapseRH"
+  );
+  const title = escapeXml(job.title || "");
+  const description = escapeXml(
+    (job.description || "").replace(/<[^>]+>/g, " ").trim()
+  );
+  const city = escapeXml(job.city || "");
+  const state = escapeXml(job.state || "");
+  const jobUrl = `https://www.sinapserh.com.br/jobs/${job.id}`;
+  const jobType = JOB_TYPE_MAP[job.job_type] || "fulltime";
+  const datePosted = job.created_at
+    ? new Date(job.created_at).toUTCString()
+    : new Date().toUTCString();
+
+  const location = job.is_remote
+    ? "Remoto, Brasil"
+    : [city, state, "Brasil"].filter(Boolean).join(", ");
+
+  const salaryText = job.salary_min
+    ? job.salary_max
+      ? `R$ ${Number(job.salary_min).toLocaleString("pt-BR")} - R$ ${Number(job.salary_max).toLocaleString("pt-BR")} por mês`
+      : `A partir de R$ ${Number(job.salary_min).toLocaleString("pt-BR")} por mês`
+    : "";
+
+  return `    <item>
+      <title><![CDATA[${title}]]></title>
+      <link><![CDATA[${jobUrl}]]></link>
+      <description><![CDATA[${description || title}]]></description>
+      <pubDate>${datePosted}</pubDate>
+      <guid isPermaLink="true">${jobUrl}</guid>
+      <indeed:jobtype>${jobType}</indeed:jobtype>
+      <indeed:company><![CDATA[${companyName}]]></indeed:company>
+      <indeed:city><![CDATA[${location}]]></indeed:city>
+      <indeed:country>BR</indeed:country>
+      ${salaryText ? `<indeed:salary><![CDATA[${salaryText}]]></indeed:salary>` : ""}
+    </item>`;
+}).join("\n")}
+  </channel>
+</rss>`;
 
   return new Response(xml, {
     headers: {
