@@ -33,6 +33,7 @@ export function QuickCandidateRegister() {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { signUp } = useSupabaseAuth();
   const navigate = useNavigate();
