@@ -1,0 +1,1 @@
+UPDATE public.system_settings SET instagram_url = 'https://www.instagram.com/sinapserhoficial/', linkedin_url = 'https://www.linkedin.com/company/sinapserh/';
