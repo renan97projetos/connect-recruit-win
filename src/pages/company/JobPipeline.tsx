@@ -60,6 +60,9 @@ import {
   ArrowLeft,
   Loader2,
   Mail,
+  Share2,
+  Copy,
+  Check,
   Calendar,
   Trophy,
   ArrowRight,
@@ -308,6 +311,14 @@ export default function JobPipeline() {
 
   const [jobTitle, setJobTitle] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [jobCity, setJobCity] = useState('');
+  const [jobState, setJobState] = useState('');
+  const [jobSalaryMin, setJobSalaryMin] = useState<number | null>(null);
+  const [jobSalaryMax, setJobSalaryMax] = useState<number | null>(null);
+  const [jobType, setJobType] = useState('');
+  const [jobIsRemote, setJobIsRemote] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [applications, setApplications] = useState<any[]>([]);
   const [profilesById, setProfilesById] = useState<Record<string, { avatar_url?: string | null; phone?: string | null }>>({});
   const [loading, setLoading] = useState(true);
@@ -426,7 +437,7 @@ export default function JobPipeline() {
     const load = async () => {
       setLoading(true);
       const [jobRes, appsRes] = await Promise.all([
-        supabase.from('jobs').select('title, company_name').eq('id', id).maybeSingle(),
+        supabase.from('jobs').select('title, company_name, description, city, state, salary_min, salary_max, job_type, is_remote, location, created_at').eq('id', id).maybeSingle(),
         supabase
           .from('applications')
           .select(
@@ -439,6 +450,13 @@ export default function JobPipeline() {
       if (jobRes.data) {
         setJobTitle(jobRes.data.title);
         setCompanyName((jobRes.data as any).company_name || '');
+        setJobDescription((jobRes.data as any).description || '');
+        setJobCity((jobRes.data as any).city || '');
+        setJobState((jobRes.data as any).state || '');
+        setJobSalaryMin((jobRes.data as any).salary_min || null);
+        setJobSalaryMax((jobRes.data as any).salary_max || null);
+        setJobType((jobRes.data as any).job_type || '');
+        setJobIsRemote((jobRes.data as any).is_remote || false);
       }
       const apps = appsRes.data || [];
       setApplications(apps);
