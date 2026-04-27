@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
-
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -142,27 +139,18 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: {
-          username: GMAIL_USER!,
-          password: GMAIL_APP_PASSWORD!,
-        },
-      },
-    });
-
-    await client.send({
-      from: GMAIL_USER!,
+    const result = await sendLovableEmail({
       to: candidateEmail,
       subject: `${subject} — ${jobTitle}`,
-      content: "auto",
       html,
+      idempotencyKey: `status-${candidateEmail}-${newStatus}-${jobTitle}`,
     });
 
-    await client.close();
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     console.log("Candidate status email sent to:", candidateEmail, "status:", newStatus);
 

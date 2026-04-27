@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
-
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,12 +8,10 @@ const corsHeaders = {
 };
 
 interface WelcomeEmailRequest {
-  // Novo padrão (candidato)
   userId?: string;
   userName: string;
   userEmail: string;
   companyName?: string;
-  // Padrão legado (usuário interno da empresa)
   companyId?: string;
   permissions?: string[];
   tempPassword?: string;
@@ -47,11 +42,6 @@ const buildHtml = (content: string) => `
         <div style="padding:32px;">
           ${content}
         </div>
-        <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
-          <p style="margin:0;font-size:12px;color:#999;">
-            Este é um e-mail automático da plataforma SinapseRH. Por favor, não responda.
-          </p>
-        </div>
       </div>
     </body>
   </html>
@@ -67,9 +57,6 @@ const handler = async (req: Request): Promise<Response> => {
     const { userName, userEmail, companyId, permissions, tempPassword } = body;
     let { companyName } = body;
 
-    console.log('Sending welcome email to:', userEmail);
-
-    // Detecta fluxo: usuário interno da empresa (legacy) vs candidato
     const isCompanyUserFlow = !!companyId && !!tempPassword && Array.isArray(permissions);
 
     if (isCompanyUserFlow) {
@@ -89,15 +76,6 @@ const handler = async (req: Request): Promise<Response> => {
     const safeCompanyName = companyName || 'SinapseRH';
     const loginUrl = `https://www.sinapserh.com.br/login`;
     const candidateUrl = `https://www.sinapserh.com.br/candidate`;
-
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: { username: GMAIL_USER!, password: GMAIL_APP_PASSWORD! },
-      },
-    });
 
     let subject: string;
     let content: string;
@@ -153,17 +131,18 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    await client.send({
-      from: GMAIL_USER!,
+    const result = await sendLovableEmail({
       to: userEmail,
       subject,
-      content: "auto",
       html: buildHtml(content),
+      idempotencyKey: `welcome-${userEmail}-${body.userId || ''}`,
     });
 
-    await client.close();
-
-    console.log("Welcome email sent successfully via Gmail SMTP");
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: 'Email de boas-vindas enviado com sucesso' }),

@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
-
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,15 +46,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const uploadUrl = `https://www.sinapserh.com.br/upload-documents/${applicationId}`;
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: { username: GMAIL_USER!, password: GMAIL_APP_PASSWORD! },
-      },
-    });
-
     const content = `
       <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Parabéns pela aprovação! 🎉</h2>
       <p style="font-size:15px;color:#444;margin:0 0 14px;">
@@ -88,15 +76,18 @@ const handler = async (req: Request): Promise<Response> => {
       </p>
     `;
 
-    await client.send({
-      from: GMAIL_USER!,
+    const result = await sendLovableEmail({
       to: candidateEmail,
       subject: `Documentos necessários para sua contratação — ${jobTitle}`,
-      content: "auto",
       html: buildHtml(content),
+      idempotencyKey: `hiring-docs-${applicationId}`,
     });
 
-    await client.close();
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: 'Email enviado com sucesso' }),

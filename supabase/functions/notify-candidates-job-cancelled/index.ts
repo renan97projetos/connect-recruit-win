@@ -1,8 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
-
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,17 +65,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: {
-          username: GMAIL_USER!,
-          password: GMAIL_APP_PASSWORD!,
-        },
-      },
-    });
+
 
     let sent = 0;
     const errors: string[] = [];
@@ -112,30 +99,21 @@ Deno.serve(async (req) => {
                 <p style="font-size:14px;color:#555;">
                   Continue acompanhando novas oportunidades em nossa plataforma — seu currículo permanece disponível para futuras vagas compatíveis com seu perfil.
                 </p>
-                <p style="font-size:13px;color:#888;margin-top:30px;text-align:center;">
-                  Este é um e-mail automático da plataforma SinapseRH.
-                </p>
               </div>
             </div>
           </body>
         </html>
       `;
 
-      try {
-        await client.send({
-          from: GMAIL_USER!,
-          to: r.candidate_email,
-          subject: `Vaga cancelada — ${job.title}`,
-          content: "auto",
-          html,
-        });
-        sent++;
-      } catch (err: any) {
-        errors.push(`${r.candidate_email}: ${err?.message || String(err)}`);
-      }
+      const result = await sendLovableEmail({
+        to: r.candidate_email,
+        subject: `Vaga cancelada — ${job.title}`,
+        html,
+        idempotencyKey: `job-cancelled-${jobId}-${r.id}`,
+      });
+      if (result.ok) sent++;
+      else errors.push(`${r.candidate_email}: ${result.error}`);
     }
-
-    await client.close();
 
     // Marca as candidaturas como rejeitadas (vaga não existe mais)
     await supabase
