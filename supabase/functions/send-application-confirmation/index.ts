@@ -38,6 +38,13 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // DEBUG: list env vars available
+  const envKeys = Object.keys(Deno.env.toObject()).filter(k => k.includes("SUPA") || k.includes("KEY") || k.includes("URL"));
+  console.log("Available env keys:", envKeys);
+  console.log("SERVICE ROLE first 20 chars:", (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").slice(0, 20));
+  console.log("ANON first 20 chars:", (Deno.env.get("SUPABASE_ANON_KEY") || "").slice(0, 20));
+  console.log("PUBLISHABLE first 20 chars:", (Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "").slice(0, 20));
+
   try {
     const { candidateName, candidateEmail, jobTitle, companyName, applicationId }: Body = await req.json();
 
