@@ -1079,6 +1079,25 @@ export default function JobPipeline() {
       )
     : candidatesInActiveStage;
 
+  const shareJobUrl = `https://www.sinapserh.com.br/jobs/${id}`;
+  const shareLocationText = jobIsRemote
+    ? 'Remoto'
+    : [jobCity, jobState].filter(Boolean).join(', ') || 'Brasil';
+  const shareSalaryText = jobSalaryMin
+    ? `R$ ${jobSalaryMin.toLocaleString('pt-BR')}${jobSalaryMax ? ` - R$ ${jobSalaryMax.toLocaleString('pt-BR')}` : '+'}`
+    : '';
+  const shareLinkedinUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareJobUrl)}&title=${encodeURIComponent(`Vaga: ${jobTitle} | ${companyName}`)}&summary=${encodeURIComponent(`Estamos contratando ${jobTitle}! ${shareLocationText}. ${shareSalaryText ? `Salário: ${shareSalaryText}.` : ''} Candidate-se agora:`)}`;
+  const shareWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(
+    `🚀 *Vaga: ${jobTitle}*\n🏢 ${companyName}\n📍 ${shareLocationText}${shareSalaryText ? `\n💰 ${shareSalaryText}` : ''}\n\n👉 Candidate-se agora:\n${shareJobUrl}`
+  )}`;
+  const shareIndeedUrl = `https://www.indeed.com.br/empregos?q=${encodeURIComponent(jobTitle)}&l=${encodeURIComponent(jobCity || jobState || 'Brasil')}`;
+  const shareGoogleUrl = `https://www.google.com/search?q=${encodeURIComponent(`${jobTitle} ${companyName} vaga emprego`)}`;
+  const copyShareLink = () => {
+    navigator.clipboard.writeText(shareJobUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <CompanyLayout>
       {/* Header */}
