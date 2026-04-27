@@ -2,6 +2,7 @@ import type { DriveStep } from 'driver.js';
 
 export type TourId =
   | 'dashboard'
+  | 'job-pipeline'
   | 'job-requests'
   | 'job-history'
   | 'talent-pool'
@@ -27,45 +28,44 @@ export const COMPANY_TOURS: TourMeta[] = [
       {
         element: '[data-tour="company-logo"]',
         popover: {
-          title: '👋 Bem-vindo!',
+          title: '👋 Bem-vindo ao SinapseRH!',
           description:
-            'Este é o seu painel de empresa. Por aqui você gerencia recrutamento e gestão de pessoas em um só lugar.',
+            'Este é o painel de controle da sua empresa. Aqui você gerencia todos os seus processos seletivos em um só lugar.',
           ...popoverBase,
         },
       },
       {
         element: '[data-tour="nav-main"]',
         popover: {
-          title: 'Menu de Recrutamento',
+          title: 'Menu principal',
           description:
-            '<b>Dashboard</b>, <b>Requisições</b>, <b>Histórico</b> e <b>Banco de Talentos</b>: tudo o que você precisa para conduzir processos seletivos.',
-          ...popoverBase,
-        },
-      },
-      {
-        element: '[data-tour="pipeline-stages"]',
-        popover: {
-          title: 'Pipeline de Vagas',
-          description:
-            'Cada card mostra quantas vagas estão em cada etapa: <b>Aberta</b>, <b>Triagem</b>, <b>Entrevista</b>, <b>Avaliação</b>, <b>Proposta</b>, <b>Admissão</b> ou <b>Reprovado</b>. Clique para filtrar.',
+            '<b>Recrutamento</b>, <b>Dashboard</b>, <b>Histórico</b> e <b>Banco de Talentos</b>: navegue entre as áreas do sistema por aqui.',
           ...popoverBase,
         },
       },
       {
         element: '[data-tour="new-job-btn"]',
         popover: {
-          title: 'Criar Nova Vaga',
+          title: 'Criar nova vaga',
           description:
-            'Clique aqui para abrir o formulário de criação de vaga. Você pode usar IA para gerar descrição automaticamente.',
+            'Clique aqui para abrir o formulário de criação de vaga. Use a IA para gerar a descrição automaticamente em segundos.',
           ...popoverBase,
         },
       },
       {
         element: '[data-tour="metrics-btn"]',
         popover: {
-          title: 'Métricas',
+          title: 'Métricas do processo seletivo',
           description:
-            'Veja gráficos de candidaturas dos últimos 30 dias, top vagas e funil de conversão. Pode exportar como PDF.',
+            'Veja gráficos de candidaturas, funil de conversão por etapa e tempo médio em cada fase. Exporte como PDF.',
+          ...popoverBase,
+        },
+      },
+      {
+        popover: {
+          title: 'Tabela de vagas',
+          description:
+            'Todas as suas vagas aparecem aqui com o status (Ativa, Rascunho, Pausada, Encerrada) e o número de candidatos. Clique em qualquer vaga para abrir o pipeline de candidatos.',
           ...popoverBase,
         },
       },
@@ -74,7 +74,54 @@ export const COMPANY_TOURS: TourMeta[] = [
         popover: {
           title: 'Precisa de ajuda?',
           description:
-            'A qualquer momento, clique neste botão <b>?</b> para refazer o tour da tela atual ou ver todos os tutoriais disponíveis.',
+            'A qualquer momento clique neste <b>?</b> para refazer o tour da tela atual ou ver todos os tutoriais disponíveis.',
+          ...popoverBase,
+        },
+      },
+    ],
+  },
+  {
+    id: 'job-pipeline' as any,
+    label: 'Pipeline de Candidatos',
+    route: '/company/jobs',
+    steps: [
+      {
+        popover: {
+          title: 'Pipeline de candidatos',
+          description:
+            'Esta é a tela central do recrutamento. Cada etapa (Triagem, Entrevista, Avaliação, Proposta, Admissão) mostra quantos candidatos estão nela. Clique na etapa para ver os cards.',
+          ...popoverBase,
+        },
+      },
+      {
+        popover: {
+          title: 'Triagem — tabela ranqueada',
+          description:
+            'Na Triagem, os candidatos aparecem em tabela ordenada por score. Use o botão <b>→</b> para avançar para Entrevista ou o <b>👎</b> para reprovar (o candidato recebe um e-mail automático).',
+          ...popoverBase,
+        },
+      },
+      {
+        popover: {
+          title: 'Entrevista — agendamento',
+          description:
+            'Na etapa de Entrevista, clique no ícone de calendário para agendar: defina data, horário, formato (vídeo, presencial, telefone) e link. O candidato recebe o e-mail com todos os detalhes automaticamente.',
+          ...popoverBase,
+        },
+      },
+      {
+        popover: {
+          title: 'Proposta e Admissão',
+          description:
+            'Na etapa de Proposta, registre o salário e benefícios. O candidato recebe o e-mail. Em Admissão, solicite os documentos de contratação com um clique — o sistema envia a lista completa por e-mail.',
+          ...popoverBase,
+        },
+      },
+      {
+        popover: {
+          title: 'Notas e WhatsApp',
+          description:
+            'Em qualquer etapa, use o ícone de nota 📝 para registrar observações internas (visível só para sua equipe) e o ícone do WhatsApp para contato direto com o candidato.',
           ...popoverBase,
         },
       },
