@@ -73,6 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
       subject: `Candidatura recebida — ${jobTitle}`,
       html: buildHtml(content),
       idempotencyKey: `app-confirm-${applicationId || `${candidateEmail}-${jobTitle}`}`,
+      templateLabel: "application-confirmation",
     });
 
     if (!result.ok) {
