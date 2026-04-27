@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star, Rocket, Target, Heart, MessageCircle, Briefcase, Settings } from 'lucide-react';
+import { MapPin, DollarSign, Building2, ArrowRight, Search, CheckCircle2, Users, Zap, BarChart3, Brain, Clock, Quote, Sparkles, Star, Rocket, Target, Heart, MessageCircle, Briefcase, Settings, Hexagon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { JobFiltersComponent, JobFilters } from '@/components/JobFilters';
@@ -385,8 +385,9 @@ export default function Home() {
             {/* JARVIS — destaque principal */}
             <div className="bg-foreground text-background rounded-2xl border-3 border-foreground shadow-brutal-lg p-8 mb-6 flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 bg-primary rounded-xl border-3 border-background flex items-center justify-center shadow-brutal">
-                  <Sparkles className="h-8 w-8 text-primary-foreground" />
+                <div className="w-16 h-16 bg-primary rounded-xl border-3 border-background flex items-center justify-center shadow-brutal relative">
+                  <Hexagon className="h-10 w-10" style={{ color: '#fff', fill: '#7c3aed' }} />
+                  <span className="absolute text-white font-bold text-sm">J</span>
                 </div>
               </div>
               <div className="flex-1">
