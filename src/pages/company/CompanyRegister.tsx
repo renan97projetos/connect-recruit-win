@@ -746,13 +746,14 @@ export default function CompanyRegister() {
                 disabled={submitting || !form.plan_id}
                 className="inline-flex items-center gap-2 h-12 px-6 rounded-lg bg-primary border-3 border-foreground text-primary-foreground font-black shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {submitting ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Cadastrando...</>
-                ) : !form.plan_id ? (
-                  <>Selecione um plano <ArrowRight className="h-4 w-4" /></>
-                ) : (
-                  <>Finalizar cadastro <Check className="h-4 w-4" /></>
-                )}
+                {(() => {
+                  const sel = plans.find(p => p.id === form.plan_id);
+                  const isPro = sel?.name?.toLowerCase() === 'pro';
+                  if (submitting) return (<><Loader2 className="h-4 w-4 animate-spin" /> {isPro ? 'Enviando pré-cadastro...' : 'Cadastrando...'}</>);
+                  if (!form.plan_id) return (<>Selecione um plano <ArrowRight className="h-4 w-4" /></>);
+                  if (isPro) return (<>Pré-cadastrar e falar no WhatsApp <ArrowRight className="h-4 w-4" /></>);
+                  return (<>Começar agora <Check className="h-4 w-4" /></>);
+                })()}
               </button>
             )}
           </div>
