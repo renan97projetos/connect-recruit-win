@@ -531,7 +531,7 @@ export default function Home() {
               Sem surpresas. Cancele quando quiser.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="flex justify-center max-w-lg mx-auto">
             {/* Starter */}
             <div className="bg-background border-3 border-foreground rounded-2xl p-8 shadow-brutal">
               <div className="inline-block bg-yellow text-foreground text-xs font-bold px-3 py-1 rounded-full border-2 border-foreground mb-4">
@@ -540,9 +540,6 @@ export default function Home() {
               <p className="text-muted-foreground mb-6 text-sm">
                 Substitua suas planilhas. Ideal para PMEs organizando o RH.
               </p>
-              <div className="text-4xl font-black mb-1">
-                R$ XX<span className="text-lg font-normal text-muted-foreground">/mês</span>
-              </div>
               <p className="text-xs text-muted-foreground mb-6">
                 até 2 usuários · até 5 vagas ativas
               </p>
@@ -553,11 +550,13 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" className="w-full border-3 border-foreground font-bold shadow-brutal">
-                Começar grátis →
-              </Button>
+              <a href="https://wa.me/5527998119863?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Starter%20do%20SinapseRH" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="w-full border-3 border-foreground font-bold shadow-brutal">
+                  Falar com time de vendas →
+                </Button>
+              </a>
             </div>
-            {/* Pro */}
+            {/* Card Pro temporariamente oculto
             <div className="bg-primary text-primary-foreground border-3 border-foreground rounded-2xl p-8 shadow-brutal-lg relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow text-foreground text-xs font-bold px-4 py-1 rounded-full border-2 border-foreground whitespace-nowrap">
                 ✦ MAIS POPULAR
@@ -585,6 +584,7 @@ export default function Home() {
                 Começar com Pro →
               </Button>
             </div>
+            */}
           </div>
         </div>
       </section>
