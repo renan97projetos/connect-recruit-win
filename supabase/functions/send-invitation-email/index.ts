@@ -82,18 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending invitation email to:', invitation.email);
 
-    // Send invitation email via Resend API
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: "SinapseRH <onboarding@resend.dev>",
-        to: [invitation.email],
-        subject: `Você foi convidado para ${companyName}`,
-        html: `
+    const html = `
           <!DOCTYPE html>
           <html>
             <head>
@@ -108,13 +97,10 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e0e0e0; border-top: none;">
                   <p style="font-size: 18px; color: #1e3a5f; font-weight: 600;">Olá ${invitation.name},</p>
-                  
                   <p style="font-size: 16px;">Você recebeu um convite para acessar o sistema de gestão de RH da <strong>${companyName}</strong>.</p>
-                  
                   <div style="background: #e8f4fd; border-left: 4px solid #0284c7; padding: 18px; margin: 25px 0; border-radius: 6px;">
                     <p style="margin: 0;"><strong>📧 Email de acesso:</strong> ${invitation.email}</p>
                   </div>
-                  
                   ${permissionsList ? `
                   <div style="background: #f8fafc; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #1e3a5f;">
                     <h3 style="margin: 0 0 15px 0; color: #1e3a5f; font-size: 16px;">🔐 Permissões que você terá:</h3>
@@ -123,49 +109,47 @@ const handler = async (req: Request): Promise<Response> => {
                     </ul>
                   </div>
                   ` : ''}
-                  
                   <p style="text-align: center;">
                     <a href="${registerUrl}" style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white !important; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 25px 0;">Criar minha conta</a>
                   </p>
-                  
                   <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 18px; margin: 25px 0; border-radius: 6px;">
                     <p style="margin: 0; font-size: 14px;">
-                      <strong>⏰ Atenção:</strong> Este convite expira em <strong>${expiresFormatted}</strong>. 
+                      <strong>⏰ Atenção:</strong> Este convite expira em <strong>${expiresFormatted}</strong>.
                       Após essa data, será necessário solicitar um novo convite.
                     </p>
                   </div>
-                  
                   <p style="font-size: 14px; color: #666; margin-top: 30px;">
                     Se você não esperava receber este convite, pode ignorar este email com segurança.
                   </p>
-                  
                   <p style="margin-top: 30px;">
                     Atenciosamente,<br>
                     <strong>Equipe SinapseRH</strong>
                   </p>
                 </div>
                 <div style="text-align: center; padding: 25px; color: #666; font-size: 13px; background: #f9f9f9; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0; border-top: none;">
-                  <p style="margin: 0;">Este é um email automático, por favor não responda.</p>
-                  <p style="margin: 10px 0 0 0;">© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
+                  <p style="margin: 0;">© ${new Date().getFullYear()} SinapseRH. Todos os direitos reservados.</p>
                 </div>
               </div>
             </body>
           </html>
-        `,
-      }),
+        `;
+
+    const result = await sendLovableEmail({
+      to: invitation.email,
+      subject: `Você foi convidado para ${companyName}`,
+      html,
+      idempotencyKey: `invitation-${invitation.id}`,
     });
 
-    if (!emailResponse.ok) {
-      const errorData = await emailResponse.json();
-      console.error('Resend API error:', errorData);
-      throw new Error(errorData.message || 'Erro ao enviar email');
+    if (!result.ok) {
+      console.error('Lovable email error:', result.error);
+      throw new Error(result.error || 'Erro ao enviar email');
     }
 
-    const emailResult = await emailResponse.json();
-    console.log("Invitation email sent successfully:", emailResult);
+    console.log("Invitation email sent successfully:", result.data);
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Email de convite enviado com sucesso' }), 
+      JSON.stringify({ success: true, message: 'Email de convite enviado com sucesso' }),
       {
         status: 200,
         headers: {
