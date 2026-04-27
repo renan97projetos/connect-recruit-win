@@ -65,17 +65,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: {
-          username: GMAIL_USER!,
-          password: GMAIL_APP_PASSWORD!,
-        },
-      },
-    });
+
 
     let sent = 0;
     const errors: string[] = [];
