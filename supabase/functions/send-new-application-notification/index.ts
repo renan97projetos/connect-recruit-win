@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +14,7 @@ interface Body {
   candidateName: string;
   candidateEmail: string;
   score?: number | null;
+  applicationId?: string;
 }
 
 const buildHtml = (content: string) => `
@@ -30,11 +30,6 @@ const buildHtml = (content: string) => `
         <div style="padding:32px;">
           ${content}
         </div>
-        <div style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
-          <p style="margin:0;font-size:12px;color:#999;">
-            Este é um e-mail automático da plataforma SinapseRH. Por favor, não responda.
-          </p>
-        </div>
       </div>
     </body>
   </html>
@@ -46,19 +41,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { companyEmail, jobTitle, candidateName, candidateEmail, score }: Body = await req.json();
+    const { companyEmail, jobTitle, jobId, candidateName, candidateEmail, score, applicationId }: Body = await req.json();
 
     if (!companyEmail || !jobTitle) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY not configured");
-      return new Response(JSON.stringify({ error: "Email service not configured" }), {
-        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -80,33 +67,20 @@ const handler = async (req: Request): Promise<Response> => {
       </p>
     `;
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "SinapseRH <onboarding@resend.dev>",
-        to: [companyEmail],
-        subject: `Novo candidato para ${jobTitle}`,
-        html: buildHtml(content),
-      }),
+    const result = await sendLovableEmail({
+      to: companyEmail,
+      subject: `Novo candidato para ${jobTitle}`,
+      html: buildHtml(content),
+      idempotencyKey: `new-app-notif-${applicationId || `${jobId}-${candidateEmail}`}`,
     });
 
-    const emailData = await emailResponse.json();
-
-    if (!emailResponse.ok) {
-      console.error("Resend error:", emailData);
-      return new Response(JSON.stringify({ error: emailData }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("New application notification sent:", emailData);
-
-    return new Response(JSON.stringify({ success: true, id: emailData.id }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
