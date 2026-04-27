@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,14 +53,13 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: { username: GMAIL_USER!, password: GMAIL_APP_PASSWORD! },
-      },
-    });
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Email service not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const content = `
       <h2 style="margin:0 0 16px;font-size:20px;color:#111;">Olá, ${candidateName || "candidato"}! 👋</h2>
@@ -84,17 +81,33 @@ const handler = async (req: Request): Promise<Response> => {
       </p>
     `;
 
-    await client.send({
-      from: GMAIL_USER!,
-      to: candidateEmail,
-      subject: `Candidatura recebida — ${jobTitle}`,
-      content: "auto",
-      html: buildHtml(content),
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "SinapseRH <onboarding@resend.dev>",
+        to: [candidateEmail],
+        subject: `Candidatura recebida — ${jobTitle}`,
+        html: buildHtml(content),
+      }),
     });
 
-    await client.close();
+    const emailData = await emailResponse.json();
 
-    return new Response(JSON.stringify({ success: true }), {
+    if (!emailResponse.ok) {
+      console.error("Resend error:", emailData);
+      return new Response(JSON.stringify({ error: emailData }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("Application confirmation sent:", emailData);
+
+    return new Response(JSON.stringify({ success: true, id: emailData.id }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
