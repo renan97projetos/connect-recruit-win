@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
-
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+import { sendLovableEmail } from "../_shared/send-lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
