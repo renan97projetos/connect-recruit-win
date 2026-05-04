@@ -418,6 +418,7 @@ export default function CompanyDashboard() {
   const kpis = [
     { label: 'Total de vagas', value: totalVagas, color: 'text-gray-900' },
     { label: 'Ativas', value: ativas, color: 'text-green-600' },
+    { label: 'Aguardando publicação', value: aguardandoPublicacao, color: 'text-blue-600' },
     { label: 'Rascunho', value: rascunho, color: 'text-gray-500' },
     { label: 'Pausadas', value: pausadas, color: 'text-amber-600' },
     { label: 'Encerradas', value: encerradas, color: 'text-red-500' },
