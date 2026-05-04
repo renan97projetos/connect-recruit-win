@@ -456,7 +456,7 @@ export default function CompanyDashboard() {
       </div>
 
       {/* SEÇÃO 1 — KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
