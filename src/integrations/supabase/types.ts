@@ -1272,6 +1272,42 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_publication_requests: {
+        Row: {
+          created_at: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          job_id: string
+          notes: string | null
+          published_channels: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          job_id: string
+          notes?: string | null
+          published_channels?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          job_id?: string
+          notes?: string | null
+          published_channels?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_metrics: {
         Row: {
           active_tenants: number | null

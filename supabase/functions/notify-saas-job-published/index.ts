@@ -144,6 +144,14 @@ Deno.serve(async (req) => {
 </body>
 </html>`.trim();
 
+    // Registra/atualiza a solicitação de publicação manual no backoffice
+    await supabase
+      .from("manual_publication_requests")
+      .upsert(
+        { job_id: job.id, status: "pending" },
+        { onConflict: "job_id", ignoreDuplicates: true },
+      );
+
     const result = await sendLovableEmail({
       to: SAAS_NOTIFICATION_EMAIL,
       subject,
