@@ -487,6 +487,7 @@ export default function CompanyDashboard() {
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="ativa">Ativas</SelectItem>
+            <SelectItem value="aguardando_publicacao">Aguardando publicação</SelectItem>
             <SelectItem value="rascunho">Rascunho</SelectItem>
             <SelectItem value="pausada">Pausadas</SelectItem>
             <SelectItem value="encerrada">Encerradas</SelectItem>
