@@ -67,9 +67,6 @@ export default function JobForm() {
   const [activeApplicationsCount, setActiveApplicationsCount] = useState(0);
   const [editUnlocked, setEditUnlocked] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
-  const [publishedDialog, setPublishedDialog] = useState(false);
-  const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
-  const [copiedShare, setCopiedShare] = useState(false);
 
   // Vaga é considerada "publicada" quando o status não é rascunho nem aguardando aprovação
   const isPublishedJob = isEditing && !!jobApprovalStatus && !['draft', 'pending_approval'].includes(jobApprovalStatus);
