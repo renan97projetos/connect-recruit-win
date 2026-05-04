@@ -300,7 +300,7 @@ export default function CompanyDashboard() {
     setLoading(true);
     const { data: jobsData } = await supabase
       .from('jobs')
-      .select('id, title, is_active, is_archived, is_paused, pipeline_stage, created_at, city, location, job_type, applications(id, status, current_stage, applied_at, updated_at)')
+      .select('id, title, is_active, is_archived, is_paused, pending_manual_publication, pipeline_stage, created_at, city, location, job_type, applications(id, status, current_stage, applied_at, updated_at)')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false });
 
