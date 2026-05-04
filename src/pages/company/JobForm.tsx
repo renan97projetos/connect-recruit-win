@@ -17,8 +17,7 @@ import { PermissionGuard } from '@/components/PermissionGuard';
 import { JobPreview } from '@/components/jobs/JobPreview';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Lock, Unlock, AlertTriangle, Share2, Copy, Check, Rocket } from 'lucide-react';
+import { Lock, Unlock, AlertTriangle } from 'lucide-react';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { PlanLimitBanner } from '@/components/PlanLimitBanner';
 import { ProFeatureGate } from '@/components/ProFeatureGate';
@@ -68,9 +67,6 @@ export default function JobForm() {
   const [activeApplicationsCount, setActiveApplicationsCount] = useState(0);
   const [editUnlocked, setEditUnlocked] = useState(false);
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
-  const [publishedDialog, setPublishedDialog] = useState(false);
-  const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
-  const [copiedShare, setCopiedShare] = useState(false);
 
   // Vaga é considerada "publicada" quando o status não é rascunho nem aguardando aprovação
   const isPublishedJob = isEditing && !!jobApprovalStatus && !['draft', 'pending_approval'].includes(jobApprovalStatus);
@@ -421,12 +417,13 @@ export default function JobForm() {
           navigate(`/company/jobs/${jobId}/edit`, { replace: true });
         }
       } else {
-        if (willPublish && !requiresApproval && !isEditing && jobId) {
-          setPublishedJobId(jobId);
-          setPublishedDialog(true);
-        } else {
-          navigate('/company/dashboard');
+        if (willPublish && !requiresApproval && jobId && !isEditing) {
+          // Notifica o time SaaS por e-mail para divulgação manual em canais externos
+          supabase.functions
+            .invoke('notify-saas-job-published', { body: { jobId } })
+            .catch((err) => console.error('notify-saas-job-published failed', err));
         }
+        navigate('/company/dashboard');
       }
     } catch (e) {
       console.error('Error saving job:', e);
@@ -1424,141 +1421,6 @@ export default function JobForm() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {(() => {
-        const jobUrl = `https://www.sinapserh.com.br/jobs/${publishedJobId}`;
-        const title = formData.title || 'vaga';
-        const company = companyName || 'nossa empresa';
-        const city = formData.city || '';
-        const state = formData.state || '';
-        const salaryMin = formData.salaryMin;
-        const salaryMax = formData.salaryMax;
-        const isRemote = formData.location === 'remote';
-
-        const locationText = isRemote
-          ? 'Remoto'
-          : [city, state].filter(Boolean).join(', ') || 'Brasil';
-
-        const salaryText = salaryMin
-          ? `R$ ${Number(salaryMin).toLocaleString('pt-BR')}${salaryMax ? ` - R$ ${Number(salaryMax).toLocaleString('pt-BR')}` : '+'}`
-          : '';
-
-        const linkedinUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(jobUrl)}&title=${encodeURIComponent(`Vaga: ${title} | ${company}`)}&summary=${encodeURIComponent(`Estamos contratando ${title}! ${locationText}. ${salaryText ? `Salário: ${salaryText}.` : ''} Candidate-se:`)}`;
-
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-          `🚀 *Vaga: ${title}*\n🏢 ${company}\n📍 ${locationText}${salaryText ? `\n💰 ${salaryText}` : ''}\n\n👉 Candidate-se agora:\n${jobUrl}`
-        )}`;
-
-        const indeedUrl = `https://www.indeed.com.br/empregos?q=${encodeURIComponent(title)}&l=${encodeURIComponent(city || state || 'Brasil')}`;
-
-        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(`${title} ${company} vaga emprego`)}`;
-
-        const copyLink = () => {
-          navigator.clipboard.writeText(jobUrl);
-          setCopiedShare(true);
-          setTimeout(() => setCopiedShare(false), 2000);
-        };
-
-        return (
-          <Dialog
-            open={publishedDialog}
-            onOpenChange={(open) => {
-              if (!open) {
-                setPublishedDialog(false);
-                navigate('/company/dashboard');
-              }
-            }}
-          >
-            <DialogContent className="max-w-md">
-              <div className="text-center space-y-2">
-                <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Rocket className="w-7 h-7 text-primary" />
-                </div>
-                <h2 className="text-2xl font-bold">Vaga publicada! 🎉</h2>
-                <p className="text-sm text-muted-foreground">
-                  <strong>{title}</strong> está ao vivo e visível para candidatos.
-                  Divulgue agora para receber mais candidaturas.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium flex items-center gap-2">
-                  <Share2 className="w-4 h-4" /> Divulgue sua vaga
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href={linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-md bg-[#0A66C2] text-white text-sm font-medium hover:opacity-90 transition"
-                  >
-                    LinkedIn
-                  </a>
-                  <a
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-md bg-[#25D366] text-white text-sm font-medium hover:opacity-90 transition"
-                  >
-                    WhatsApp
-                  </a>
-                  <a
-                    href={indeedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-md bg-[#2164f3] text-white text-sm font-medium hover:opacity-90 transition"
-                  >
-                    Indeed
-                  </a>
-                  <a
-                    href={googleUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-md bg-foreground text-background text-sm font-medium hover:opacity-90 transition"
-                  >
-                    Google Jobs
-                  </a>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                onClick={copyLink}
-                className="w-full"
-              >
-                {copiedShare ? (
-                  <><Check className="w-4 h-4 mr-2" /> Link copiado!</>
-                ) : (
-                  <><Copy className="w-4 h-4 mr-2" /> Copiar link da vaga</>
-                )}
-              </Button>
-
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setPublishedDialog(false);
-                  navigate(`/company/jobs/${publishedJobId}`);
-                }}
-              >
-                Ir para o pipeline da vaga →
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                ou{' '}
-                <button
-                  type="button"
-                  className="underline hover:text-foreground"
-                  onClick={() => {
-                    setPublishedDialog(false);
-                    navigate('/company/dashboard');
-                  }}
-                >
-                  voltar para Gestão de Vagas
-                </button>
-              </p>
-            </DialogContent>
-          </Dialog>
-        );
-      })()}
     </CompanyLayout>
   );
 }
