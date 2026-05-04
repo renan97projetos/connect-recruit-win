@@ -66,6 +66,7 @@ import BackofficeUsers from "./pages/backoffice/Users";
 import BackofficeMetrics from "./pages/backoffice/Metrics";
 import BackofficeAuditLogs from "./pages/backoffice/AuditLogs";
 import BackofficeSettings from "./pages/backoffice/Settings";
+import BackofficeJobPublications from "./pages/backoffice/JobPublications";
 import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
