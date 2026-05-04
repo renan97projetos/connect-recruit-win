@@ -545,6 +545,8 @@ export default function CompanyDashboard() {
                   ? { label: 'Pausada', className: 'bg-amber-50 text-amber-600' }
                   : job.is_active
                   ? { label: 'Ativa', className: 'bg-green-50 text-green-700' }
+                  : job.pending_manual_publication
+                  ? { label: 'Aguardando publicação', className: 'bg-blue-50 text-blue-700' }
                   : { label: 'Rascunho', className: 'bg-gray-100 text-gray-500' };
 
                 const jobType = JOB_TYPE_LABELS[job.job_type] || job.job_type || '—';
