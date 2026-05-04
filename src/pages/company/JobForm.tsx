@@ -417,12 +417,13 @@ export default function JobForm() {
           navigate(`/company/jobs/${jobId}/edit`, { replace: true });
         }
       } else {
-        if (willPublish && !requiresApproval && !isEditing && jobId) {
-          setPublishedJobId(jobId);
-          setPublishedDialog(true);
-        } else {
-          navigate('/company/dashboard');
+        if (willPublish && !requiresApproval && jobId && !isEditing) {
+          // Notifica o time SaaS por e-mail para divulgação manual em canais externos
+          supabase.functions
+            .invoke('notify-saas-job-published', { body: { jobId } })
+            .catch((err) => console.error('notify-saas-job-published failed', err));
         }
+        navigate('/company/dashboard');
       }
     } catch (e) {
       console.error('Error saving job:', e);
