@@ -1103,6 +1103,7 @@ export type Database = {
           min_experience_years: number | null
           paused_at: string | null
           paused_reason: string | null
+          pending_manual_publication: boolean
           pipeline_stage: string
           required_education_area: string | null
           required_education_level: string | null
@@ -1154,6 +1155,7 @@ export type Database = {
           min_experience_years?: number | null
           paused_at?: string | null
           paused_reason?: string | null
+          pending_manual_publication?: boolean
           pipeline_stage?: string
           required_education_area?: string | null
           required_education_level?: string | null
@@ -1205,6 +1207,7 @@ export type Database = {
           min_experience_years?: number | null
           paused_at?: string | null
           paused_reason?: string | null
+          pending_manual_publication?: boolean
           pipeline_stage?: string
           required_education_area?: string | null
           required_education_level?: string | null

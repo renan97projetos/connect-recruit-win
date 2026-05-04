@@ -300,7 +300,7 @@ export default function CompanyDashboard() {
     setLoading(true);
     const { data: jobsData } = await supabase
       .from('jobs')
-      .select('id, title, is_active, is_archived, is_paused, pipeline_stage, created_at, city, location, job_type, applications(id, status, current_stage, applied_at, updated_at)')
+      .select('id, title, is_active, is_archived, is_paused, pending_manual_publication, pipeline_stage, created_at, city, location, job_type, applications(id, status, current_stage, applied_at, updated_at)')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false });
 
@@ -315,7 +315,12 @@ export default function CompanyDashboard() {
   // === KPIs ===
   const totalVagas = jobs.length;
   const ativas = jobs.filter((j) => j.is_active && !j.is_archived && !j.is_paused).length;
-  const rascunho = jobs.filter((j) => !j.is_active && !j.is_archived).length;
+  const aguardandoPublicacao = jobs.filter(
+    (j) => j.pending_manual_publication && !j.is_active && !j.is_archived && !j.is_paused,
+  ).length;
+  const rascunho = jobs.filter(
+    (j) => !j.is_active && !j.is_archived && !j.pending_manual_publication,
+  ).length;
   const pausadas = jobs.filter((j) => j.is_paused && !j.is_archived).length;
   const encerradas = jobs.filter((j) => j.is_archived).length;
 
@@ -323,6 +328,7 @@ export default function CompanyDashboard() {
     if (j.is_archived) return 'encerrada';
     if (j.is_paused) return 'pausada';
     if (j.is_active) return 'ativa';
+    if (j.pending_manual_publication) return 'aguardando_publicacao';
     return 'rascunho';
   };
 
@@ -412,6 +418,7 @@ export default function CompanyDashboard() {
   const kpis = [
     { label: 'Total de vagas', value: totalVagas, color: 'text-gray-900' },
     { label: 'Ativas', value: ativas, color: 'text-green-600' },
+    { label: 'Aguardando publicação', value: aguardandoPublicacao, color: 'text-blue-600' },
     { label: 'Rascunho', value: rascunho, color: 'text-gray-500' },
     { label: 'Pausadas', value: pausadas, color: 'text-amber-600' },
     { label: 'Encerradas', value: encerradas, color: 'text-red-500' },
@@ -449,7 +456,7 @@ export default function CompanyDashboard() {
       </div>
 
       {/* SEÇÃO 1 — KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -480,6 +487,7 @@ export default function CompanyDashboard() {
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="ativa">Ativas</SelectItem>
+            <SelectItem value="aguardando_publicacao">Aguardando publicação</SelectItem>
             <SelectItem value="rascunho">Rascunho</SelectItem>
             <SelectItem value="pausada">Pausadas</SelectItem>
             <SelectItem value="encerrada">Encerradas</SelectItem>
@@ -537,6 +545,8 @@ export default function CompanyDashboard() {
                   ? { label: 'Pausada', className: 'bg-amber-50 text-amber-600' }
                   : job.is_active
                   ? { label: 'Ativa', className: 'bg-green-50 text-green-700' }
+                  : job.pending_manual_publication
+                  ? { label: 'Aguardando publicação', className: 'bg-blue-50 text-blue-700' }
                   : { label: 'Rascunho', className: 'bg-gray-100 text-gray-500' };
 
                 const jobType = JOB_TYPE_LABELS[job.job_type] || job.job_type || '—';

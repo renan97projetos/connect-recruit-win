@@ -205,7 +205,9 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
         approval_status: 'approved',
         approval_decided_at: new Date().toISOString(),
         approval_rejection_reason: null,
-        is_active: true,
+        // Aprovação não ativa direto: vaga aguarda divulgação manual pelo time interno
+        is_active: false,
+        pending_manual_publication: true,
         updated_at: new Date().toISOString(),
       } as any)
       .eq('id', job.id);
@@ -214,7 +216,11 @@ export function JobStagePanel({ job, onClose, onJobUpdated }: JobStagePanelProps
     supabase.functions.invoke('send-job-approval-email', {
       body: { jobId: job.id, type: 'approved' },
     }).catch(() => {});
-    toast({ title: 'Vaga aprovada', description: 'A vaga foi publicada.' });
+    // Cria solicitação de publicação manual + notifica o time
+    supabase.functions.invoke('notify-saas-job-published', {
+      body: { jobId: job.id },
+    }).catch(() => {});
+    toast({ title: 'Vaga aprovada', description: 'Aguardando divulgação manual pelo time SinapseRH.' });
     refresh();
     onClose();
   };

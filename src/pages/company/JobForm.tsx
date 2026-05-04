@@ -326,7 +326,10 @@ export default function JobForm() {
         salary_currency: 'BRL',
         benefits: filteredBenefits,
         experience_level: formData.experienceLevel || null,
-        is_active: willPublish && !requiresApproval,
+        // Vaga publicada sem aprovação fica aguardando o time interno divulgar manualmente
+        // — só vira "ativa" quando o backoffice marcar como Publicada.
+        is_active: false,
+        pending_manual_publication: willPublish && !requiresApproval,
         requires_approval: requiresApproval,
         approval_status: requiresApproval
           ? (willPublish ? 'pending_approval' : 'draft')
