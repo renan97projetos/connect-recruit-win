@@ -315,7 +315,12 @@ export default function CompanyDashboard() {
   // === KPIs ===
   const totalVagas = jobs.length;
   const ativas = jobs.filter((j) => j.is_active && !j.is_archived && !j.is_paused).length;
-  const rascunho = jobs.filter((j) => !j.is_active && !j.is_archived).length;
+  const aguardandoPublicacao = jobs.filter(
+    (j) => j.pending_manual_publication && !j.is_active && !j.is_archived && !j.is_paused,
+  ).length;
+  const rascunho = jobs.filter(
+    (j) => !j.is_active && !j.is_archived && !j.pending_manual_publication,
+  ).length;
   const pausadas = jobs.filter((j) => j.is_paused && !j.is_archived).length;
   const encerradas = jobs.filter((j) => j.is_archived).length;
 
@@ -323,6 +328,7 @@ export default function CompanyDashboard() {
     if (j.is_archived) return 'encerrada';
     if (j.is_paused) return 'pausada';
     if (j.is_active) return 'ativa';
+    if (j.pending_manual_publication) return 'aguardando_publicacao';
     return 'rascunho';
   };
 
